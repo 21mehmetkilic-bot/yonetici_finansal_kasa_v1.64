@@ -4427,8 +4427,17 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.64.0";
+        const APP_VERSION = "1.64.1";
         const CHANGELOG = [
+            {
+                version: "1.64.1",
+                date: "24.07.2026",
+                changes: [
+                    "🚨 ÖNEMLİ GÜVENLİK DÜZELTMESİ: Tehlikeli Bölge'de 'Ayarlar' kategorisini sıfırlamak, bulut yedeğinizin bağlantı bilgilerini (API Anahtarı, Bin ID) de siliyordu. Bu, verinizin JSONBin'de hâlâ dururken panelin ona nasıl ulaşacağını unutmasına sebep oluyordu — gerçek bir kullanıcı deneyiminde yaşanıp bildirildi",
+                    "Artık bulut bağlantı ayarları, hiçbir Tehlikeli Bölge sıfırlamasından etkilenmiyor — sadece Bulut Senkronizasyonu bölümünden elle değiştirilebiliyor/kaldırılabiliyor",
+                    "Not: Bu hatayı daha önce yaşadıysanız, verileriniz JSONBin.io hesabınızda hâlâ duruyor olmalı — 'BINS' sekmesinden Bin ID'nizi bulup Bulut Senkronizasyonu ayarlarına elle girerek 'Buluttan Getir' ile geri alabilirsiniz"
+                ]
+            },
             {
                 version: "1.64.0",
                 date: "24.07.2026",
@@ -11002,25 +11011,31 @@
                 }
             },
             ayarlar: {
-                label: 'Ayarlar (şifreler, marka/logo, bulut/e-posta, kurlar, hedef)',
+                label: 'Ayarlar (şifreler, marka/logo, e-posta, kurlar, hedef)',
+                // GÜVENLİK: cloudApiKey_rev4/cloudBinId_rev4/cloudAutoSync_rev4/cloudKeyIsAccessKey_rev4
+                // BİLEREK bu listede YOK. Bunlar kullanıcının kendi bulut yedeğinin "adresi"dir —
+                // bir veri sıfırlaması bunları silerse, yedeğin kendisi JSONBin'de hâlâ dururken
+                // panel artık ona nasıl ulaşacağını bilemez. Bu, gerçek bir kullanıcı deneyimiyle
+                // yaşanmış bir hatanın düzeltmesidir; bulut bağlantı ayarları sadece Bulut
+                // Senkronizasyonu bölümünden elle değiştirilebilir/kaldırılabilir.
                 keys: [
                     'exchangeRates_rev4', 'savingsGoal_rev4', 'adminPass_rev4', 'viewerPass_rev4', 'adminEmail_rev4',
-                    'securityQuestion_rev4', 'securityAnswer_rev4', 'visSettings_rev4', 'cloudApiKey_rev4',
-                    'cloudBinId_rev4', 'cloudAutoSync_rev4', 'cloudLastSync_rev4', 'notificationsEnabled_rev4',
+                    'securityQuestion_rev4', 'securityAnswer_rev4', 'visSettings_rev4',
+                    'notificationsEnabled_rev4',
                     'lastNotifiedDate_rev4', 'currencyLayoutSideBySide_rev4', 'appsScriptUrl_rev4', 'appsScriptSecret_rev4',
-                    'loginFailCount_rev4', 'loginLockUntil_rev4', 'lastBackupReminderDate_rev4', 'cloudKeyIsAccessKey_rev4',
+                    'loginFailCount_rev4', 'loginLockUntil_rev4', 'lastBackupReminderDate_rev4',
                     'brandCompanyName_rev4', 'brandTagline_rev4', 'brandLogoDataUrl_rev4'
                 ],
                 resetMemory: () => {
                     exchangeRates = { USD: null, EUR: null, GOLD: null, updatedAt: null, manualOverride: {} };
                     savingsGoal = { targetAmount: null, targetDate: null, startAmount: null, startDate: null };
-                    cloudApiKey = ''; cloudBinId = ''; cloudAutoSync = false; cloudKeyIsAccessKey = false;
                     notificationsEnabled = false; currencyLayoutSideBySide = true;
                     appsScriptUrl = ''; appsScriptSecret = '';
                     brandCompanyName = BRAND_CONFIG.companyName; brandTagline = BRAND_CONFIG.tagline; brandLogoDataUrl = '';
                     visibilitySettings = loadVisibilitySettings();
                     // NOT: Yönetici/İzleyici şifreleri ayrıca aşağıda (showResetConfirm içinde) ele alınır,
-                    // çünkü yeni şifrenin panoya kopyalanması gibi ek bir akışı var.
+                    // çünkü yeni şifrenin panoya kopyalanması gibi ek bir akışı var. Bulut bağlantı
+                    // ayarları (cloudApiKey/cloudBinId/vb.) YUKARIDAKİ NOT gereği bilerek dokunulmuyor.
                 }
             },
             kayitlar: {
