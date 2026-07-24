@@ -2572,11 +2572,15 @@
             </div>
 
             <div id="csv-step-2" class="hidden flex-1 flex flex-col overflow-hidden">
-                <p class="text-xs font-bold theme-text-main mb-2" id="csv-preview-summary">0 satır bulundu</p>
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <p class="text-xs font-bold theme-text-main" id="csv-preview-summary">0 satır bulundu</p>
+                    <button onclick="toggleAllCsvRows()" class="text-[10px] font-bold text-emerald-600 hover:underline shrink-0">Tümünü Seç / Kaldır</button>
+                </div>
                 <div class="overflow-y-auto border theme-border rounded-xl flex-1">
                     <table class="w-full text-left text-[11px]">
                         <thead class="theme-table-header sticky top-0">
                             <tr>
+                                <th class="py-2 px-2 text-center w-8"><i class="fa-solid fa-check text-[10px]"></i></th>
                                 <th class="py-2 px-3">Tarih</th>
                                 <th class="py-2 px-3">Açıklama</th>
                                 <th class="py-2 px-3 text-right">Tutar</th>
@@ -2585,10 +2589,11 @@
                         </thead>
                         <tbody id="csv-preview-body" class="divide-y theme-border"></tbody>
                     </table>
+                    <div id="csv-preview-pagination"></div>
                 </div>
                 <div class="flex gap-3 pt-4 shrink-0">
                     <button onclick="backToCsvStep1()" class="flex-1 py-2.5 theme-input border theme-border rounded-xl text-xs font-bold theme-text-main hover:opacity-80">Geri</button>
-                    <button onclick="confirmCsvImport()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold">Tümünü İçe Aktar</button>
+                    <button id="csv-import-confirm-btn" onclick="confirmCsvImport()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold">Seçilenleri İçe Aktar</button>
                 </div>
             </div>
 
@@ -2619,11 +2624,15 @@
             </div>
 
             <div id="cc-csv-step-2" class="hidden flex-1 flex flex-col overflow-hidden">
-                <p class="text-xs font-bold theme-text-main mb-2" id="cc-csv-preview-summary">0 satır bulundu</p>
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <p class="text-xs font-bold theme-text-main" id="cc-csv-preview-summary">0 satır bulundu</p>
+                    <button onclick="toggleAllCcCsvRows()" class="text-[10px] font-bold text-violet-600 hover:underline shrink-0">Tümünü Seç / Kaldır</button>
+                </div>
                 <div class="overflow-y-auto border theme-border rounded-xl flex-1">
                     <table class="w-full text-left text-[11px]">
                         <thead class="theme-table-header sticky top-0">
                             <tr>
+                                <th class="py-2 px-2 text-center w-8"><i class="fa-solid fa-check text-[10px]"></i></th>
                                 <th class="py-2 px-3">Tarih</th>
                                 <th class="py-2 px-3">Açıklama</th>
                                 <th class="py-2 px-3 text-right">Tutar</th>
@@ -2632,11 +2641,12 @@
                         </thead>
                         <tbody id="cc-csv-preview-body" class="divide-y theme-border"></tbody>
                     </table>
+                    <div id="cc-csv-preview-pagination"></div>
                 </div>
                 <p id="cc-csv-limit-warning" class="hidden text-[10px] font-bold text-red-500 pt-2"></p>
                 <div class="flex gap-3 pt-4 shrink-0">
                     <button onclick="backToCcCsvStep1()" class="flex-1 py-2.5 theme-input border theme-border rounded-xl text-xs font-bold theme-text-main hover:opacity-80">Geri</button>
-                    <button onclick="confirmCcCsvImport()" class="flex-1 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold">Tümünü İçe Aktar</button>
+                    <button id="cc-csv-import-confirm-btn" onclick="confirmCcCsvImport()" class="flex-1 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold">Seçilenleri İçe Aktar</button>
                 </div>
             </div>
 
@@ -4427,8 +4437,18 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.64.1";
+        const APP_VERSION = "1.65.0";
         const CHANGELOG = [
+            {
+                version: "1.65.0",
+                date: "24.07.2026",
+                changes: [
+                    "☑️ CSV/Excel içe aktarmada artık her satırın yanında bir kutucuk var — istemediğiniz satırların işaretini kaldırıp sadece seçtiklerinizi içe aktarabilirsiniz (hem Banka Ekstresi hem Kredi Kartı içe aktarmada)",
+                    "'Tümünü Seç / Kaldır' kısayolu eklendi",
+                    "Önizleme artık sayfalama ile gösteriliyor (50'şer satır) — 1000'in üzerinde satırlı dosyalarda bile akıcı çalışır, önceden sadece ilk 50 satır gösterilip GERİ KALANI GÖRÜLMEDEN içe aktarılıyordu",
+                    "Kredi Kartı içe aktarmada limit uyarısı artık sadece seçili satırlara göre hesaplanıyor"
+                ]
+            },
             {
                 version: "1.64.1",
                 date: "24.07.2026",
@@ -6967,6 +6987,7 @@
             document.getElementById('csv-step-2').classList.add('hidden');
             document.getElementById('csv-cancel-btn').classList.remove('hidden');
             csvParsedRows = [];
+            csvPreviewPage = 1;
 
             const el = document.getElementById('csvImportModal');
             if (el) el.classList.remove('hidden');
@@ -7208,7 +7229,7 @@
                     else if (typeVal.includes('gir') || typeVal.includes('credit') || typeVal.includes('gelir')) type = 'giriş';
                 }
 
-                csvParsedRows.push({ date: dateStr, description: description || 'CSV İçe Aktarım', amount: Math.abs(amount), type });
+                csvParsedRows.push({ date: dateStr, description: description || 'CSV İçe Aktarım', amount: Math.abs(amount), type, selected: true });
             });
 
             if (csvParsedRows.length === 0) {
@@ -7219,12 +7240,22 @@
             renderCsvPreview();
         }
 
+        let csvPreviewPage = 1;
         function renderCsvPreview() {
             const tbody = document.getElementById('csv-preview-body');
-            safeSetText('csv-preview-summary', `${csvParsedRows.length} işlem satırı bulundu — kontrol edip onaylayın:`);
+            const selectedCount = csvParsedRows.filter(r => r.selected).length;
+            safeSetText('csv-preview-summary', `${csvParsedRows.length} işlem satırı bulundu — ${selectedCount} tanesi seçili. İstemediklerinizin işaretini kaldırabilirsiniz:`);
 
-            tbody.innerHTML = csvParsedRows.slice(0, 50).map(r => `
-                <tr>
+            const page = paginate(csvParsedRows, csvPreviewPage);
+            csvPreviewPage = page.currentPage;
+
+            tbody.innerHTML = page.pageItems.map(r => {
+                const realIndex = csvParsedRows.indexOf(r);
+                return `
+                <tr class="${r.selected ? '' : 'opacity-40'}">
+                    <td class="py-1.5 px-2 text-center">
+                        <input type="checkbox" onchange="toggleCsvRowSelection(${realIndex})" ${r.selected ? 'checked' : ''} class="w-3.5 h-3.5 accent-emerald-600 cursor-pointer">
+                    </td>
                     <td class="py-1.5 px-3">${new Date(r.date).toLocaleDateString('tr-TR')}</td>
                     <td class="py-1.5 px-3 theme-text-muted">${escapeHtml(r.description)}</td>
                     <td class="py-1.5 px-3 text-right font-bold ${r.type === 'giriş' ? 'text-emerald-500' : 'text-red-500'}">${r.type === 'giriş' ? '+' : '−'}${formatCurrency(r.amount)}</td>
@@ -7232,10 +7263,29 @@
                         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md ${r.type === 'giriş' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}">${r.type === 'giriş' ? 'Giriş' : 'Çıkış'}</span>
                     </td>
                 </tr>
-            `).join('') + (csvParsedRows.length > 50 ? `<tr><td colspan="4" class="py-2 px-3 text-center text-[10px] theme-text-muted">+${csvParsedRows.length - 50} satır daha (hepsi içe aktarılacak)</td></tr>` : '');
+            `;
+            }).join('');
+
+            renderPaginationControls('csv-preview-pagination', page, 'goToCsvPreviewPage');
+
+            const importBtn = document.getElementById('csv-import-confirm-btn');
+            if (importBtn) importBtn.innerText = selectedCount > 0 ? `Seçilenleri İçe Aktar (${selectedCount})` : 'Seçilenleri İçe Aktar';
 
             document.getElementById('csv-step-1').classList.add('hidden');
             document.getElementById('csv-step-2').classList.remove('hidden');
+        }
+        function goToCsvPreviewPage(pageNum) {
+            csvPreviewPage = pageNum;
+            renderCsvPreview();
+        }
+        function toggleCsvRowSelection(index) {
+            csvParsedRows[index].selected = !csvParsedRows[index].selected;
+            renderCsvPreview();
+        }
+        function toggleAllCsvRows() {
+            const allSelected = csvParsedRows.every(r => r.selected);
+            csvParsedRows.forEach(r => { r.selected = !allSelected; });
+            renderCsvPreview();
         }
 
         function confirmCsvImport() {
@@ -7243,16 +7293,23 @@
             const bankItem = banks.find(b => b.id === bankId);
             if (!bankItem) return;
 
+            const rowsToImport = csvParsedRows.filter(r => r.selected);
+            if (rowsToImport.length === 0) {
+                showAlert('Hiçbir Satır Seçilmedi', 'İçe aktarmak için en az bir satırı işaretleyin.');
+                return;
+            }
+
             // Performans: skipSave=true ile her satırda ayrı ayrı diske yazmak yerine, tüm
             // satırlar işlendikten sonra TEK bir kayıt yapılır (bkz. adjustBankBalance yorumu).
-            csvParsedRows.forEach(r => {
+            rowsToImport.forEach(r => {
                 adjustBankBalance(bankId, r.type, r.description, r.amount, r.date, true);
             });
             safeSetStorage('bankTx_rev4', JSON.stringify(bankTransactions));
             safeSetStorage('banks_rev4', JSON.stringify(allBanks));
 
-            const count = csvParsedRows.length;
+            const count = rowsToImport.length;
             csvParsedRows = [];
+            csvPreviewPage = 1;
             updateDashboard();
             closeCsvImportModal();
             showToast('İçe Aktarma Tamamlandı', `${count} işlem "${bankItem.name}" hesabına eklendi.`, 'success');
@@ -7274,6 +7331,7 @@
             document.getElementById('cc-csv-step-2').classList.add('hidden');
             document.getElementById('cc-csv-cancel-btn').classList.remove('hidden');
             ccCsvParsedRows = [];
+            ccCsvPreviewPage = 1;
 
             const el = document.getElementById('ccCsvImportModal');
             if (el) el.classList.remove('hidden');
@@ -7311,7 +7369,7 @@
                 // ödeme/iade (borcu azaltır) olarak sınıflandırılır — banka hesabı içe aktarmasındaki
                 // giriş/çıkış mantığının kredi kartı karşılığı.
                 const type = amount < 0 ? 'harcama' : 'ödeme';
-                ccCsvParsedRows.push({ date: dateStr, description: description || 'CSV İçe Aktarım', amount: Math.abs(amount), type });
+                ccCsvParsedRows.push({ date: dateStr, description: description || 'CSV İçe Aktarım', amount: Math.abs(amount), type, selected: true });
             });
 
             if (ccCsvParsedRows.length === 0) {
@@ -7322,12 +7380,22 @@
             renderCcCsvPreview();
         }
 
+        let ccCsvPreviewPage = 1;
         function renderCcCsvPreview() {
             const tbody = document.getElementById('cc-csv-preview-body');
-            safeSetText('cc-csv-preview-summary', `${ccCsvParsedRows.length} işlem satırı bulundu — kontrol edip onaylayın:`);
+            const selectedCount = ccCsvParsedRows.filter(r => r.selected).length;
+            safeSetText('cc-csv-preview-summary', `${ccCsvParsedRows.length} işlem satırı bulundu — ${selectedCount} tanesi seçili. İstemediklerinizin işaretini kaldırabilirsiniz:`);
 
-            tbody.innerHTML = ccCsvParsedRows.slice(0, 50).map(r => `
-                <tr>
+            const page = paginate(ccCsvParsedRows, ccCsvPreviewPage);
+            ccCsvPreviewPage = page.currentPage;
+
+            tbody.innerHTML = page.pageItems.map(r => {
+                const realIndex = ccCsvParsedRows.indexOf(r);
+                return `
+                <tr class="${r.selected ? '' : 'opacity-40'}">
+                    <td class="py-1.5 px-2 text-center">
+                        <input type="checkbox" onchange="toggleCcCsvRowSelection(${realIndex})" ${r.selected ? 'checked' : ''} class="w-3.5 h-3.5 accent-violet-600 cursor-pointer">
+                    </td>
                     <td class="py-1.5 px-3">${new Date(r.date).toLocaleDateString('tr-TR')}</td>
                     <td class="py-1.5 px-3 theme-text-muted">${escapeHtml(r.description)}</td>
                     <td class="py-1.5 px-3 text-right font-bold ${r.type === 'ödeme' ? 'text-emerald-500' : 'text-red-500'}">${r.type === 'ödeme' ? '+' : '−'}${formatCurrency(r.amount)}</td>
@@ -7335,25 +7403,45 @@
                         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md ${r.type === 'ödeme' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}">${r.type === 'ödeme' ? 'Ödeme' : 'Harcama'}</span>
                     </td>
                 </tr>
-            `).join('') + (ccCsvParsedRows.length > 50 ? `<tr><td colspan="4" class="py-2 px-3 text-center text-[10px] theme-text-muted">+${ccCsvParsedRows.length - 50} satır daha (hepsi içe aktarılacak)</td></tr>` : '');
+            `;
+            }).join('');
+
+            renderPaginationControls('cc-csv-preview-pagination', page, 'goToCcCsvPreviewPage');
 
             const cardId = parseInt(document.getElementById('cc-csv-card-select').value);
             const cardItem = creditCards.find(c => c.id === cardId);
             const warningEl = document.getElementById('cc-csv-limit-warning');
             if (cardItem && warningEl) {
-                const totalExpense = ccCsvParsedRows.filter(r => r.type === 'harcama').reduce((sum, r) => sum + r.amount, 0);
-                const totalPayment = ccCsvParsedRows.filter(r => r.type === 'ödeme').reduce((sum, r) => sum + r.amount, 0);
+                const selectedRows = ccCsvParsedRows.filter(r => r.selected);
+                const totalExpense = selectedRows.filter(r => r.type === 'harcama').reduce((sum, r) => sum + r.amount, 0);
+                const totalPayment = selectedRows.filter(r => r.type === 'ödeme').reduce((sum, r) => sum + r.amount, 0);
                 const netOutstandingAfter = getCardOutstanding(cardItem.id) + totalExpense - totalPayment;
                 if (netOutstandingAfter > cardItem.totalLimit + 0.01) {
-                    warningEl.innerText = `⚠️ Bu işlemler sonrası kart borcu (${formatCurrency(Math.max(netOutstandingAfter, 0))}), kart limitini (${formatCurrency(cardItem.totalLimit)}) aşıyor. Onaylarsanız içe aktarma engellenecektir.`;
+                    warningEl.innerText = `⚠️ Seçili işlemler sonrası kart borcu (${formatCurrency(Math.max(netOutstandingAfter, 0))}), kart limitini (${formatCurrency(cardItem.totalLimit)}) aşıyor. Onaylarsanız içe aktarma engellenecektir.`;
                     warningEl.classList.remove('hidden');
                 } else {
                     warningEl.classList.add('hidden');
                 }
             }
 
+            const importBtn = document.getElementById('cc-csv-import-confirm-btn');
+            if (importBtn) importBtn.innerText = selectedCount > 0 ? `Seçilenleri İçe Aktar (${selectedCount})` : 'Seçilenleri İçe Aktar';
+
             document.getElementById('cc-csv-step-1').classList.add('hidden');
             document.getElementById('cc-csv-step-2').classList.remove('hidden');
+        }
+        function goToCcCsvPreviewPage(pageNum) {
+            ccCsvPreviewPage = pageNum;
+            renderCcCsvPreview();
+        }
+        function toggleCcCsvRowSelection(index) {
+            ccCsvParsedRows[index].selected = !ccCsvParsedRows[index].selected;
+            renderCcCsvPreview();
+        }
+        function toggleAllCcCsvRows() {
+            const allSelected = ccCsvParsedRows.every(r => r.selected);
+            ccCsvParsedRows.forEach(r => { r.selected = !allSelected; });
+            renderCcCsvPreview();
         }
 
         function confirmCcCsvImport() {
@@ -7361,8 +7449,14 @@
             const cardItem = creditCards.find(c => c.id === cardId);
             if (!cardItem) return;
 
-            const expenseRows = ccCsvParsedRows.filter(r => r.type === 'harcama');
-            const paymentRows = ccCsvParsedRows.filter(r => r.type === 'ödeme');
+            const selectedRows = ccCsvParsedRows.filter(r => r.selected);
+            if (selectedRows.length === 0) {
+                showAlert('Hiçbir Satır Seçilmedi', 'İçe aktarmak için en az bir satırı işaretleyin.');
+                return;
+            }
+
+            const expenseRows = selectedRows.filter(r => r.type === 'harcama');
+            const paymentRows = selectedRows.filter(r => r.type === 'ödeme');
             const totalExpense = expenseRows.reduce((sum, r) => sum + r.amount, 0);
             const totalPayment = paymentRows.reduce((sum, r) => sum + r.amount, 0);
 
@@ -7405,6 +7499,7 @@
             safeSetStorage('creditCardPayments_rev4', JSON.stringify(allCreditCardPayments));
             logAudit('Kredi Kartı Hareketleri İçe Aktarıldı', `${expenseRows.length} harcama, ${paymentRows.length} ödeme — "${cardItem.bankName} (${cardItem.cardName})" kartına CSV/Excel ile eklendi.`);
             ccCsvParsedRows = [];
+            ccCsvPreviewPage = 1;
             updateDashboard();
             closeCcCsvImportModal();
             showToast('İçe Aktarma Tamamlandı', `${expenseRows.length} harcama ve ${paymentRows.length} ödeme "${cardItem.bankName} (${cardItem.cardName})" kartına eklendi.`, 'success');
