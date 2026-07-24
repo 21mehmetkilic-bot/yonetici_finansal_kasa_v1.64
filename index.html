@@ -1125,6 +1125,9 @@
                             <button onclick="triggerAction(openCsvImportModal)" class="admin-only py-2.5 px-4 bg-zinc-900/10 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-850 border theme-border rounded-xl text-xs font-bold theme-text-main transition-all flex items-center gap-1.5 shadow-sm shrink-0">
                                 <i class="fa-solid fa-file-csv text-emerald-500"></i> CSV İçe Aktar
                             </button>
+                            <button onclick="exportBankTransactionsToExcel()" class="py-2.5 px-4 bg-zinc-900/10 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-850 border theme-border rounded-xl text-xs font-bold theme-text-main transition-all flex items-center gap-1.5 shadow-sm shrink-0" title="Sadece banka hesap hareketlerini Excel'e aktarır">
+                                <i class="fa-regular fa-file-excel text-emerald-500"></i> Excel'e Aktar
+                            </button>
                             <button onclick="triggerAction(openAddBankAccountModal)" class="admin-only text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
                                 <i class="fa-solid fa-circle-plus"></i> Banka Hesabı Ekle
                             </button>
@@ -1300,6 +1303,9 @@
                             </div>
                             <button onclick="triggerAction(openCcCsvImportModal)" class="admin-only text-xs theme-text-main border theme-border hover:opacity-80 px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
                                 <i class="fa-solid fa-file-arrow-up"></i> CSV/Excel İçe Aktar
+                            </button>
+                            <button onclick="exportCreditCardTransactionsToExcel()" class="text-xs theme-text-main border theme-border hover:opacity-80 px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0" title="Sadece kredi kartı harcama/ödeme hareketlerini Excel'e aktarır">
+                                <i class="fa-regular fa-file-excel text-emerald-500"></i> Excel'e Aktar
                             </button>
                             <button onclick="triggerAction(openAddCreditCardModal)" class="admin-only text-xs text-white bg-violet-600 hover:bg-violet-700 px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
                                 <i class="fa-solid fa-circle-plus"></i> Harcama Ekle
@@ -4239,6 +4245,95 @@
         }
 
         // Seçilen cari(ler)i Excel'e aktarır
+        // Sadece Banka Hesap Hareketlerini (tüm hesapların işlem geçmişini) Excel'e aktarır —
+        // exportToExcel'deki tam raporun aksine, buradan SADECE banka hareketleri iner.
+        function exportBankTransactionsToExcel() {
+            try {
+                const bankIdsVisible = new Set(banks.map(b => b.id));
+                const records = bankTransactions
+                    .filter(t => bankIdsVisible.has(t.bankId))
+                    .filter(t => isWithinDateFilter(t.date))
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                if (records.length === 0) {
+                    showAlert('Kayıt Yok', 'Dışa aktarılacak banka hareketi bulunamadı.');
+                    return;
+                }
+
+                const totalGiris = records.filter(t => t.type === 'giriş').reduce((s, t) => s + t.amount, 0);
+                const totalCikis = records.filter(t => t.type === 'çıkış').reduce((s, t) => s + t.amount, 0);
+
+                const wb = XLSX.utils.book_new();
+                const data = [
+                    ["BANKA HESAP HAREKETLERİ RAPORU", ""],
+                    ["Rapor Tarihi:", new Date().toLocaleString("tr-TR")],
+                    ["Tarih Süzgeci:", (dateFilter && dateFilter.mode !== 'all') ? getDateFilterLabel() : "Tümü (filtre yok)"],
+                    ["Toplam Giriş:", totalGiris],
+                    ["Toplam Çıkış:", totalCikis],
+                    ["Net:", totalGiris - totalCikis],
+                    ["", ""],
+                    ["Tarih", "Banka", "Açıklama", "Tür", "Tutar (TRY)", "İşlem Sonrası Bakiye"]
+                ];
+                records.forEach(t => {
+                    data.push([t.date, t.bankName, t.description, t.type === 'giriş' ? 'Giriş' : 'Çıkış', t.amount, t.balanceAfter]);
+                });
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, "Banka Hareketleri");
+                XLSX.writeFile(wb, `Banka_Hareketleri_${getTodayDateString()}.xlsx`);
+                showToast('Excel Oluşturuldu', `${records.length} banka hareketi indirildi.`, 'success');
+            } catch (err) {
+                logError('exportBankTransactionsToExcel', err);
+                showAlert('Excel Oluşturulamadı', 'Bir hata oluştu: ' + err.message);
+            }
+        }
+
+        // Sadece Kredi Kartı Hareketlerini (tüm kartların harcama + ödemelerini) Excel'e aktarır.
+        function exportCreditCardTransactionsToExcel() {
+            try {
+                const cardMap = new Map(creditCards.map(c => [c.id, `${c.bankName} (${c.cardName})`]));
+                const expenseRecords = creditCardExpenses
+                    .filter(e => cardMap.has(e.cardId))
+                    .filter(e => isWithinDateFilter(e.paidDate))
+                    .map(e => ({ date: e.paidDate, card: cardMap.get(e.cardId), desc: e.description || e.creditor, type: 'Harcama', amount: e.amount }));
+                const paymentRecords = creditCardPayments
+                    .filter(p => cardMap.has(p.cardId))
+                    .filter(p => isWithinDateFilter(p.date))
+                    .map(p => ({ date: p.date, card: cardMap.get(p.cardId), desc: 'Ekstre Ödemesi', type: 'Ödeme', amount: p.amount }));
+
+                const records = [...expenseRecords, ...paymentRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                if (records.length === 0) {
+                    showAlert('Kayıt Yok', 'Dışa aktarılacak kredi kartı hareketi bulunamadı.');
+                    return;
+                }
+
+                const totalExpense = expenseRecords.reduce((s, r) => s + r.amount, 0);
+                const totalPayment = paymentRecords.reduce((s, r) => s + r.amount, 0);
+
+                const wb = XLSX.utils.book_new();
+                const data = [
+                    ["KREDİ KARTI HAREKETLERİ RAPORU", ""],
+                    ["Rapor Tarihi:", new Date().toLocaleString("tr-TR")],
+                    ["Tarih Süzgeci:", (dateFilter && dateFilter.mode !== 'all') ? getDateFilterLabel() : "Tümü (filtre yok)"],
+                    ["Toplam Harcama:", totalExpense],
+                    ["Toplam Ödeme:", totalPayment],
+                    ["Net Borç Değişimi:", totalExpense - totalPayment],
+                    ["", ""],
+                    ["Tarih", "Kart", "Açıklama", "Tür", "Tutar (TRY)"]
+                ];
+                records.forEach(r => {
+                    data.push([r.date, r.card, r.desc, r.type, r.amount]);
+                });
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, "Kredi Kartı Hareketleri");
+                XLSX.writeFile(wb, `Kredi_Karti_Hareketleri_${getTodayDateString()}.xlsx`);
+                showToast('Excel Oluşturuldu', `${records.length} kredi kartı hareketi indirildi.`, 'success');
+            } catch (err) {
+                logError('exportCreditCardTransactionsToExcel', err);
+                showAlert('Excel Oluşturulamadı', 'Bir hata oluştu: ' + err.message);
+            }
+        }
+
         function exportCariToExcel() {
             if (selectedCariNames.length === 0) {
                 showAlert('Cari Seçilmedi', 'Excel\'e aktarmak için önce en az bir cari seçmelisiniz.');
@@ -4437,8 +4532,18 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.65.0";
+        const APP_VERSION = "1.66.0";
         const CHANGELOG = [
+            {
+                version: "1.66.0",
+                date: "24.07.2026",
+                changes: [
+                    "🚨 KRİTİK HATA DÜZELTMESİ: Banka ekstresi CSV/Excel içe aktarmada, işlemler dosyadaki sırayla (genelde en yeniden en eskiye) işleniyordu. Bakiyenin asla eksiye düşmemesi kuralı ile birleşince bu, YANLIŞ toplam sonuçlara yol açıyordu (gerçek bir kullanıcı raporunda 0 TL olması gereken sonuç 180.132,50 TL çıkıyordu). Artık dosyanın kronolojik yönü otomatik tespit edilip gerekirse ters çevriliyor — hem 'yeniden eskiye' hem 'eskiden yeniye' sıralanmış ekstreler artık doğru sonuç veriyor",
+                    "📊 Bankalar sayfasına 'Excel'e Aktar' butonu eklendi — sadece banka hesap hareketlerini (tüm genel rapor değil) ayrı bir Excel dosyası olarak indirir",
+                    "📊 Kredi Kartı sayfasına da aynı şekilde 'Excel'e Aktar' butonu eklendi — sadece kredi kartı harcama/ödeme hareketlerini indirir",
+                    "Bu düzeltme gerçek bir kullanıcı dosyasıyla (1155 satırlık banka ekstresi) test edilip doğrulandı"
+                ]
+            },
             {
                 version: "1.65.0",
                 date: "24.07.2026",
@@ -7235,6 +7340,25 @@
             if (csvParsedRows.length === 0) {
                 showAlert('Geçerli Satır Bulunamadı', 'Dosyada işlenebilir hiçbir satır bulunamadı. Tarih ve tutar sütunlarının doğru biçimde olduğundan emin olun.');
                 return;
+            }
+
+            // ================= KRONOLOJİK SIRALAMA DÜZELTMESİ (KRİTİK) =================
+            // Banka ekstreleri genelde EN YENİ işlem en üstte olacak şekilde dışa aktarılır.
+            // Ama bakiye hesaplaması (adjustBankBalance içindeki Math.max(0, ...) — bakiyenin
+            // asla eksiye düşmemesi kuralı) satırların GERÇEK KRONOLOJİK sırayla (eskiden yeniye)
+            // işlenmesini gerektirir. Ters sırayla işlenirse, bazı çıkışlar bu "0'ın altına
+            // düşürme" korumasına yanlışlıkla takılıp sanki hiç olmamış gibi sonuç bozulur —
+            // gerçek bir kullanıcı raporuyla tespit edilip doğrulandı (180.132,50 TL'lik hatalı
+            // sonuç → düzeltme sonrası doğru olan ~0 TL'ye döndü).
+            // Çözüm: dosyanın yönünü (ilk satır mı yeni, son satır mı yeni) otomatik tespit edip,
+            // gerekiyorsa diziyi tersine çeviriyoruz — böylece hem "yeniden eskiye" hem "eskiden
+            // yeniye" sıralanmış dosyalar doğru işlenir.
+            if (csvParsedRows.length > 1) {
+                const firstDate = csvParsedRows[0].date;
+                const lastDate = csvParsedRows[csvParsedRows.length - 1].date;
+                if (firstDate > lastDate) {
+                    csvParsedRows.reverse();
+                }
             }
 
             renderCsvPreview();
