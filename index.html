@@ -4565,8 +4565,17 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.68.0";
+        const APP_VERSION = "1.68.1";
         const CHANGELOG = [
+            {
+                version: "1.68.1",
+                date: "24.07.2026",
+                changes: [
+                    "🚨 ACİL GÜVENLİK DÜZELTMESİ: Bir önceki sürümde Firebase Gizli Anahtarı ve Veritabanı URL'si yanlışlıkla kodun içine gömülmüştü. Panel GitHub Pages gibi HERKESE AÇIK bir adreste yayınlandığında, sayfayı ziyaret eden herkes (sayfa kaynağını görüntüleyerek) bu anahtarı görüp, panel arayüzüne hiç girmeden, şifreyi hiç bilmeden DOĞRUDAN Firebase veritabanına erişebilir/değiştirebilir/silebilirdi",
+                    "Bu sürümde o anahtar ve URL koddan tamamen kaldırıldı — artık HİÇBİR bulut kimlik bilgisi paylaşılan dosyanın içinde durmuyor, sadece kullanıcının kendi tarayıcısına (localStorage) girdiği bilgiler orada kalıyor",
+                    "⚠️ Eğer bu paneli daha önce bir sürümde (v1.67.1) GitHub Pages gibi herkese açık bir adrese yüklediyseniz, Firebase Gizli Anahtarınızı DERHAL yenilemeniz (rotate) gerekir — Firebase Console > Project Settings > Service accounts > Database secrets"
+                ]
+            },
             {
                 version: "1.68.0",
                 date: "24.07.2026",
@@ -5756,8 +5765,8 @@
         // false ise tam yetkili "Master Key"dir (X-Master-Key ile gönderilir).
         let cloudKeyIsAccessKey = safeGetStorage('cloudKeyIsAccessKey_rev4', 'false') === 'true';
         // Firebase Realtime Database bağlantı bilgileri
-        let firebaseDbUrl = safeGetStorage('firebaseDbUrl_rev4', 'https://dizayn-muhendislik-kasa-default-rtdb.firebaseio.com');
-        let firebaseSecret = safeGetStorage('firebaseSecret_rev4', 'eNqhQSayjAv0TbZnpyNa5IMJA7PmaeuZMBN6stln');
+        let firebaseDbUrl = safeGetStorage('firebaseDbUrl_rev4', '');
+        let firebaseSecret = safeGetStorage('firebaseSecret_rev4', '');
 
         // Google Apps Script üzerinden gerçek şifre sıfırlama e-postası göndermek için (opsiyonel).
         // Boş bırakılırsa sistem eskisi gibi yeni şifreyi sadece panoya kopyalar, e-posta göndermeye çalışmaz.
