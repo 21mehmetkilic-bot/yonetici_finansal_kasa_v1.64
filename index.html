@@ -1693,22 +1693,49 @@
                     <div>
                         <span class="text-[10px] font-black theme-text-muted uppercase tracking-widest block flex items-center gap-1.5"><i class="fa-solid fa-cloud"></i> Bulut Senkronizasyonu (Her Cihazda Aynı Veri)</span>
                         <p class="text-[10px] theme-text-muted mt-1 leading-relaxed">
-                            Bu dosya statik bir dosya olduğu için kendi başına bir sunucusu yoktur. "Her yerde aynı veri" için ücretsiz bir bulut anahtarı gerekir:
-                            <a href="https://jsonbin.io" target="_blank" rel="noopener" class="text-indigo-500 hover:underline font-bold">jsonbin.io</a>'da 1 dakikada ücretsiz hesap açın. <b>Önerilen:</b> "API Keys" sayfasında Master Key ile tüm hesabınıza değil, sadece bu panelin kullandığı işlemlere (Bins: Read/Create/Update) izin veren kısıtlı bir <b>Access Key</b> oluşturup onu kullanın — aşağıdaki kutucuğu işaretlemeyi unutmayın. Dilerseniz doğrudan Master Key'i de kullanabilirsiniz ama bu, tüm hesabınıza tam erişim verir.
+                            Bu dosya statik bir dosya olduğu için kendi başına bir sunucusu yoktur. "Her yerde aynı veri" için ücretsiz bir bulut hesabı gerekir. İki sağlayıcı desteklenir — büyük veri hacmi (yüzlerce/binlerce kayıt) için <b>Firebase</b> önerilir, çünkü ücretsiz planı çok daha geniş (1GB'a karşı JSONBin'in 100KB'ı).
                         </p>
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold theme-text-muted block mb-1">API ANAHTARI (MASTER KEY veya ACCESS KEY)</label>
-                        <input id="cloud-api-key" type="password" class="w-full py-2 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-mono" placeholder="JSONBin.io Master Key veya Access Key">
+                        <label class="text-[10px] font-bold theme-text-muted block mb-1">BULUT SAĞLAYICISI</label>
+                        <select id="cloud-provider-select" onchange="toggleCloudProviderFields()" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs">
+                            <option value="jsonbin">JSONBin.io (basit, ücretsiz planda 100KB sınırı)</option>
+                            <option value="firebase">Firebase Realtime Database (Google, ücretsiz planda 1GB — önerilen)</option>
+                        </select>
                     </div>
-                    <label class="flex items-center justify-between gap-2 p-2.5 theme-table-header border theme-border rounded-xl cursor-pointer">
-                        <span class="text-xs font-semibold theme-text-main">Girdiğim anahtar kısıtlı bir "Access Key" (Master Key değil)</span>
-                        <input type="checkbox" id="cloud-key-is-access-key" class="w-4 h-4 accent-indigo-600 cursor-pointer shrink-0">
-                    </label>
-                    <div>
-                        <label class="text-[10px] font-bold theme-text-muted block mb-1">BIN ID (İlk kayıtta otomatik oluşturulur)</label>
-                        <input id="cloud-bin-id" type="text" class="w-full py-2 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-mono" placeholder="Boş bırakabilirsiniz">
+
+                    <div id="cloud-jsonbin-fields" class="space-y-3">
+                        <p class="text-[10px] theme-text-muted">
+                            <a href="https://jsonbin.io" target="_blank" rel="noopener" class="text-indigo-500 hover:underline font-bold">jsonbin.io</a>'da 1 dakikada ücretsiz hesap açın. <b>Önerilen:</b> "API Keys" sayfasında Master Key ile tüm hesabınıza değil, sadece bu panelin kullandığı işlemlere (Bins: Read/Create/Update) izin veren kısıtlı bir <b>Access Key</b> oluşturup onu kullanın — aşağıdaki kutucuğu işaretlemeyi unutmayın.
+                        </p>
+                        <div>
+                            <label class="text-[10px] font-bold theme-text-muted block mb-1">API ANAHTARI (MASTER KEY veya ACCESS KEY)</label>
+                            <input id="cloud-api-key" type="password" class="w-full py-2 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-mono" placeholder="JSONBin.io Master Key veya Access Key">
+                        </div>
+                        <label class="flex items-center justify-between gap-2 p-2.5 theme-table-header border theme-border rounded-xl cursor-pointer">
+                            <span class="text-xs font-semibold theme-text-main">Girdiğim anahtar kısıtlı bir "Access Key" (Master Key değil)</span>
+                            <input type="checkbox" id="cloud-key-is-access-key" class="w-4 h-4 accent-indigo-600 cursor-pointer shrink-0">
+                        </label>
+                        <div>
+                            <label class="text-[10px] font-bold theme-text-muted block mb-1">BIN ID (İlk kayıtta otomatik oluşturulur)</label>
+                            <input id="cloud-bin-id" type="text" class="w-full py-2 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-mono" placeholder="Boş bırakabilirsiniz">
+                        </div>
                     </div>
+
+                    <div id="cloud-firebase-fields" class="hidden space-y-3">
+                        <p class="text-[10px] theme-text-muted">
+                            <a href="https://console.firebase.google.com" target="_blank" rel="noopener" class="text-indigo-500 hover:underline font-bold">console.firebase.google.com</a>'da Google hesabınızla ücretsiz bir proje oluşturup "Realtime Database" açın. Veritabanı URL'nizi ve (Proje Ayarları > Service Accounts > Database Secrets altındaki) Gizli Anahtarınızı aşağıya girin.
+                        </p>
+                        <div>
+                            <label class="text-[10px] font-bold theme-text-muted block mb-1">FIREBASE VERİTABANI URL'Sİ</label>
+                            <input id="firebase-db-url" type="text" class="w-full py-2 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-mono" placeholder="https://proje-adi-default-rtdb.firebaseio.com">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold theme-text-muted block mb-1">GİZLİ ANAHTAR (DATABASE SECRET)</label>
+                            <input id="firebase-secret" type="password" class="w-full py-2 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-mono" placeholder="Kendi belirlediğiniz gizli anahtar">
+                        </div>
+                    </div>
+
                     <label class="flex items-center justify-between gap-2 p-2.5 theme-table-header border theme-border rounded-xl cursor-pointer">
                         <span class="text-xs font-semibold theme-text-main">Otomatik Senkronizasyon (her değişiklikte buluta kaydet, açılışta buluttan getir)</span>
                         <input type="checkbox" id="cloud-auto-sync" class="w-4 h-4 accent-indigo-600 cursor-pointer shrink-0">
@@ -4532,8 +4559,27 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.66.0";
+        const APP_VERSION = "1.67.1";
         const CHANGELOG = [
+            {
+                version: "1.67.1",
+                date: "24.07.2026",
+                changes: [
+                    "☁️ Firebase bağlantı bilgileriniz (Veritabanı URL'si + Gizli Anahtar) varsayılan olarak önceden dolduruldu — Bulut Sağlayıcısı da varsayılan olarak Firebase'e ayarlandı. Sadece bir kez 'Buluta Kaydet'e basmanız yeterli, JSONBin.io ise dropdown'dan hâlâ seçilip kullanılabiliyor",
+                    "🐞 Düzeltme: Açılışta otomatik senkronizasyon kontrolü sadece JSONBin'in Bin ID'sine bakıyordu, Firebase kullanılırken bu kontrolü hiç geçemiyordu — artık her iki sağlayıcı için de doğru çalışıyor",
+                    "Otomatik Senkronizasyon varsayılan olarak açık hale getirildi",
+                    "⚠️ Güvenlik notu: Bu sürümde Firebase Gizli Anahtarı doğrudan dosyanın koduna gömülüdür — bu dosyayı başkasıyla paylaşmadan önce Yönetici Paneli'nden bu anahtarı temizlemeniz/değiştirmeniz önerilir"
+                ]
+            },
+            {
+                version: "1.67.0",
+                date: "24.07.2026",
+                changes: [
+                    "☁️ Bulut Senkronizasyonuna ikinci bir sağlayıcı eklendi: Firebase Realtime Database (Google) — ücretsiz planı 1GB (JSONBin'in 100KB'ına karşı) olduğu için büyük veri hacimleri (çoklu proje, yüzlerce/binlerce işlem) için önerilir",
+                    "Yönetici Paneli > Bulut Senkronizasyonu bölümünde artık bir 'Bulut Sağlayıcısı' seçimi var — JSONBin.io veya Firebase arasında seçim yapılabiliyor, ikisi de bağımsız olarak yapılandırılıp saklanabiliyor",
+                    "Firebase için sadece Veritabanı URL'si ve Gizli Anahtar (Database Secret) gerekiyor — karmaşık oturum/token yönetimi yok, JSONBin ile aynı kolaylıkta"
+                ]
+            },
             {
                 version: "1.66.0",
                 date: "24.07.2026",
@@ -5679,17 +5725,23 @@
             reader.readAsText(file);
         }
 
-        // ================= BULUT SENKRONİZASYONU (JSONBin.io) =================
+        // ================= BULUT SENKRONİZASYONU (JSONBin.io VEYA Firebase Realtime Database) =================
         // Statik bir HTML dosyasının kendi sunucusu olamayacağı için, "her yerde aynı veri"
-        // hedefine ulaşmak amacıyla ücretsiz bir bulut anahtar-değer deposu (JSONBin.io) kullanılır.
-        // Aynı API Anahtarı + Bin ID, veriyi kullandığınız her cihazda girildiğinde tüm cihazlar
+        // hedefine ulaşmak amacıyla ücretsiz bir bulut anahtar-değer deposu kullanılır. İki
+        // sağlayıcı desteklenir: JSONBin.io (basit ama ücretsiz planda 100KB/istek sınırı var)
+        // ve Firebase Realtime Database (Google, ücretsiz planda 1GB depolama — büyük veri
+        // hacimleri için çok daha uygun). Aynı bilgiler her cihaza girildiğinde tüm cihazlar
         // otomatik olarak aynı veriyi görür/yazar.
+        let cloudProvider = safeGetStorage('cloudProvider_rev4', 'firebase'); // 'jsonbin' | 'firebase' — varsayılan artık Firebase (daha geniş ücretsiz limit), JSONBin dropdown'dan hâlâ seçilebilir
         let cloudApiKey = safeGetStorage('cloudApiKey_rev4', '');
         let cloudBinId = safeGetStorage('cloudBinId_rev4', '');
-        let cloudAutoSync = safeGetStorage('cloudAutoSync_rev4', 'false') === 'true';
+        let cloudAutoSync = safeGetStorage('cloudAutoSync_rev4', 'true') === 'true';
         // true ise girilen anahtar kısıtlı bir "Access Key"dir (X-Access-Key ile gönderilir);
         // false ise tam yetkili "Master Key"dir (X-Master-Key ile gönderilir).
         let cloudKeyIsAccessKey = safeGetStorage('cloudKeyIsAccessKey_rev4', 'false') === 'true';
+        // Firebase Realtime Database bağlantı bilgileri
+        let firebaseDbUrl = safeGetStorage('firebaseDbUrl_rev4', 'https://dizayn-muhendislik-kasa-default-rtdb.firebaseio.com');
+        let firebaseSecret = safeGetStorage('firebaseSecret_rev4', 'eNqhQSayjAv0TbZnpyNa5IMJA7PmaeuZMBN6stln');
 
         // Google Apps Script üzerinden gerçek şifre sıfırlama e-postası göndermek için (opsiyonel).
         // Boş bırakılırsa sistem eskisi gibi yeni şifreyi sadece panoya kopyalar, e-posta göndermeye çalışmaz.
@@ -5699,6 +5751,9 @@
         let cloudIsSyncing = false;
 
         function isCloudConfigured() {
+            if (cloudProvider === 'firebase') {
+                return !!(firebaseDbUrl && firebaseDbUrl.trim().length > 0);
+            }
             return !!(cloudApiKey && cloudApiKey.trim().length > 0);
         }
 
@@ -5718,7 +5773,19 @@
                 : "text-[10px] font-bold text-emerald-500 mt-2 block";
         }
 
+        // Genel giriş noktaları: seçili sağlayıcıya göre doğru işlevi çağırır. Bu sayede
+        // uygulamanın geri kalanı (otomatik senkronizasyon, butonlar vb.) hangi sağlayıcının
+        // seçili olduğunu bilmek zorunda kalmaz.
         async function cloudPush(silent) {
+            if (cloudProvider === 'firebase') return firebasePush(silent);
+            return jsonbinPush(silent);
+        }
+        async function cloudPull(silent) {
+            if (cloudProvider === 'firebase') return firebasePull(silent);
+            return jsonbinPull(silent);
+        }
+
+        async function jsonbinPush(silent) {
             if (!isCloudConfigured()) {
                 if (!silent) showAlert('Bulut Bağlantısı Yok', 'Önce API Anahtarınızı girip kaydetmeniz gerekiyor.');
                 return;
@@ -5760,7 +5827,7 @@
                 setCloudStatus('✓ Buluta kaydedildi — ' + now, false);
                 if (!silent) showToast('Buluta Kaydedildi', 'Verileriniz başarıyla buluta senkronize edildi.', 'success');
             } catch (err) {
-                logError('cloudPush', err);
+                logError('jsonbinPush', err);
                 setCloudStatus('✗ Buluta kaydetme başarısız oldu', true);
                 if (!silent) showAlert('Bağlantı Hatası', 'Buluta kaydedilemedi. API Anahtarınızı ve internet bağlantınızı kontrol edin. (' + err.message + ')');
             } finally {
@@ -5768,7 +5835,7 @@
             }
         }
 
-        async function cloudPull(silent) {
+        async function jsonbinPull(silent) {
             if (!isCloudConfigured() || !cloudBinId) {
                 if (!silent) showAlert('Bulut Bağlantısı Yok', 'Buluttan veri getirmek için önce bir kez "Buluta Kaydet" yaparak Bin oluşturmanız veya mevcut Bin ID\'nizi girmeniz gerekiyor.');
                 return;
@@ -5792,7 +5859,7 @@
                 setCloudStatus('✓ Buluttan güncellendi — ' + now, false);
                 if (!silent && applied) showToast('Buluttan Güncellendi', 'En güncel veriler bu cihaza uygulandı.', 'success');
             } catch (err) {
-                logError('cloudPull', err);
+                logError('jsonbinPull', err);
                 setCloudStatus('✗ Buluttan getirme başarısız oldu', true);
                 if (!silent) showAlert('Bağlantı Hatası', 'Buluttan veri getirilemedi. API Anahtarı / Bin ID\'yi ve internet bağlantınızı kontrol edin. (' + err.message + ')');
             } finally {
@@ -5800,21 +5867,120 @@
             }
         }
 
+        // ================= FIREBASE REALTIME DATABASE =================
+        // Firebase'in REST API'si çok basittir: Database URL'nin sonuna bir yol + ".json" eklenip
+        // GET/PUT istekleri atılır. Kimlik doğrulama için "legacy secret" (Firebase Console >
+        // Proje Ayarları > Service Accounts > Database Secrets) kullanılır — bu, JSONBin'deki API
+        // Anahtarı gibi tek bir kopyala-yapıştır değeridir, karmaşık bir oturum/token gerekmez.
+        function firebaseDataUrl() {
+            // Kullanıcı sonunda "/" bırakmış olabilir, temizleyelim
+            const base = firebaseDbUrl.trim().replace(/\/+$/, '');
+            const authPart = firebaseSecret ? `?auth=${encodeURIComponent(firebaseSecret)}` : '';
+            return `${base}/dizaynMuhendislikVerileri.json${authPart}`;
+        }
+
+        async function firebasePush(silent) {
+            if (!isCloudConfigured()) {
+                if (!silent) showAlert('Bulut Bağlantısı Yok', 'Önce Firebase Veritabanı URL\'nizi girip kaydetmeniz gerekiyor.');
+                return;
+            }
+            if (cloudIsSyncing) return;
+            cloudIsSyncing = true;
+            if (!silent) setCloudStatus('Buluta kaydediliyor (Firebase)...', false);
+
+            flushPendingStorageWrites();
+            try {
+                const snapshot = buildDataSnapshot();
+                const res = await fetch(firebaseDataUrl(), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(snapshot)
+                });
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                const now = new Date().toLocaleString('tr-TR');
+                safeSetStorage('cloudLastSync_rev4', now);
+                setCloudStatus('✓ Buluta kaydedildi (Firebase) — ' + now, false);
+                if (!silent) showToast('Buluta Kaydedildi', 'Verileriniz başarıyla Firebase\'e senkronize edildi.', 'success');
+            } catch (err) {
+                logError('firebasePush', err);
+                setCloudStatus('✗ Buluta kaydetme başarısız oldu', true);
+                if (!silent) showAlert('Bağlantı Hatası', 'Firebase\'e kaydedilemedi. Veritabanı URL\'nizi, Gizli Anahtarınızı ve güvenlik kurallarınızı kontrol edin. (' + err.message + ')');
+            } finally {
+                cloudIsSyncing = false;
+            }
+        }
+
+        async function firebasePull(silent) {
+            if (!isCloudConfigured()) {
+                if (!silent) showAlert('Bulut Bağlantısı Yok', 'Buluttan veri getirmek için önce Firebase Veritabanı URL\'nizi girip kaydetmeniz gerekiyor.');
+                return;
+            }
+            if (cloudIsSyncing) return;
+            cloudIsSyncing = true;
+            if (!silent) setCloudStatus('Buluttan getiriliyor (Firebase)...', false);
+
+            try {
+                const res = await fetch(firebaseDataUrl(), { method: 'GET' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const record = await res.json();
+
+                if (!record) {
+                    setCloudStatus('Firebase\'de henüz veri yok', true);
+                    if (!silent) showAlert('Veri Bulunamadı', 'Bu Firebase veritabanında henüz kayıtlı veri yok. Önce bir kez "Buluta Kaydet" yapmanız gerekiyor.');
+                    return;
+                }
+
+                const applied = applyDataSnapshot(record);
+
+                const now = new Date().toLocaleString('tr-TR');
+                safeSetStorage('cloudLastSync_rev4', now);
+                setCloudStatus('✓ Buluttan güncellendi (Firebase) — ' + now, false);
+                if (!silent && applied) showToast('Buluttan Güncellendi', 'En güncel veriler bu cihaza uygulandı.', 'success');
+            } catch (err) {
+                logError('firebasePull', err);
+                setCloudStatus('✗ Buluttan getirme başarısız oldu', true);
+                if (!silent) showAlert('Bağlantı Hatası', 'Firebase\'den veri getirilemedi. Veritabanı URL\'nizi, Gizli Anahtarınızı ve güvenlik kurallarınızı kontrol edin. (' + err.message + ')');
+            } finally {
+                cloudIsSyncing = false;
+            }
+        }
+
+        // Ayarlar penceresinde JSONBin/Firebase alanlarından hangisinin gösterileceğini değiştirir
+        function toggleCloudProviderFields() {
+            const sel = document.getElementById('cloud-provider-select');
+            const provider = sel ? sel.value : 'jsonbin';
+            const jsonbinFields = document.getElementById('cloud-jsonbin-fields');
+            const firebaseFields = document.getElementById('cloud-firebase-fields');
+            if (jsonbinFields) jsonbinFields.classList.toggle('hidden', provider !== 'jsonbin');
+            if (firebaseFields) firebaseFields.classList.toggle('hidden', provider !== 'firebase');
+        }
+
         function saveCloudConfig() {
+            const providerField = document.getElementById('cloud-provider-select');
             const keyField = document.getElementById('cloud-api-key');
             const binField = document.getElementById('cloud-bin-id');
             const autoField = document.getElementById('cloud-auto-sync');
             const isAccessKeyField = document.getElementById('cloud-key-is-access-key');
+            const fbUrlField = document.getElementById('firebase-db-url');
+            const fbSecretField = document.getElementById('firebase-secret');
 
+            cloudProvider = providerField ? providerField.value : 'jsonbin';
             cloudApiKey = keyField ? keyField.value.trim() : '';
             cloudBinId = binField ? binField.value.trim() : '';
             cloudAutoSync = autoField ? autoField.checked : false;
             cloudKeyIsAccessKey = isAccessKeyField ? isAccessKeyField.checked : false;
+            firebaseDbUrl = fbUrlField ? fbUrlField.value.trim() : '';
+            firebaseSecret = fbSecretField ? fbSecretField.value.trim() : '';
 
+            safeSetStorage('cloudProvider_rev4', cloudProvider);
             safeSetStorage('cloudApiKey_rev4', cloudApiKey);
             safeSetStorage('cloudBinId_rev4', cloudBinId);
             safeSetStorage('cloudAutoSync_rev4', String(cloudAutoSync));
             safeSetStorage('cloudKeyIsAccessKey_rev4', String(cloudKeyIsAccessKey));
+            safeSetStorage('firebaseDbUrl_rev4', firebaseDbUrl);
+            safeSetStorage('firebaseSecret_rev4', firebaseSecret);
 
             showToast('Bulut Ayarları Kaydedildi', 'Aynı bilgileri diğer cihazlarınıza da girerek senkronize edebilirsiniz.', 'success');
         }
@@ -10906,10 +11072,14 @@
             renderVisibilityToggles();
 
             // Bulut Senkronizasyonu alanlarını doldur
+            document.getElementById('cloud-provider-select').value = cloudProvider;
             document.getElementById('cloud-api-key').value = cloudApiKey;
             document.getElementById('cloud-bin-id').value = cloudBinId;
             document.getElementById('cloud-auto-sync').checked = cloudAutoSync;
             document.getElementById('cloud-key-is-access-key').checked = cloudKeyIsAccessKey;
+            document.getElementById('firebase-db-url').value = firebaseDbUrl;
+            document.getElementById('firebase-secret').value = firebaseSecret;
+            toggleCloudProviderFields();
             const lastSync = safeGetStorage('cloudLastSync_rev4', '');
             setCloudStatus(lastSync ? ('Son senkronizasyon: ' + lastSync) : (isCloudConfigured() ? 'Henüz senkronize edilmedi' : 'Bulut bağlantısı yapılandırılmadı'), false);
 
@@ -11674,8 +11844,11 @@
             });
 
             // Bulut Otomatik Senkronizasyonu Açıksa: açılışta en güncel veriyi buluttan çek
+            // NOT: JSONBin bir Bin ID'ye ihtiyaç duyar (ilk kayıttan sonra oluşur), Firebase'de
+            // böyle bir şart yok — sadece Veritabanı URL'sinin girilmiş olması yeterlidir.
             safeInit('cloudAutoSync', () => {
-                if (cloudAutoSync && isCloudConfigured() && cloudBinId) {
+                const readyForAutoSync = cloudProvider === 'firebase' ? isCloudConfigured() : (isCloudConfigured() && cloudBinId);
+                if (cloudAutoSync && readyForAutoSync) {
                     cloudPull(true);
                 }
             });
