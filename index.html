@@ -3827,7 +3827,13 @@
 
             applyProjectFilter();
             logAudit('Proje Verisi Silindi', `"${project.name}" projesinden seçili kategoriler silindi.${projectRemoved ? ' Proje de listeden tamamen kaldırıldı.' : ''}`);
+            // GÜVENLİK: updateDashboard()'un sonunda otomatik tetiklenen bulut kaydını bastır — silme
+            // işlemi zaten "Proje Sil" akışında yedek alma seçeneğiyle korundu, buluta yansıması
+            // kullanıcının bilinçli tercihine (manuel "Buluta Kaydet") bırakılmalı.
+            suppressAutoCloudPush = true;
+            if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
             updateDashboard();
+            suppressAutoCloudPush = false;
             updateActiveProjectLabel();
             renderProjectManagementList();
             populateProjectDeleteSelect();
@@ -4559,8 +4565,18 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.67.1";
+        const APP_VERSION = "1.68.0";
         const CHANGELOG = [
+            {
+                version: "1.68.0",
+                date: "24.07.2026",
+                changes: [
+                    "🚨 KRİTİK GÜVENLİK DÜZELTMESİ: Tehlikeli Bölge sıfırlaması veya Proje Sil işleminden sonra, Otomatik Senkronizasyon birkaç saniye içinde BOŞALMIŞ hâli sessizce buluta yazıyordu — yani bulut yedeği, tam korumaya çalıştığı anda, korumaya çalıştığı veriyi kaybediyordu. Gerçek bir kullanıcı raporuyla tespit edilip doğrulandı",
+                    "Artık bu tür yıkıcı işlemlerden sonra otomatik bulut kaydı ATLANIYOR — buluta yansıması için kullanıcının bilinçli olarak 'Buluta Kaydet'e basması gerekiyor",
+                    "🛡️ Tehlikeli Bölge sıfırlamasına da (Proje Sil'de zaten olan) 'silmeden önce yedek almak ister misiniz?' güvenlik sorusu eklendi",
+                    "Bu düzeltme hem hatalı senaryo hem normal (organik) veri girişi senaryosu simüle edilerek test edildi"
+                ]
+            },
             {
                 version: "1.67.1",
                 date: "24.07.2026",
@@ -6051,9 +6067,18 @@
             }
         }
 
+        // Yıkıcı toplu işlemler (Tehlikeli Bölge sıfırlaması, Proje Sil) sırasında bu bayrak true
+        // yapılır — böylece updateDashboard()'un sonunda otomatik olarak tetiklenen bulut kaydı
+        // ATLANIR. GERÇEK BİR HATADAN DÜZELTİLDİ: önceden, biri veri sıfırlarsa, 2.5 saniye sonra
+        // otomatik senkronizasyon o BOŞALMIŞ hâli sessizce buluta yazıyordu — yani bulut yedeği,
+        // tam korumaya çalıştığı anda, korumaya çalıştığı veriyi kaybediyordu. Artık böyle yıkıcı
+        // işlemlerden sonra buluta yazma OTOMATİK olmuyor; kullanıcı isterse "Buluta Kaydet"e
+        // kendisi elle basmalı — bu, kazara/istemsiz bir sıfırlamanın buluta da yayılmasını önler.
+        let suppressAutoCloudPush = false;
+
         // Otomatik senkronizasyon: veri değiştikten 2.5 saniye sonra (kullanıcı yazmayı bitirince) buluta gönderir.
         function scheduleAutoCloudPush() {
-            if (!cloudAutoSync || !isCloudConfigured() || userRole !== 'admin') return;
+            if (!cloudAutoSync || !isCloudConfigured() || userRole !== 'admin' || suppressAutoCloudPush) return;
             if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
             cloudSyncTimer = setTimeout(() => cloudPush(true), 2500);
         }
@@ -11456,81 +11481,97 @@
                 return;
             }
 
-            showConfirm(
-                isFullReset ? 'TÜM Veriler Kalıcı Olarak Silinecek' : 'Seçilen Kategoriler Kalıcı Olarak Silinecek',
-                `Bu işlem GERİ ALINAMAZ: ${selectedLabels.join(', ')} kategorisi/kategorileri kalıcı olarak silinecek. Onaylıyor musunuz?`,
-                () => {
-                    const keysToRemove = selectedKeys.flatMap(k => RESET_CATEGORIES[k].keys);
+            // Silmeden önce yedek almak isteyip istemediğini sor (Proje Sil ile aynı güvenlik akışı)
+            showBackupPromptModal((choice) => {
+                if (choice === null) return; // vazgeçildi
+                const proceedWithReset = () => executeDataReset(selectedKeys, selectedLabels, isFullReset);
+                if (choice === true) {
+                    exportDataJSON();
+                    showToast('Yedek İndiriliyor', 'Yedek indirildikten hemen sonra sıfırlama işlemi gerçekleştirilecek.', 'info');
+                    setTimeout(proceedWithReset, 1200);
+                } else {
+                    proceedWithReset();
+                }
+            });
+        }
 
-                    try {
-                        keysToRemove.forEach(k => localStorage.removeItem(k));
-                    } catch (e) { /* localStorage erişilemiyorsa sessizce geç */ }
+        function executeDataReset(selectedKeys, selectedLabels, isFullReset) {
+            const keysToRemove = selectedKeys.flatMap(k => RESET_CATEGORIES[k].keys);
 
-                    // IndexedDB'deki aynı anahtarları da temizle — aksi halde açılışta çalışan
-                    // "eksik veriyi IndexedDB'den geri yükle" mekanizması, az önce sildiğimiz
-                    // verileri farkında olmadan geri getirebilirdi.
-                    if (idbAvailable && idbDatabase) {
-                        idbDatabase.kv.bulkDelete(keysToRemove).catch(e => console.warn('IndexedDB temizleme hatası:', e));
-                    }
+            try {
+                keysToRemove.forEach(k => localStorage.removeItem(k));
+            } catch (e) { /* localStorage erişilemiyorsa sessizce geç */ }
 
-                    // Sadece seçilen kategorilerin bellekteki verilerini sıfırla
-                    selectedKeys.forEach(k => RESET_CATEGORIES[k].resetMemory());
+            // IndexedDB'deki aynı anahtarları da temizle — aksi halde açılışta çalışan
+            // "eksik veriyi IndexedDB'den geri yükle" mekanizması, az önce sildiğimiz
+            // verileri farkında olmadan geri getirebilirdi.
+            if (idbAvailable && idbDatabase) {
+                idbDatabase.kv.bulkDelete(keysToRemove).catch(e => console.warn('IndexedDB temizleme hatası:', e));
+            }
 
-                    // GÜVENLİK: updateDashboard() her veri türünü otomatik kaydetmez (ör. kredi kartı
-                    // verileri kendi özel fonksiyonlarında kaydedilir). Az önce ilgili localStorage
-                    // anahtarları tamamen silindiği için, resetMemory() ile düzeltilmiş (sadece aktif
-                    // projesi temizlenmiş) hâlin gerçekten diske yazıldığından emin olmak için burada
-                    // açıkça kaydediyoruz — aksi halde diğer projelerin verisi de kaybolurdu.
-                    if (selectedKeys.includes('krediKartlari')) {
-                        safeSetStorage('creditCards_rev4', JSON.stringify(allCreditCards));
-                        safeSetStorage('creditCard_rev4', JSON.stringify(allCreditCardExpenses));
-                        safeSetStorage('creditCardPayments_rev4', JSON.stringify(allCreditCardPayments));
-                    }
-                    if (selectedKeys.includes('cariler')) {
-                        safeSetStorage('carilerList_rev4', JSON.stringify(allCarilerList));
-                        safeSetStorage('cariGroups_rev4', JSON.stringify(allCariGroups));
-                    }
+            // GÜVENLİK: Sıfırlama işlemi sırasında otomatik bulut senkronizasyonunu bastır.
+            // AKSI HALDE: updateDashboard() çağrısı, birkaç saniye sonra bu BOŞALMIŞ hâli
+            // otomatik olarak buluta yazardı — yani bulut yedeği, tam korumaya çalıştığı anda,
+            // korumaya çalıştığı veriyi kaybederdi. Bunu bir kullanıcı raporuyla tespit ettik.
+            suppressAutoCloudPush = true;
+            if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
 
-                    // Şifreler SADECE "Ayarlar" kategorisi seçiliyse yeniden üretilir
-                    let newAdminPass = null, newViewerPass = null;
-                    if (selectedKeys.includes('ayarlar')) {
-                        newAdminPass = generateSecurePassword(12);
-                        newViewerPass = generateSecurePassword(10);
-                        adminPassword = newAdminPass;
-                        viewerPassword = newViewerPass;
-                        adminEmail = '21mehmetkilic@gmail.com';
-                        securityQuestion = 'En sevdiğiniz renk?';
-                        securityAnswer = 'mavi';
-                    }
+            // Sadece seçilen kategorilerin bellekteki verilerini sıfırla
+            selectedKeys.forEach(k => RESET_CATEGORIES[k].resetMemory());
 
-                    dueReminderDismissed = false;
+            // GÜVENLİK: updateDashboard() her veri türünü otomatik kaydetmez (ör. kredi kartı
+            // verileri kendi özel fonksiyonlarında kaydedilir). Az önce ilgili localStorage
+            // anahtarları tamamen silindiği için, resetMemory() ile düzeltilmiş (sadece aktif
+            // projesi temizlenmiş) hâlin gerçekten diske yazıldığından emin olmak için burada
+            // açıkça kaydediyoruz — aksi halde diğer projelerin verisi de kaybolurdu.
+            if (selectedKeys.includes('krediKartlari')) {
+                safeSetStorage('creditCards_rev4', JSON.stringify(allCreditCards));
+                safeSetStorage('creditCard_rev4', JSON.stringify(allCreditCardExpenses));
+                safeSetStorage('creditCardPayments_rev4', JSON.stringify(allCreditCardPayments));
+            }
+            if (selectedKeys.includes('cariler')) {
+                safeSetStorage('carilerList_rev4', JSON.stringify(allCarilerList));
+                safeSetStorage('cariGroups_rev4', JSON.stringify(allCariGroups));
+            }
 
-                    logAudit(
-                        isFullReset ? 'Tüm Veriler Sıfırlandı' : 'Seçili Kategoriler Sıfırlandı',
-                        `${selectedLabels.join(', ')} sıfırlandı.` + (newAdminPass ? ' Yeni rastgele şifreler üretildi.' : '')
-                    );
+            // Şifreler SADECE "Ayarlar" kategorisi seçiliyse yeniden üretilir
+            let newAdminPass = null, newViewerPass = null;
+            if (selectedKeys.includes('ayarlar')) {
+                newAdminPass = generateSecurePassword(12);
+                newViewerPass = generateSecurePassword(10);
+                adminPassword = newAdminPass;
+                viewerPassword = newViewerPass;
+                adminEmail = '21mehmetkilic@gmail.com';
+                securityQuestion = 'En sevdiğiniz renk?';
+                securityAnswer = 'mavi';
+            }
 
-                    updateDashboard();
-                    applyVisibilitySettings();
-                    applyBranding();
-                    closePasswordChangeModal();
+            dueReminderDismissed = false;
 
-                    if (newAdminPass) {
-                        // GÜVENLİK: Yeni oluşturulan Yönetici/İzleyici şifreleri ekrana yazılmaz — panoya
-                        // kopyalanır. Panoya kopyalama tarayıcı tarafından reddedilirse kullanıcı bilgilendirilir.
-                        copyToClipboardSafely(`Yönetici: ${newAdminPass}\nİzleyici: ${newViewerPass}`).then(copied => {
-                            if (copied) {
-                                showAlert('Sıfırlama Tamamlandı', 'Seçilen veriler silindi ve yeni Yönetici/İzleyici şifreleri panonuza kopyalandı. Güvenli bir yere kaydedip ilk fırsatta Yönetici Paneli\'nden kendi şifrelerinizi belirleyin.');
-                            } else {
-                                showAlert('Sıfırlama Tamamlandı', 'Seçilen veriler silindi. Panonuza otomatik kopyalama başarısız oldu; yeni giriş şifrelerini görmek için panel yöneticisiyle iletişime geçin.');
-                            }
-                        });
-                    } else {
-                        showToast('Sıfırlandı', `${selectedLabels.join(', ')} sıfırlandı.`, 'success');
-                    }
-                },
-                true
+            logAudit(
+                isFullReset ? 'Tüm Veriler Sıfırlandı' : 'Seçili Kategoriler Sıfırlandı',
+                `${selectedLabels.join(', ')} sıfırlandı.` + (newAdminPass ? ' Yeni rastgele şifreler üretildi.' : '')
             );
+
+            updateDashboard();
+            suppressAutoCloudPush = false; // sıfırlama bitti, normal (organik değişiklik) otomatik senkronizasyon akışına dön
+            applyVisibilitySettings();
+            applyBranding();
+            closePasswordChangeModal();
+
+            if (newAdminPass) {
+                // GÜVENLİK: Yeni oluşturulan Yönetici/İzleyici şifreleri ekrana yazılmaz — panoya
+                // kopyalanır. Panoya kopyalama tarayıcı tarafından reddedilirse kullanıcı bilgilendirilir.
+                copyToClipboardSafely(`Yönetici: ${newAdminPass}\nİzleyici: ${newViewerPass}`).then(copied => {
+                    if (copied) {
+                        showAlert('Sıfırlama Tamamlandı', 'Seçilen veriler silindi ve yeni Yönetici/İzleyici şifreleri panonuza kopyalandı. Güvenli bir yere kaydedip ilk fırsatta Yönetici Paneli\'nden kendi şifrelerinizi belirleyin.');
+                    } else {
+                        showAlert('Sıfırlama Tamamlandı', 'Seçilen veriler silindi. Panonuza otomatik kopyalama başarısız oldu; yeni giriş şifrelerini görmek için panel yöneticisiyle iletişime geçin.');
+                    }
+                });
+            } else {
+                showToast('Sıfırlandı', `${selectedLabels.join(', ')} sıfırlandı.`, 'success');
+            }
         }
 
         // Özel Uyarı ve Onay Pencereleri (Alert/Confirm Yerine)
