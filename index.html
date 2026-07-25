@@ -115,39 +115,106 @@
             --divider-color: #dcebdc;
         }
 
+        body[data-theme="porselen"] {
+            /* 6. Porselen Teması (Porcelain - sıcak kırık beyaz + sakin indigo vurgu) */
+            --bg-body: #f7f6f3;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --border-color: #e8e6e1;
+            --text-main: #1c1917;
+            --text-muted: #78716c;
+            --accent-primary: #4f46e5;
+            --accent-primary-hover: #4338ca;
+            --input-bg: #ffffff;
+            --input-border: #e7e5e4;
+            --input-text: #1c1917;
+            --table-header-bg: #f5f4f1;
+            --divider-color: #ebe9e4;
+        }
+
+        body[data-theme="kum"] {
+            /* 7. Kum Teması (Sand - kağıt beji + sakin teal vurgu) */
+            --bg-body: #f5f0e8;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --border-color: #e7e0d4;
+            --text-main: #292524;
+            --text-muted: #78716c;
+            --accent-primary: #0d9488;
+            --accent-primary-hover: #0f766e;
+            --input-bg: #ffffff;
+            --input-border: #e4ddd0;
+            --input-text: #292524;
+            --table-header-bg: #f3ede3;
+            --divider-color: #e7e0d4;
+        }
+
+        /* Porselen ve Kum, "sadece renk değişti" hissini kırmak için biraz daha yumuşak
+           gölge + hover vurgusu alır (Linear/Notion tarzı sakin, kurumsal his). */
+        body[data-theme="porselen"] .glass-card,
+        body[data-theme="kum"] .glass-card {
+            box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04),
+                        0 8px 24px -4px rgba(28, 25, 23, 0.06);
+        }
+        body[data-theme="porselen"] .kpi-card:hover,
+        body[data-theme="kum"] .kpi-card:hover {
+            border-color: color-mix(in srgb, var(--accent-primary) 25%, transparent);
+            box-shadow: 0 12px 32px -8px rgba(28, 25, 23, 0.08);
+        }
+        body[data-theme="porselen"] .tab-btn.active,
+        body[data-theme="kum"] .tab-btn.active {
+            box-shadow: 0 4px 14px -2px color-mix(in srgb, var(--accent-primary) 35%, transparent);
+        }
+
         /* Yeni eklenen temalar (Okyanus/Orman), arka plan renklerinin yanı sıra
            uygulama genelinde hâlâ ham Tailwind "indigo" sınıfı kullanan buton/ikon/odak
            durumlarını da (--accent-primary üzerinden) kendi renklerine çevirir — böylece
            bu temalarda butonlar/ikonlar da tutarlı şekilde tema rengini alır. Mevcut Safir/
            Zümrüt/Alev temalarının şu anki görünümü bilinçli olarak DEĞİŞTİRİLMEDİ. */
         [data-theme="okyanus"] .bg-indigo-500, [data-theme="okyanus"] .bg-indigo-600,
-        [data-theme="orman"] .bg-indigo-500, [data-theme="orman"] .bg-indigo-600 {
+        [data-theme="orman"] .bg-indigo-500, [data-theme="orman"] .bg-indigo-600,
+        [data-theme="porselen"] .bg-indigo-500, [data-theme="porselen"] .bg-indigo-600,
+        [data-theme="kum"] .bg-indigo-500, [data-theme="kum"] .bg-indigo-600 {
             background-color: var(--accent-primary) !important;
         }
         [data-theme="okyanus"] .hover\:bg-indigo-700:hover,
-        [data-theme="orman"] .hover\:bg-indigo-700:hover {
+        [data-theme="orman"] .hover\:bg-indigo-700:hover,
+        [data-theme="porselen"] .hover\:bg-indigo-700:hover,
+        [data-theme="kum"] .hover\:bg-indigo-700:hover {
             background-color: var(--accent-primary-hover) !important;
         }
         [data-theme="okyanus"] .text-indigo-400,
         [data-theme="okyanus"] .text-indigo-500, [data-theme="okyanus"] .text-indigo-600,
         [data-theme="orman"] .text-indigo-400,
-        [data-theme="orman"] .text-indigo-500, [data-theme="orman"] .text-indigo-600 {
+        [data-theme="orman"] .text-indigo-500, [data-theme="orman"] .text-indigo-600,
+        [data-theme="porselen"] .text-indigo-400,
+        [data-theme="porselen"] .text-indigo-500, [data-theme="porselen"] .text-indigo-600,
+        [data-theme="kum"] .text-indigo-400,
+        [data-theme="kum"] .text-indigo-500, [data-theme="kum"] .text-indigo-600 {
             color: var(--accent-primary) !important;
         }
         [data-theme="okyanus"] .hover\:text-indigo-400:hover, [data-theme="okyanus"] .hover\:text-indigo-500:hover, [data-theme="okyanus"] .group:hover .group-hover\:text-indigo-400,
-        [data-theme="orman"] .hover\:text-indigo-400:hover, [data-theme="orman"] .hover\:text-indigo-500:hover, [data-theme="orman"] .group:hover .group-hover\:text-indigo-400 {
+        [data-theme="orman"] .hover\:text-indigo-400:hover, [data-theme="orman"] .hover\:text-indigo-500:hover, [data-theme="orman"] .group:hover .group-hover\:text-indigo-400,
+        [data-theme="porselen"] .hover\:text-indigo-400:hover, [data-theme="porselen"] .hover\:text-indigo-500:hover, [data-theme="porselen"] .group:hover .group-hover\:text-indigo-400,
+        [data-theme="kum"] .hover\:text-indigo-400:hover, [data-theme="kum"] .hover\:text-indigo-500:hover, [data-theme="kum"] .group:hover .group-hover\:text-indigo-400 {
             color: var(--accent-primary-hover) !important;
         }
         [data-theme="okyanus"] .border-indigo-500, [data-theme="okyanus"] .border-indigo-600, [data-theme="okyanus"] .hover\:border-indigo-500:hover, [data-theme="okyanus"] .focus\:border-indigo-500:focus,
-        [data-theme="orman"] .border-indigo-500, [data-theme="orman"] .border-indigo-600, [data-theme="orman"] .hover\:border-indigo-500:hover, [data-theme="orman"] .focus\:border-indigo-500:focus {
+        [data-theme="orman"] .border-indigo-500, [data-theme="orman"] .border-indigo-600, [data-theme="orman"] .hover\:border-indigo-500:hover, [data-theme="orman"] .focus\:border-indigo-500:focus,
+        [data-theme="porselen"] .border-indigo-500, [data-theme="porselen"] .border-indigo-600, [data-theme="porselen"] .hover\:border-indigo-500:hover, [data-theme="porselen"] .focus\:border-indigo-500:focus,
+        [data-theme="kum"] .border-indigo-500, [data-theme="kum"] .border-indigo-600, [data-theme="kum"] .hover\:border-indigo-500:hover, [data-theme="kum"] .focus\:border-indigo-500:focus {
             border-color: var(--accent-primary) !important;
         }
         [data-theme="okyanus"] .bg-indigo-500\/10, [data-theme="okyanus"] .bg-indigo-500\/20, [data-theme="okyanus"] .bg-indigo-500\/5, [data-theme="okyanus"] .bg-indigo-600\/10, [data-theme="okyanus"] .hover\:bg-indigo-500\/10:hover,
-        [data-theme="orman"] .bg-indigo-500\/10, [data-theme="orman"] .bg-indigo-500\/20, [data-theme="orman"] .bg-indigo-500\/5, [data-theme="orman"] .bg-indigo-600\/10, [data-theme="orman"] .hover\:bg-indigo-500\/10:hover {
+        [data-theme="orman"] .bg-indigo-500\/10, [data-theme="orman"] .bg-indigo-500\/20, [data-theme="orman"] .bg-indigo-500\/5, [data-theme="orman"] .bg-indigo-600\/10, [data-theme="orman"] .hover\:bg-indigo-500\/10:hover,
+        [data-theme="porselen"] .bg-indigo-500\/10, [data-theme="porselen"] .bg-indigo-500\/20, [data-theme="porselen"] .bg-indigo-500\/5, [data-theme="porselen"] .bg-indigo-600\/10, [data-theme="porselen"] .hover\:bg-indigo-500\/10:hover,
+        [data-theme="kum"] .bg-indigo-500\/10, [data-theme="kum"] .bg-indigo-500\/20, [data-theme="kum"] .bg-indigo-500\/5, [data-theme="kum"] .bg-indigo-600\/10, [data-theme="kum"] .hover\:bg-indigo-500\/10:hover {
             background-color: color-mix(in srgb, var(--accent-primary) 12%, transparent) !important;
         }
         [data-theme="okyanus"] .border-indigo-500\/20, [data-theme="okyanus"] .border-indigo-500\/30,
-        [data-theme="orman"] .border-indigo-500\/20, [data-theme="orman"] .border-indigo-500\/30 {
+        [data-theme="orman"] .border-indigo-500\/20, [data-theme="orman"] .border-indigo-500\/30,
+        [data-theme="porselen"] .border-indigo-500\/20, [data-theme="porselen"] .border-indigo-500\/30,
+        [data-theme="kum"] .border-indigo-500\/20, [data-theme="kum"] .border-indigo-500\/30 {
             border-color: color-mix(in srgb, var(--accent-primary) 25%, transparent) !important;
         }
         [data-theme="okyanus"] .accent-indigo-600, [data-theme="orman"] .accent-indigo-600 {
@@ -287,6 +354,24 @@
             .responsive-table .rt-empty-row td::before {
                 content: none;
             }
+            /* MOBİLDE SADELEŞTİRİLMİŞ SATIRLAR: varsayılan olarak sadece "her zaman göster"
+               işaretli hücreler (isim + tutar) görünür; kalan detaylar gizlenir. Satırın
+               üstündeki ok ikonuna dokununca "rt-expanded" sınıfı eklenip tüm detaylar açılır. */
+            .responsive-table tr.rt-collapsible td:not(.rt-always-show) {
+                display: none;
+            }
+            .responsive-table tr.rt-collapsible.rt-expanded td {
+                display: flex;
+            }
+            .responsive-table tr.rt-collapsible .rt-always-show {
+                border-bottom: none !important;
+            }
+        }
+        /* Genişlet/daralt ok ikonu SADECE mobilde (kart görünümünde) anlamlı; masaüstünde
+           zaten tüm sütunlar bir arada göründüğü için gizlenir. */
+        .rt-mobile-expand-btn { display: none; }
+        @media (max-width: 768px) {
+            .rt-mobile-expand-btn { display: inline-flex; }
         }
 
         /* İlgili Sayfaya Göre Öne Çıkan/Küçük KPI Kartları */
@@ -394,6 +479,16 @@
             animation: rowSlideDown 0.3s ease;
         }
 
+        /* PERFORMANS + ERİŞİLEBİLİRLİK: "Hareketi Azalt" tercihi olan kullanıcılarda (ve
+           dolaylı olarak düşük güçlü cihazlarda) sürekli/tekrarlayan animasyonları (nabız,
+           döngü, zıplama gibi) devre dışı bırakır — tek seferlik giriş animasyonlarını (fadeIn,
+           rowSlideDown gibi) olduğu gibi bırakır çünkü onlar zaten çok kısa ve tekrarlamıyor. */
+        @media (prefers-reduced-motion: reduce) {
+            .animate-pulse, .animate-spin, .animate-ping, .animate-bounce {
+                animation: none !important;
+            }
+        }
+
         /* Güvenlik Gizleme Sınıfları */
         .secure-blur {
             filter: blur(10px);
@@ -408,10 +503,19 @@
         .lock-overlay {
             background-color: rgba(11, 15, 25, 0.95);
         }
+        /* Yapışkan (sticky) tablo başlıkları kaydırma sırasında altındaki satırların
+           görünmemesi için TAM OPAK bir arka plana sahip olmalı — Safir (koyu) temadaki
+           varsayılan tablo başlığı arka planı sadece %30 saydam olduğu için, sticky
+           konumdayken bu saydamlık altındaki metinle karışıp okunmaz hâle gelirdi. */
+        thead.sticky {
+            background-color: var(--bg-sidebar);
+        }
         body[data-theme="emerald-light"] .lock-overlay,
         body[data-theme="alev-light"] .lock-overlay,
         body[data-theme="okyanus"] .lock-overlay,
-        body[data-theme="orman"] .lock-overlay {
+        body[data-theme="orman"] .lock-overlay,
+        body[data-theme="porselen"] .lock-overlay,
+        body[data-theme="kum"] .lock-overlay {
             background-color: rgba(255, 255, 255, 0.95);
         }
 
@@ -542,6 +646,13 @@
                         </span>
                         <span id="sidebar-urgent-count" class="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/20">0</span>
                     </button>
+
+                    <button id="nav-receivables" onclick="switchTab('receivables-tab', this)" class="tab-btn w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-between">
+                        <span class="flex items-center gap-3">
+                            <i class="fa-solid fa-hand-holding-dollar text-lg"></i> Alacaklarım
+                        </span>
+                        <span id="sidebar-receivables-count" class="bg-zinc-800 text-zinc-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-zinc-700">0</span>
+                    </button>
                     
                     <button id="nav-banka-cek" onclick="switchTab('banka-cek-tab', this)" class="tab-btn w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-between">
                         <span class="flex items-center gap-3">
@@ -597,6 +708,8 @@
                         <option value="alev-light">🔥 Alev</option>
                         <option value="okyanus">🌊 Okyanus</option>
                         <option value="orman">🌲 Orman</option>
+                        <option value="porselen">🤍 Porselen</option>
+                        <option value="kum">🏜️ Kum</option>
                     </select>
                 </div>
                 <button id="change-pass-btn" onclick="openPasswordChangeModal()" class="hidden theme-text-main hover:underline font-bold mb-3 block w-full"><i class="fa-solid fa-gears"></i> Yönetici Ayarlarını Düzenle</button>
@@ -645,19 +758,19 @@
                         <button onclick="exportToExcel()" class="auth-required-action py-2 px-3 bg-zinc-900/10 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-850 border theme-border rounded-lg text-[11px] font-bold theme-text-main transition-all flex items-center gap-1.5 shadow-sm">
                             <i class="fa-regular fa-file-excel text-emerald-500 text-xs"></i> Excel
                         </button>
-                        <!-- Borç Yönetimi Kalıcı Özet Rozeti -->
-                        <div class="flex items-center gap-1.5 py-2 px-3 theme-bg-card border theme-border rounded-lg shadow-sm" title="Borç Yönetimi Sonucu">
+                        <!-- Borç Yönetimi Kalıcı Özet Rozeti — MOBİLDE GİZLİ (sadece sm+ ekranlarda görünür) -->
+                        <div class="hidden sm:flex items-center gap-1.5 py-2 px-3 theme-bg-card border theme-border rounded-lg shadow-sm" title="Borç Yönetimi Sonucu">
                             <i class="fa-solid fa-scale-balanced text-indigo-500 text-xs"></i>
                             <span id="header-debt-summary-badge" class="text-[11px] font-black text-red-500">-₺0,00</span>
                         </div>
-                        <button onclick="triggerAction(generatePdfReport)" class="admin-only auth-required-action py-2 px-3 bg-zinc-900/10 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-850 border theme-border rounded-lg text-[11px] font-bold theme-text-main transition-all flex items-center gap-1.5 shadow-sm">
+                        <button onclick="triggerAction(generatePdfReport)" class="hidden sm:flex admin-only auth-required-action py-2 px-3 bg-zinc-900/10 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-850 border theme-border rounded-lg text-[11px] font-bold theme-text-main transition-all items-center gap-1.5 shadow-sm">
                             <i class="fa-regular fa-file-pdf text-red-500 text-xs"></i> PDF Rapor
                         </button>
-                        <button onclick="openPrintOptionsModal()" class="auth-required-action py-2 px-3 bg-zinc-900/10 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-850 border theme-border rounded-lg text-[11px] font-bold theme-text-main transition-all flex items-center gap-1.5 shadow-sm">
+                        <button onclick="openPrintOptionsModal()" class="hidden sm:flex auth-required-action py-2 px-3 bg-zinc-900/10 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-850 border theme-border rounded-lg text-[11px] font-bold theme-text-main transition-all items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-print text-zinc-400 text-xs"></i> Yazdır
                         </button>
-                        <!-- Tarih Filtresi (global panel açar) -->
-                        <button onclick="toggleDateFilterPanel(this)" class="auth-required-action date-filter-trigger-btn relative w-8 h-8 flex items-center justify-center theme-input border theme-border rounded-lg theme-text-muted hover:text-indigo-500 transition-all shrink-0" title="Tarih Filtresi">
+                        <!-- Tarih Filtresi (global panel açar) — MOBİLDE GİZLİ -->
+                        <button onclick="toggleDateFilterPanel(this)" class="hidden sm:flex auth-required-action date-filter-trigger-btn relative w-8 h-8 items-center justify-center theme-input border theme-border rounded-lg theme-text-muted hover:text-indigo-500 transition-all shrink-0" title="Tarih Filtresi">
                             <i class="fa-solid fa-calendar-days text-xs"></i>
                             <span class="date-filter-active-dot hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 theme-bg-card"></span>
                         </button>
@@ -688,8 +801,8 @@
                         </div>
                     </div>
 
-                    <!-- Canlı Saat -->
-                    <div class="flex items-center gap-3 theme-bg-card border theme-border p-3 rounded-xl shadow-sm">
+                    <!-- Canlı Saat — MOBİLDE GİZLİ (sadece sm+ ekranlarda görünür) -->
+                    <div class="hidden sm:flex items-center gap-3 theme-bg-card border theme-border p-3 rounded-xl shadow-sm">
                         <div class="w-9 h-9 rounded-lg bg-zinc-900/10 dark:bg-zinc-900 border theme-border theme-text-main flex items-center justify-center">
                             <i class="fa-regular fa-calendar-check text-sm"></i>
                         </div>
@@ -702,7 +815,7 @@
             </div>
 
             <!-- KARTLAR (KPI BLOCKS) -->
-            <div id="kpi-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-7">
+            <div id="kpi-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-7">
                 
                 <!-- KPI 1: Kasa & Gelirler -->
                 <div id="vis-kpi-cash" class="kpi-card glass-card p-6 rounded-3xl relative overflow-hidden group hover:border-zinc-500 transition-all duration-300">
@@ -802,6 +915,23 @@
                     </div>
                 </div>
 
+                <!-- KPI 6: Alacaklarım (Tahsil Edilecek) -->
+                <div id="vis-kpi-receivables" class="kpi-card glass-card p-6 rounded-3xl relative overflow-hidden group hover:border-zinc-500 transition-all duration-300">
+                    <div class="absolute right-0 top-0 w-20 h-20 bg-black/5 dark:bg-white/5 rounded-bl-full -z-10"></div>
+                    <div class="flex justify-between items-start mb-5">
+                        <div class="kpi-icon-box p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl">
+                            <i class="fa-solid fa-hand-holding-dollar text-base"></i>
+                        </div>
+                        <span class="kpi-badge text-[10px] text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-lg font-bold border border-emerald-500/20" id="kpi-receivables-count">0 Alacak</span>
+                    </div>
+                    <span class="kpi-label text-xs font-bold theme-text-muted uppercase tracking-wider block">ALACAKLARIM (TAHSİL EDİLECEK)</span>
+                    <h3 class="kpi-value text-xl sm:text-2xl font-black text-emerald-500 mt-2 break-words" id="kpi-receivables-total">₺0,00</h3>
+                    <button onclick="toggleKpiBreakdownPanel('alacaklar')" id="kpi-breakdown-toggle-alacaklar" class="hidden mt-2 text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-down text-[8px]" id="kpi-breakdown-chevron-alacaklar"></i> Proje Bazında Gör
+                    </button>
+                    <div id="kpi-breakdown-panel-alacaklar" class="hidden pt-2 mt-2 border-t theme-border"></div>
+                </div>
+
             </div>
 
             <!-- VADE HATIRLATMA BANNER'I (yaklaşan/geçmiş çek ve kredi kartı son ödeme tarihleri) -->
@@ -831,6 +961,14 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- SON EKLENEN 10 KAYIT: her türden (borç/alacak/çek/kredi kartı/gelir/banka hareketi)
+                     en son eklenen kayıtları tek listede gösterir, tıklayınca ilgili sayfaya götürür. -->
+                <div id="recent-activity-widget" class="glass-card p-6 rounded-3xl">
+                    <h3 class="text-lg font-extrabold theme-text-main flex items-center gap-2 mb-1"><i class="fa-solid fa-clock-rotate-left theme-text-muted"></i> Son Eklenenler</h3>
+                    <p class="text-xs theme-text-muted mb-4">En son eklediğiniz 10 kayıt — birine tıklayınca ilgili sayfaya gidersiniz.</p>
+                    <div id="recent-activity-list" class="space-y-1.5"></div>
                 </div>
 
                 <!-- PROJE BAZINDA ÖZET: SADECE ANA KASA AKTİFKEN GÖRÜNÜR -->
@@ -901,7 +1039,28 @@
 
             <!-- ================= SEKME 2: KASA VE BORÇ TAKİBİ ================= -->
             <div id="kasa-tab-content" class="tab-content space-y-8">
-                
+
+                <!-- BORÇ VADE ZAMAN ÇİZELGESİ (TIMELINE) — Çekler'deki widget'ın aynası -->
+                <div id="vis-debt-timeline" class="glass-card rounded-3xl border theme-border p-6 shadow-md">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between border-b theme-border pb-4 mb-6 gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-zinc-900/10 dark:bg-zinc-900 flex items-center justify-center theme-text-main border theme-border">
+                                <i class="fa-solid fa-hourglass-half text-lg animate-spin" style="animation-duration: 8s;"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold theme-text-main">⏳ Önemli Borç Vade Zaman Çizelgesi (Kronolojik)</h3>
+                                <p class="text-xs theme-text-muted">Vadesine <b>2 gün veya daha az kalanlar en üstte kırmızı parıldayan alarm tasarımıyla</b> vurgulanır. Sadece "Ödenecek Tarih" girilmiş borçlar burada görünür.</p>
+                            </div>
+                        </div>
+                        <button onclick="triggerAction(openAddDebtModal)" class="admin-only text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
+                            <i class="fa-solid fa-circle-plus"></i> Yeni Borç Ekle
+                        </button>
+                    </div>
+                    <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2" id="debt-timeline-list">
+                        <!-- JS dinamik olarak dolduracak -->
+                    </div>
+                </div>
+
                 <!-- Gelir Kaynakları (Sol, Geniş) + Borç Yönetimi (Sağ, Küçük) -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Gelir Kaynakları -->
@@ -1036,11 +1195,12 @@
                                 </div>
                             </div>
 
-                            <div class="overflow-x-auto max-h-[350px]">
+                            <div class="overflow-x-auto max-h-[420px]">
                                 <table class="responsive-table w-full text-left border-collapse">
-                                    <thead class="theme-table-header theme-text-muted text-xs font-bold uppercase tracking-wider border-b theme-border">
+                                    <thead class="theme-table-header theme-text-muted text-xs font-bold uppercase tracking-wider border-b theme-border sticky top-0 z-10">
                                         <tr>
                                             <th class="py-4 px-6">Alacaklı</th>
+                                            <th class="py-4 px-6">Proje</th>
                                             <th class="py-4 px-6">Açıklama</th>
                                             <th class="py-4 px-6">Kategori</th>
                                             <th class="py-4 px-6">Yazıldığı Tarih</th>
@@ -1081,14 +1241,16 @@
                                 </div>
                             </div>
 
-                            <div class="overflow-x-auto max-h-[350px]">
+                            <div class="overflow-x-auto max-h-[650px]">
                                 <table class="responsive-table w-full text-left border-collapse">
-                                    <thead class="theme-table-header theme-text-muted text-xs font-bold uppercase tracking-wider border-b theme-border">
+                                    <thead class="theme-table-header theme-text-muted text-xs font-bold uppercase tracking-wider border-b theme-border sticky top-0 z-10">
                                         <tr>
                                             <th class="py-4 px-6">Alacaklı</th>
+                                            <th class="py-4 px-6">Proje</th>
                                             <th class="py-4 px-6">Açıklama</th>
                                             <th class="py-4 px-6">Kategori</th>
                                             <th class="py-4 px-6">Yazıldığı Tarih</th>
+                                            <th class="py-4 px-6">Ödenecek Tarih</th>
                                             <th class="py-4 px-6">Ödenen Tarih</th>
                                             <th class="py-4 px-6 text-right">Tutar</th>
                                             <th class="py-4 px-6 text-center">Ödeme Durumu</th>
@@ -1126,6 +1288,78 @@
                     <div class="theme-table-header py-4 px-6 border-t theme-border flex justify-between items-center text-sm font-extrabold theme-text-muted">
                         <span>Aylık Kalan Toplamı:</span>
                         <span class="text-red-500 font-black" id="monthly-total-remaining">₺0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= SEKME 2b: ALACAKLARIM (TAHSİL EDİLECEK) ================= -->
+            <div id="receivables-tab-content" class="tab-content space-y-8">
+
+                <!-- ALACAK VADE ZAMAN ÇİZELGESİ (TIMELINE) — Çekler'deki widget'ın aynası -->
+                <div id="vis-receivable-timeline" class="glass-card rounded-3xl border theme-border p-6 shadow-md">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between border-b theme-border pb-4 mb-6 gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                                <i class="fa-solid fa-hourglass-half text-lg animate-spin" style="animation-duration: 8s;"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold theme-text-main">⏳ Önemli Alacak Vade Zaman Çizelgesi (Kronolojik)</h3>
+                                <p class="text-xs theme-text-muted">Vadesine <b>2 gün veya daha az kalanlar en üstte kırmızı parıldayan alarm tasarımıyla</b> vurgulanır. Sadece "Tahsil Edilecek Tarih" girilmiş alacaklar burada görünür.</p>
+                            </div>
+                        </div>
+                        <button onclick="triggerAction(openAddReceivableModal)" class="admin-only text-xs text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
+                            <i class="fa-solid fa-circle-plus"></i> Yeni Alacak Ekle
+                        </button>
+                    </div>
+                    <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2" id="receivable-timeline-list">
+                        <!-- JS dinamik olarak dolduracak -->
+                    </div>
+                </div>
+
+                <div id="vis-receivables" class="glass-card rounded-3xl overflow-hidden border theme-border shadow-lg">
+                    <div class="p-6 bg-gradient-to-r from-emerald-500/10 to-transparent border-b theme-border flex items-center justify-between flex-wrap gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                <i class="fa-solid fa-hand-holding-dollar"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold theme-text-main">💰 Alacaklarım (Tahsil Edilecek)</h3>
+                                <p class="text-[11px] theme-text-muted">Size borçlu olan carilerin tam listesi.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span id="receivables-badge-count" class="theme-table-header theme-text-muted text-xs px-3 py-1 rounded-full font-bold border theme-border">0 Alacak</span>
+                            <button onclick="triggerAction(openAddReceivableModal)" class="admin-only text-xs text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
+                                <i class="fa-solid fa-circle-plus"></i> Alacak Ekle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[650px]">
+                        <table class="responsive-table w-full text-left border-collapse">
+                            <thead class="theme-table-header theme-text-muted text-xs font-bold uppercase tracking-wider border-b theme-border sticky top-0 z-10">
+                                <tr>
+                                    <th class="py-4 px-6">Borçlu</th>
+                                    <th class="py-4 px-6">Proje</th>
+                                    <th class="py-4 px-6">Açıklama</th>
+                                    <th class="py-4 px-6">Kategori</th>
+                                    <th class="py-4 px-6">Yazıldığı Tarih</th>
+                                    <th class="py-4 px-6">Tahsil Edilecek Tarih</th>
+                                    <th class="py-4 px-6">Tahsil Edilen Tarih</th>
+                                    <th class="py-4 px-6 text-right">Tutar</th>
+                                    <th class="py-4 px-6 text-center">Tahsilat Durumu</th>
+                                    <th class="py-4 px-6 text-center">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="receivables-body" class="divide-y theme-border text-sm">
+                                <!-- JS dinamik olarak dolduracak -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="receivables-pagination"></div>
+                    <div class="theme-table-header py-4 px-6 border-t theme-border flex justify-between items-center text-sm font-extrabold text-emerald-500">
+                        <span>Tahsil Edilecek Toplam:</span>
+                        <span class="text-lg font-black" id="total-receivables-value">₺0,00</span>
                     </div>
                 </div>
             </div>
@@ -2008,8 +2242,13 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs font-bold theme-text-muted block mb-1">Tarih</label>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Kayıt Tarihi</label>
                     <input id="add-debt-date" type="date" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Ödenecek Tarih / Vade <span class="theme-text-muted font-normal normal-case">(isteğe bağlı)</span></label>
+                    <input id="add-debt-due-date" type="date" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs">
+                    <p class="text-[10px] theme-text-muted mt-1">Girilirse, çeklerde olduğu gibi vadeye 3 gün kala hatırlatma şeridinde uyarı çıkar.</p>
                 </div>
             </div>
             <div class="flex gap-3">
@@ -2019,7 +2258,89 @@
         </div>
     </div>
 
-    <!-- 5b. YENİ AYLIK SABİT ÖDEME EKLEME MODALI -->
+    <!-- 5a2. YENİ ALACAK (TAHSİL EDİLECEK) EKLEME MODALI -->
+    <div id="receivableModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card rounded-3xl max-w-sm w-full p-6 shadow-2xl border theme-border">
+            <h3 id="receivable-modal-title" class="text-lg font-extrabold theme-text-main mb-2">Yeni Alacak Kalemi Ekle</h3>
+            <p class="text-xs theme-text-muted mb-6">Size borçlu olan bir carinin tahsil edilecek tutarını tanımlayın.</p>
+            <div class="space-y-4 mb-6 text-left">
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Borçlu (Cari)</label>
+                    <input id="add-receivable-name" type="text" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-emerald-500 rounded-xl text-xs" placeholder="Örn: Kerem Kereste" autocomplete="off">
+                    <p class="text-[9px] theme-text-muted mt-1"><i class="fa-solid fa-circle-info"></i> Size borçlu olan kişi/firmanın adı.</p>
+                </div>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Açıklama <span class="normal-case font-normal opacity-70">(isteğe bağlı)</span></label>
+                    <input id="add-receivable-description" type="text" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-emerald-500 rounded-xl text-xs" placeholder="Örn: Temmuz ayı hakediş">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-bold theme-text-muted block mb-1">Alacak Tutarı</label>
+                        <input id="add-receivable-amount" type="number" step="0.01" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-emerald-500 rounded-xl text-xs font-extrabold" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold theme-text-muted block mb-1">Para Birimi</label>
+                        <select id="add-receivable-currency" onchange="updateReceivableCurrencyHint()" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                            <option value="TRY">₺ TL</option>
+                            <option value="USD">$ Dolar</option>
+                            <option value="EUR">€ Euro</option>
+                            <option value="GOLD">Altın (gr)</option>
+                        </select>
+                    </div>
+                </div>
+                <p id="add-receivable-currency-hint" class="hidden text-[10px] theme-text-muted -mt-2"></p>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Öncelik / Kategori</label>
+                    <select id="add-receivable-category" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                        <option value="Acil Tahsilat">🚨 Acil Tahsilat</option>
+                        <option value="Normal">Normal Tahsilat</option>
+                        <option value="Genel">Genel Alacak</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Kayıt Tarihi</label>
+                    <input id="add-receivable-date" type="date" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Tahsil Edilecek Tarih / Vade <span class="theme-text-muted font-normal normal-case">(isteğe bağlı)</span></label>
+                    <input id="add-receivable-due-date" type="date" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-emerald-500 rounded-xl text-xs">
+                    <p class="text-[10px] theme-text-muted mt-1">Girilirse, vadeye 3 gün kala hatırlatma şeridinde uyarı çıkar.</p>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeAddReceivableModal()" class="flex-1 py-3 bg-zinc-900/10 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all rounded-xl text-xs font-semibold theme-text-main border theme-border">Vazgeç</button>
+                <button id="receivable-modal-save-btn" onclick="saveNewReceivable()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 transition-all rounded-xl text-xs font-bold text-white">Alacaklara Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5a3. ALACAK TAHSİLATI: PARA NEREYE GİTTİ? -->
+    <div id="collectionSourceModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
+        <div class="glass-card rounded-3xl max-w-sm w-full p-6 shadow-2xl border theme-border">
+            <h3 class="text-lg font-extrabold theme-text-main mb-2">Tahsilat Nereye Yatırıldı?</h3>
+            <p id="collection-source-debt-name" class="text-xs theme-text-muted mb-6"></p>
+
+            <div id="collection-source-step-1" class="space-y-3 mb-2">
+                <button onclick="selectCollectionSource('kasa')" class="w-full py-3.5 px-4 theme-input border theme-border rounded-xl text-sm font-bold theme-text-main hover:border-emerald-500 transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-vault text-emerald-500"></i> Kasaya (Nakit)
+                </button>
+                <button onclick="selectCollectionSource('banka')" class="w-full py-3.5 px-4 theme-input border theme-border rounded-xl text-sm font-bold theme-text-main hover:border-indigo-500 transition-all flex items-center gap-3">
+                    <i class="fa-solid fa-building-columns text-indigo-500"></i> Banka Hesabına
+                </button>
+            </div>
+
+            <div id="collection-source-step-2-bank" class="hidden space-y-3 mb-2">
+                <label class="text-xs font-bold theme-text-muted block mb-1">Hangi Banka Hesabına?</label>
+                <select id="collection-source-bank-select" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs"></select>
+                <div class="flex gap-2 pt-1">
+                    <button onclick="backToCollectionSourceStep1()" class="flex-1 py-2.5 theme-input border theme-border rounded-xl text-xs font-bold theme-text-main hover:opacity-80">Geri</button>
+                    <button onclick="finalizeCollectionSource()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold">Onayla</button>
+                </div>
+            </div>
+
+            <button onclick="closeCollectionSourceModal()" class="w-full mt-2 py-2.5 theme-text-muted hover:text-red-500 transition-all text-xs font-bold">Vazgeç</button>
+        </div>
+    </div>
     <div id="monthlyModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card rounded-3xl max-w-sm w-full p-6 shadow-2xl border theme-border">
             <h3 class="text-lg font-extrabold theme-text-main mb-2">Yeni Aylık Sabit Ödeme Ekle</h3>
@@ -3409,7 +3730,7 @@
         // TEMA YÖNETİMİ (CANLI GEÇİŞ MOTORU)
         function setTheme(themeName) {
             const body = document.body;
-            const validThemes = ['emerald-light', 'alev-light', 'okyanus', 'orman'];
+            const validThemes = ['emerald-light', 'alev-light', 'okyanus', 'orman', 'porselen', 'kum'];
 
             if (validThemes.includes(themeName)) {
                 body.setAttribute('data-theme', themeName);
@@ -3530,6 +3851,7 @@
             debts = allDebts.filter(matches);
             monthly = allMonthly.filter(matches);
             incomes = allIncomes.filter(matches);
+            receivables = allReceivables.filter(matches);
             applyBankProjectFilter();
             applyChequeAndCreditCardProjectFilter();
             applyCarilerProjectFilter();
@@ -3543,9 +3865,17 @@
         let allDebts = JSON.parse(safeGetStorage('debts_rev4', null)) || [...DEFAULT_DEBTS];
         let allMonthly = JSON.parse(safeGetStorage('monthly_rev4', null)) || [...DEFAULT_MONTHLY];
         let allIncomes = JSON.parse(safeGetStorage('incomes_rev4', null)) || [...DEFAULT_INCOMES];
+        // ================= ALACAKLARIM (TAHSİL EDİLECEK BORÇLU CARİLER) =================
+        // "Borçlarım" (allDebts) tablosunun AYNASI: burada BAŞKALARININ bana borçlu olduğu
+        // (tahsil etmem gereken) tutarlar tutulur. Aynı proje ayrımı, çoklu para birimi ve
+        // vade uyarı mantığını kullanır. Bir alacak "tahsil edildi" olarak işaretlendiğinde,
+        // paranın Kasa'ya mı yoksa hangi Banka hesabına mı yattığı sorulur (borç ödemesinin
+        // tam tersi yönü — para dışarı değil, İÇERİ akar).
+        let allReceivables = JSON.parse(safeGetStorage('receivables_rev4', null)) || [];
         let debts = [];
         let monthly = [];
         let incomes = [];
+        let receivables = [];
         // ================= BANKALAR: PROJEYE ÖZEL + ANA KASA'NIN KENDİ HAZİNESİ =================
         // Kasa modülüyle birebir aynı mantık: Ana Kasa aktifken TÜM projelerin bankaları birlikte
         // görünür (üstelik Ana Kasa'nın kendi bağımsız hesapları da olabilir — genel merkez şubesi
@@ -3915,6 +4245,80 @@
                 const p = projects.find(pr => pr.id === activeProjectId);
                 el.innerText = p ? p.name : 'Proje Seçilmedi';
             }
+        }
+
+        // ================= DASHBOARD: SON EKLENENLER (TÜM MODÜLLER) =================
+        // Borç/Alacak/Çek/Kredi Kartı Harcaması/Gelir/Banka Hareketi kayıtlarının hepsini tek bir
+        // zaman çizelgesinde birleştirir. Sıralama için kaydın "id" alanı kullanılır — bu uygulamada
+        // yeni kayıtlar hep Date.now() tabanlı id alır, yani id'ye göre büyükten küçüğe sıralamak
+        // otomatik olarak "en son eklenen en üstte" sırasını verir; ayrı bir "createdAt" alanına
+        // gerek kalmaz.
+        function getRecentActivityItems(limit = 10) {
+            const items = [];
+
+            allDebts.forEach(d => items.push({
+                id: d.id, icon: 'fa-scale-balanced', color: 'text-indigo-500',
+                label: d.name, sub: `Borç · ${formatCurrencyAny(d.amount, d.currency || 'TRY')}`, tab: 'kasa-tab'
+            }));
+            allReceivables.forEach(r => items.push({
+                id: r.id, icon: 'fa-hand-holding-dollar', color: 'text-emerald-500',
+                label: r.name, sub: `Alacak · ${formatCurrencyAny(r.amount, r.currency || 'TRY')}`, tab: 'receivables-tab'
+            }));
+            allCheques.forEach(c => items.push({
+                id: c.id, icon: 'fa-money-check', color: 'text-amber-500',
+                label: c.drawer, sub: `Çek (${c.type === 'gelen' ? 'Alınan' : 'Verilen'}) · ${formatCurrencyAny(c.amount, c.currency || 'TRY')}`, tab: 'banka-cek-tab'
+            }));
+            allIncomes.forEach(i => items.push({
+                id: i.id, icon: 'fa-wallet', color: 'text-emerald-500',
+                label: i.name, sub: `Gelir · ${formatCurrencyAny(i.amount, i.currency || 'TRY')}`, tab: 'kasa-tab'
+            }));
+            allCreditCardExpenses.forEach(e => {
+                const card = allCreditCards.find(c => c.id === e.cardId);
+                items.push({
+                    id: e.id, icon: 'fa-credit-card', color: 'text-violet-500',
+                    label: e.creditor || e.description || 'Kredi Kartı Harcaması',
+                    sub: `Kredi Kartı${card ? ' (' + card.bankName + ')' : ''} · ${formatCurrencyAny(e.amount, card ? (card.currency || 'TRY') : 'TRY')}`,
+                    tab: 'credit-card-tab'
+                });
+            });
+            bankTransactions.forEach(t => items.push({
+                id: t.id, icon: 'fa-building-columns', color: 'text-blue-500',
+                label: t.description || t.bankName, sub: `Banka Hareketi (${t.bankName}) · ${t.type === 'giriş' ? '+' : '−'}${formatCurrency(t.amount)}`, tab: 'banka-cek-tab'
+            }));
+
+            items.sort((a, b) => b.id - a.id);
+            return items.slice(0, limit);
+        }
+
+        function renderRecentActivity() {
+            const list = document.getElementById('recent-activity-list');
+            if (!list) return;
+            if (userRole === 'visitor') {
+                list.innerHTML = `<p class="text-xs theme-text-muted text-center py-4">Detayları görmek için giriş yapmanız gerekiyor.</p>`;
+                return;
+            }
+            const items = getRecentActivityItems(10);
+            if (items.length === 0) {
+                list.innerHTML = `<p class="text-xs theme-text-muted text-center py-4">Henüz bir kayıt eklenmedi.</p>`;
+                return;
+            }
+            list.innerHTML = items.map(it => `
+                <button onclick="goToRecentActivityItem('${it.tab}')" class="w-full flex items-center gap-3 p-2.5 hover:bg-zinc-900/10 dark:hover:bg-zinc-900/40 rounded-xl transition-all text-left">
+                    <div class="w-8 h-8 rounded-lg bg-zinc-900/10 dark:bg-zinc-900 flex items-center justify-center shrink-0 ${it.color}">
+                        <i class="fa-solid ${it.icon} text-xs"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="text-xs font-bold theme-text-main block truncate">${escapeHtml(it.label)}</span>
+                        <span class="text-[10px] theme-text-muted block truncate">${escapeHtml(it.sub)}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] theme-text-muted shrink-0"></i>
+                </button>
+            `).join('');
+        }
+        function goToRecentActivityItem(tabId) {
+            const navMap = { 'dashboard-tab': 'nav-dashboard', 'kasa-tab': 'nav-kasa', 'receivables-tab': 'nav-receivables', 'banka-cek-tab': 'nav-banka-cek', 'credit-card-tab': 'nav-credit-card', 'cariler-tab': 'nav-cariler' };
+            const btn = document.getElementById(navMap[tabId]);
+            if (btn) switchTab(tabId, btn);
         }
 
         // ================= DASHBOARD: PROJE BAZINDA ÖZET (SADECE ANA KASA) =================
@@ -4819,6 +5223,7 @@
         let searchQuery = '';
         // Büyük tablolarda hangi sayfanın gösterildiğini tutar (bkz. PERFORMANS: SAYFALAMA bölümü)
         let otherDebtsPage = 1;
+        let receivablesPage = 1;
         let creditCardTablePage = 1;
         let carilerTablePage = 1;
         // ROL SİSTEMİ: 'visitor' (giriş yapmamış), 'viewer' (ikinci kullanıcı - salt okunur), 'admin' (yönetici - tam yetki)
@@ -4846,6 +5251,7 @@
             { key: 'debtSummary',    id: 'vis-debt-summary-panel', label: 'Borç Yönetimi Özet Paneli' },
             { key: 'urgentPayments', id: 'vis-urgent-payments', label: 'Acil Ödemeler Tablosu' },
             { key: 'otherPayments',  id: 'vis-other-payments',  label: 'Diğer Planlı Ödemeler' },
+            { key: 'receivables',    id: 'vis-receivables',     label: 'Alacaklarım (Tahsil Edilecek)' },
             { key: 'monthlyPayments',id: 'vis-monthly-payments',label: 'Aylık Sabit Ödemeler' },
             { key: 'banks',          id: 'vis-banks',           label: 'Banka Hesapları Bakiyeleri' },
             { key: 'chequeTimeline', id: 'vis-cheque-timeline', label: 'Çek Vade Zaman Çizelgesi' },
@@ -4977,8 +5383,87 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.75.1";
+        const APP_VERSION = "1.81.0";
         const CHANGELOG = [
+            {
+                version: "1.81.0",
+                date: "25.07.2026",
+                changes: [
+                    "👉 Mobilde ekranın sol kenarından sağa doğru çekince kenar çubuğu (menü) otomatik açılıyor — sayfanın en üstüne gidip ☰ butonuna basmaya gerek kalmadan",
+                    "📱 Acil Ödemeler, Diğer Planlı Ödemeler ve Alacaklarım tabloları mobilde artık sadece isim ve tutar gösteriyor — diğer tüm detaylar (proje, açıklama, kategori, tarihler, ödeme durumu, işlemler) satırın üstündeki ok ikonuna dokununca açılıyor",
+                    "Bu değişiklik SADECE mobil/dar ekranlarda (768px altı) geçerli — masaüstü görünümü hiç etkilenmedi"
+                ]
+            },
+            {
+                version: "1.80.0",
+                date: "25.07.2026",
+                changes: [
+                    "📱 Mobilde üst çubuk sadeleştirildi — PDF Rapor, Yazdır, Tarih Filtresi ve Canlı Saat sadece masaüstünde (sm+ ekranlarda) görünüyor, mobilde sadece Excel ve arama kutuları kalıyor. Masaüstü hiç etkilenmedi",
+                    "📌 Diğer Planlı Ödemeler ve Alacaklarım tablolarına yapışkan (sticky) başlık eklendi — kaydırırken sütun adları üstte sabit kalıyor; bu iki tablonun görünür yüksekliği de en az 10 satır sığacak şekilde artırıldı",
+                    "🆕 Genel Durum Paneli'ne 'Son Eklenenler' widget'ı eklendi — Borç/Alacak/Çek/Kredi Kartı/Gelir/Banka Hareketi'nin hepsinden en son eklenen 10 kayıt tek listede, tıklayınca ilgili sayfaya gidiliyor",
+                    "⏳ Kasa sayfasına 'Borç Vade Zaman Çizelgesi', Alacaklarım sayfasına 'Alacak Vade Zaman Çizelgesi' eklendi — Çekler'deki kırmızı alarm tasarımıyla birebir aynı, vadesi yaklaşan/geçmiş kalemleri öne çıkarıyor",
+                    "🐞 Kritik düzeltme: Sekme değiştirirken çalışan render fonksiyonunda, grafikle ilgisi olmayan üç widget (Proje Özeti, Tasarruf Hedefi, Son Eklenenler) yanlışlıkla Chart.js'in yüklenmesini bekleyen bir bloğun içine girmişti — bu, yavaş/başarısız CDN bağlantılarında bu widget'ların hiç görünmemesine yol açabilirdi. Artık sadece gerçekten grafik gerektiren kısım bekliyor"
+                ]
+            },
+            {
+                version: "1.79.0",
+                date: "25.07.2026",
+                changes: [
+                    "📍 Acil Ödemeler, Diğer Planlı Ödemeler ve Alacaklarım tablolarına ayrı, kalıcı bir 'Proje' sütunu eklendi — Ana Kasa'dayken her satırın hangi projeye (veya Ana Kasa'nın kendisine) ait olduğu artık her zaman net görünüyor (önceden sadece küçük bir alt yazıydı)",
+                    "💰 Genel Durum Paneli'ne 6. KPI kartı eklendi: 'Alacaklarım (Tahsil Edilecek)' — diğer 5 kartla aynı düzende, kendi 'Proje Bazında Gör' kırılımıyla birlikte"
+                ]
+            },
+            {
+                version: "1.78.1",
+                date: "25.07.2026",
+                changes: [
+                    "📍 DÜZELTME: 'Alacaklarım' artık Kasa sayfası içinde bir bölüm değil, sol menüde Cariler/Kredi Kartı gibi kendi BAĞIMSIZ sayfası — sidebar'da 'Kasa & Borç Takibi'nin hemen altına eklendi, kendi rozet sayacıyla birlikte",
+                    "Sayfa geçişi, KPI odaklanması, sayfa başlığı ve global arama yönlendirmesi buna göre güncellendi"
+                ]
+            },
+            {
+                version: "1.78.0",
+                date: "25.07.2026",
+                changes: [
+                    "💰 YENİ MODÜL: 'Alacaklarım (Tahsil Edilecek)' — 'Diğer Planlı Ödemeler'in aynası: size borçlu olan carilerin tutarlarını takip edin",
+                    "Alacak eklerken çoklu para birimi (TL/Dolar/Euro/Altın) ve isteğe bağlı 'Tahsil Edilecek Tarih' (vade) girilebiliyor — vadeye 3 gün kala hatırlatma şeridinde otomatik uyarı çıkıyor (borçlardaki mantıkla birebir aynı)",
+                    "Bir alacağı 'tahsil edildi' işaretlerken artık 'Nereye yatırıldı?' (Kasa / Banka) sorusu soruluyor — borç ödeme akışının tam tersi yönü, aynı çoklu para birimi çevrimini kullanıyor",
+                    "'Toplam Alacaklar' KPI'sı artık sadece bekleyen çekleri değil, bu yeni alacakları da kapsıyor",
+                    "Global arama ve Yönetici Paneli'ndeki 'Bölüm Görünürlüğü' ayarlarına da eklendi",
+                    "🚨 Acil Ödemeler, 💼 Diğer Planlı Ödemeler ve Aylık Sabit Ödemeler tablolarına, Ana Kasa'dayken 'hangi projeden' etiketi eklendi"
+                ]
+            },
+            {
+                version: "1.77.0",
+                date: "25.07.2026",
+                changes: [
+                    "🗓️ 'Diğer Planlı Ödemeler ve Genel Borçlar' tablosuna 'Ödenecek Tarih / Vade' alanı eklendi — Çekler'deki vade mantığıyla birebir aynı",
+                    "Vadesi 3 gün içindeyse turuncu, bugün/geçmişse kırmızı ⚠️ ile vurgulanıyor",
+                    "Vade Hatırlatmaları şeridi artık bu borçları da (çekler ve kredi kartı son ödemeleriyle birlikte) kapsıyor — 3 gün kala otomatik uyarı çıkıyor",
+                    "Ödenen borçlarda vade uyarısı otomatik olarak kesiliyor",
+                    "Alan tamamen isteğe bağlı — boş bırakılan borçlar hiçbir uyarı üretmez, geriye dönük uyumlu"
+                ]
+            },
+            {
+                version: "1.76.0",
+                date: "25.07.2026",
+                changes: [
+                    "🤍 Yeni tema: Porselen — sıcak kırık beyaz arka plan + sakin indigo vurgu, temiz/kurumsal his (Linear/Notion tarzı)",
+                    "🏜️ Yeni tema: Kum — kağıt beji arka plan + sakin teal vurgu, daha sıcak/rahat his",
+                    "Her iki yeni tema da diğer açık temalar gibi grafiklerde, kilit ekranlarında ve tüm indigo renkli buton/ikonlarda tutarlı şekilde kendi rengini alıyor",
+                    "Kartlarda ve aktif sekme butonunda bu iki temaya özel daha yumuşak gölge/vurgu eklendi — 'sadece renk değişti' hissini kırmak için"
+                ]
+            },
+            {
+                version: "1.75.2",
+                date: "25.07.2026",
+                changes: [
+                    "🔍 Grok'un 2. tur performans önerileri değerlendirildi: DocumentFragment, yazma/arama debounce'ı zaten mevcuttu (ek işlem gerekmedi)",
+                    "⚡ 'Hareketi Azalt' erişilebilirlik tercihi olan kullanıcılarda sürekli animasyonlar (pulse/spin/ping/bounce) otomatik devre dışı kalıyor",
+                    "❌ Bilinçli olarak YAPILMADI — Tailwind'i statik CSS'e çevirme: bu dosyada sınıflar çoğu yerde JS içinde dinamik üretiliyor, statik derleme aracı bunları güvenilir tespit edemiyor; güvenli olması için tüm sınıfları dahil etmek gerekiyordu ki bu da kazancı sıfırlıyordu — risk/kazanç dengesi olumsuz olduğu için vazgeçildi",
+                    "❌ Bilinçli olarak YAPILMADI — JS minify: aktif geliştirme sürerken kodu okunmaz hale getirir; Web Worker (JSON.stringify için): bu veri hacminde gereksiz karmaşıklık; 'rev4 migration kodunu daralt': eski kullanıcı verilerini bozma riski taşıyor"
+                ]
+            },
             {
                 version: "1.75.1",
                 date: "25.07.2026",
@@ -7060,6 +7545,40 @@
             if (backdrop) backdrop.classList.toggle('hidden');
         }
 
+        // Mobilde ekranın SOL KENARINDAN başlayıp SAĞA doğru çekilen bir dokunuşla kenar çubuğunu
+        // (sidebar) otomatik açar — sayfanın en üstüne gidip "☰" butonuna basmaya gerek kalmaz.
+        // Sadece dar ekranlarda (mobil/tablet, <1024px) etkindir; masaüstünde hiçbir etkisi yoktur.
+        // "passive: true" ile eklendiği için normal dikey kaydırmayı (scroll) hiç engellemez.
+        function initSidebarSwipeGesture() {
+            let swipeStartX = null, swipeStartY = null;
+            document.addEventListener('touchstart', (e) => {
+                if (window.innerWidth >= 1024) { swipeStartX = null; return; }
+                const sidebar = document.getElementById('sidebar-drawer');
+                if (sidebar && !sidebar.classList.contains('hidden')) { swipeStartX = null; return; } // zaten açıksa yok say
+                const touch = e.touches[0];
+                if (touch.clientX > 24) { swipeStartX = null; return; } // sadece SOL KENARDAN (ilk 24px) başlayan dokunuşlar
+                swipeStartX = touch.clientX;
+                swipeStartY = touch.clientY;
+            }, { passive: true });
+
+            document.addEventListener('touchend', (e) => {
+                if (swipeStartX === null) return;
+                const touch = e.changedTouches[0];
+                const diffX = touch.clientX - swipeStartX;
+                const diffY = Math.abs(touch.clientY - swipeStartY);
+                // Yeterince sağa (80px+) VE büyük ölçüde yatay (dikey kaymadan belirgin fazla) bir
+                // hareketse aç — aksi halde normal yukarı/aşağı kaydırmayla karışmasın.
+                if (diffX > 80 && diffY < 60) {
+                    const sidebar = document.getElementById('sidebar-drawer');
+                    const backdrop = document.getElementById('sidebar-backdrop');
+                    if (sidebar) sidebar.classList.remove('hidden');
+                    if (backdrop) backdrop.classList.remove('hidden');
+                }
+                swipeStartX = null;
+                swipeStartY = null;
+            }, { passive: true });
+        }
+
         function switchTab(tabId, btnElement) {
             activeTabId = tabId;
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -7088,6 +7607,7 @@
             const titles = {
                 'dashboard-tab': { m: 'Finansal Genel Durum Analizi', s: 'Kasa nakit akışı, banka mevduatları ve vadeli çeklerin konsolide raporlama ekranı.' },
                 'kasa-tab': { m: 'Kasa ve Borç Takip Defteri', s: 'Nakit girişlerinizi ve vadeli borçlarınızı ayrı tablolarda profesyonelce yönetin.' },
+                'receivables-tab': { m: 'Alacaklarım (Tahsil Edilecek)', s: 'Size borçlu olan carilerin tutarlarını ve tahsilat durumunu takip edin.' },
                 'banka-cek-tab': { m: 'Banka Hesapları & Çek Takip Merkezi', s: 'Mevduat bakiyeleri ve vadeli çeklerin detaylı portföy izleme ekranı.' },
                 'credit-card-tab': { m: 'Kredi Kartı Harcamaları', s: 'Kredi kartından yapılan tüm harcamaların kaydı ve takibi.' },
                 'cariler-tab': { m: 'Cariler', s: 'Alacaklı/tedarikçi bazlı hesap ekstresi — geçmiş, ödenen ve açık borç tek ekranda.' }
@@ -7099,14 +7619,16 @@
 
             applyKpiFocus(tabId);
 
-            // Cariler sayfasında sadece cari ekstresi görünsün — KPI kartları ve vade
-            // hatırlatma şeridi (kasa/banka/çek/kredi kartı özetleri) bu sayfada gizlenir.
+            // Cariler ve Alacaklarım sayfalarında sadece o sayfanın içeriği görünsün — KPI kartları
+            // (Kasa/Banka/Çek/Kredi Kartı özetleri, bu sayfalarla doğrudan ilgili değil) gizlenir.
+            // Vade hatırlatma şeridi ise Alacaklarım'da görünür kalır (alacak vadeleri de orada).
             const kpiGrid = document.getElementById('kpi-grid-container');
             const dueBanner = document.getElementById('due-reminder-banner');
             const isCarilerPage = tabId === 'cariler-tab';
-            if (kpiGrid) kpiGrid.classList.toggle('hidden', isCarilerPage);
+            const isReceivablesPage = tabId === 'receivables-tab';
+            if (kpiGrid) kpiGrid.classList.toggle('hidden', isCarilerPage || isReceivablesPage);
             if (dueBanner && isCarilerPage) dueBanner.classList.add('hidden');
-            else if (dueBanner && !isCarilerPage) renderDueReminders();
+            else if (dueBanner) renderDueReminders();
 
             // PERFORMANS: Sekme değişince yalnızca o sekmenin DOM içeriğini çiz
             // (updateDashboard her seferinde tüm sekmeleri boyamıyordu; burada eksik kalanı tamamlarız)
@@ -7117,10 +7639,14 @@
         function renderActiveTabContent() {
             const tab = activeTabId || 'dashboard-tab';
             if (tab === 'dashboard-tab') {
+                renderSavingsGoalWidget();
+                renderProjectBreakdown();
+                renderRecentActivity();
+                // Chart.js lazy: sadece grafik gerektiren kısım asenkron yükleme bekler —
+                // diğer widget'lar (Son Eklenenler, Proje Özeti, Tasarruf Hedefi) Chart.js'e
+                // bağımlı değil, gecikmeden hemen çizilir.
                 ensureChartsReady().then(() => {
-                    renderSavingsGoalWidget();
                     renderTrendChart();
-                    renderProjectBreakdown();
                 });
             } else if (tab === 'kasa-tab') {
                 renderIncomeList();
@@ -7128,6 +7654,10 @@
                 renderOtherTable();
                 renderMonthlyPayments();
                 updateDebtSummary();
+                renderDebtTimeline();
+            } else if (tab === 'receivables-tab') {
+                renderReceivablesTable();
+                renderReceivableTimeline();
             } else if (tab === 'banka-cek-tab') {
                 renderBankAccounts();
                 renderChequeLedgers();
@@ -7171,7 +7701,8 @@
             bank: 'vis-kpi-bank',
             incoming: 'vis-kpi-incoming',
             outgoing: 'vis-kpi-outgoing',
-            creditcard: 'vis-kpi-creditcard'
+            creditcard: 'vis-kpi-creditcard',
+            receivables: 'vis-kpi-receivables'
         };
         // null = bu sekmede hepsi görünür (Genel Durum Paneli); dizi = sadece bu anahtarlar görünür, gerisi gizlenir
         const KPI_FOCUS_MAP = {
@@ -7189,7 +7720,7 @@
 
             if (!visibleKeys) {
                 // Genel Durum Paneli: klasik eşit 5'li düzen, hepsi görünür
-                container.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-7';
+                container.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-7';
                 Object.values(KPI_ELEMENT_IDS).forEach(id => {
                     const el = document.getElementById(id);
                     if (!el) return;
@@ -7249,8 +7780,9 @@
             // Konsolide Net Likidite
             const netLiquidity = cashRemaining + bankTotal;
 
-            // Toplam Alacaklar (Müşteri Çekleri Bekleyenler)
-            const totalReceivables = incomingChequesTotal;
+            // Toplam Alacaklar (Müşteri Çekleri Bekleyenler + Tahsil Edilecek Alacaklar)
+            const pendingReceivablesTotal = receivables.filter(r => !r.collected).reduce((sum, r) => sum + getDebtAmountTRY(r), 0);
+            const totalReceivables = incomingChequesTotal + pendingReceivablesTotal;
 
             // Kredi Kartı Harcamaları Toplamı (kart harcamaları doğrudan borç olarak kabul edilir)
             const creditCardTotal = getTotalCreditCardDebtTRY();
@@ -7275,6 +7807,9 @@
                 const kpiCcEl = document.getElementById('kpi-credit-card');
                 if (kpiCcEl) kpiCcEl.innerText = '-' + formatCurrency(creditCardTotal);
                 safeSetText('kpi-cc-count', `${creditCardExpenses.length} Harcama`);
+
+                animateCurrencyText('kpi-receivables-total', pendingReceivablesTotal);
+                safeSetText('kpi-receivables-count', `${receivables.filter(r => !r.collected).length} Alacak`);
 
                 // Kilit ekranlarını gizle
                 const lockOverlay = document.getElementById('charts-lock-overlay');
@@ -7303,6 +7838,8 @@
                 safeSetText('total-income-calc', kpiMaskText);
                 safeSetText('kpi-credit-card', kpiMaskText);
                 safeSetText('kpi-cc-count', kpiMaskText);
+                safeSetText('kpi-receivables-total', kpiMaskText);
+                safeSetText('kpi-receivables-count', kpiMaskText);
 
                 // Kilit ekranlarını göster
                 const lockOverlay = document.getElementById('charts-lock-overlay');
@@ -7327,12 +7864,14 @@
             const pendingChequesCount = cheques.filter(c => c.status === 'Bekliyor').length;
             
             safeSetText('sidebar-urgent-count', urgentList.filter(i=>!i.paid).length);
+            safeSetText('sidebar-receivables-count', userRole === 'visitor' ? '–' : receivables.filter(r=>!r.collected).length);
             safeSetText('sidebar-other-count', userRole === 'visitor' ? '–' : pendingChequesCount);
             safeSetText('sidebar-cc-count', String(creditCardExpenses.length));
             safeSetText('sidebar-cariler-count', String(new Set(debts.map(d => d.name.trim())).size));
             
             safeSetText('urgent-badge-count', `${urgentList.filter(i=>!i.paid).length} Ödenmemiş Acil`);
             safeSetText('other-badge-count', `${debts.filter(i=>!i.paid).length} Ödenmemiş Borç`);
+            safeSetText('receivables-badge-count', `${receivables.filter(i=>!i.collected).length} Tahsil Edilecek`);
 
             // Verileri güvenli kaydet
             // ÖNEMLİ: debts/monthly/incomes artık sadece AKTİF PROJEYE göre filtrelenmiş bir
@@ -7341,6 +7880,7 @@
             safeSetStorage('debts_rev4', JSON.stringify(allDebts));
             safeSetStorage('monthly_rev4', JSON.stringify(allMonthly));
             safeSetStorage('incomes_rev4', JSON.stringify(allIncomes));
+            safeSetStorage('receivables_rev4', JSON.stringify(allReceivables));
             safeSetStorage('banks_rev4', JSON.stringify(allBanks));
             safeSetStorage('cheques_rev4', JSON.stringify(allCheques));
 
@@ -7359,6 +7899,7 @@
             if (tab === 'dashboard-tab') {
                 renderSavingsGoalWidget();
                 renderProjectBreakdown();
+                renderRecentActivity();
                 // Chart.js lazy: ilk dashboard görünümünde yükle, sonra veriyi bas
                 ensureChartsReady().then(() => {
                     renderTrendChart();
@@ -7371,6 +7912,10 @@
                 renderUrgentTable();
                 renderOtherTable();
                 renderMonthlyPayments();
+                renderDebtTimeline();
+            } else if (tab === 'receivables-tab') {
+                renderReceivablesTable();
+                renderReceivableTimeline();
             } else if (tab === 'banka-cek-tab') {
                 renderBankAccounts();
                 renderChequeLedgers();
@@ -7405,6 +7950,19 @@
             const p = projects.find(pr => pr.id === projectId);
             if (!p) return '';
             return `<span class="text-[9px] theme-text-muted italic block mt-0.5"><i class="fa-solid fa-diagram-project"></i> ${escapeHtml(p.name)} projesinden</span>`;
+        }
+        // getProjectOriginLabel'in "ayrı bir tablo sütunu" versiyonu — Ana Kasa'nın kendisine
+        // ait kayıtlar için "Ana Kasa" rozetini, diğer projeler için proje adını gösterir.
+        function getProjectCellHTML(projectId) {
+            const isAnaKasaOwn = !projectId || projectId === 'ana-kasa';
+            const label = isAnaKasaOwn ? 'Ana Kasa' : (() => {
+                const p = projects.find(pr => pr.id === projectId);
+                return p ? p.name : '—';
+            })();
+            const cls = isAnaKasaOwn
+                ? 'bg-zinc-900/10 dark:bg-zinc-900 theme-text-muted border theme-border'
+                : 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20';
+            return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${cls}"><i class="fa-solid fa-diagram-project text-[8px]"></i> ${escapeHtml(label)}</span>`;
         }
 
         function renderBankAccounts() {
@@ -7532,7 +8090,8 @@
             banka: (pid) => allBanks.filter(b => b.projectId === pid).reduce((s, b) => s + (b.currency && b.currency !== 'TRY' ? convertToTRY(b.balance, b.currency) : b.balance), 0),
             cekGelen: (pid) => allCheques.filter(c => c.projectId === pid && c.type === 'gelen' && c.status === 'Bekliyor').reduce((s, c) => s + convertToTRY(c.amount, c.currency || 'TRY'), 0),
             cekGiden: (pid) => allCheques.filter(c => c.projectId === pid && c.type === 'giden' && c.status === 'Bekliyor').reduce((s, c) => s + convertToTRY(c.amount, c.currency || 'TRY'), 0),
-            krediKarti: (pid) => allCreditCards.filter(c => c.projectId === pid).reduce((s, c) => s + convertToTRY(getCardOutstandingAll(c.id), c.currency || 'TRY'), 0)
+            krediKarti: (pid) => allCreditCards.filter(c => c.projectId === pid).reduce((s, c) => s + convertToTRY(getCardOutstandingAll(c.id), c.currency || 'TRY'), 0),
+            alacaklar: (pid) => allReceivables.filter(r => r.projectId === pid && !r.collected).reduce((s, r) => s + convertToTRY(r.amount, r.currency || 'TRY'), 0)
         };
 
         // Kasa kırılımı için: bir projenin kendi para biriminde (TL'ye çevrilmeden) yabancı
@@ -7598,6 +8157,18 @@
                 });
             return groups;
         }
+        // Alacaklarım kırılımı için: bir projenin bekleyen döviz/altın alacaklarının kendi para
+        // biriminde (native) toplamını döndürür.
+        function computeAlacaklarCurrencyNative(pid) {
+            const groups = {};
+            allReceivables
+                .filter(r => r.projectId === pid && !r.collected && r.currency && r.currency !== 'TRY')
+                .forEach(r => {
+                    if (!groups[r.currency]) groups[r.currency] = 0;
+                    groups[r.currency] += r.amount;
+                });
+            return groups;
+        }
 
         // Ucuz kısım: sadece Ana Kasa aktifken + en az 1 proje varken düğmeleri göster. Her
         // updateDashboard() çağrısında güvenle çalıştırılabilir, hesaplama içermez.
@@ -7649,6 +8220,7 @@
                             : key === 'cekGelen' ? computeCekGelenCurrencyNative(r.project.id)
                             : key === 'cekGiden' ? computeCekGidenCurrencyNative(r.project.id)
                             : key === 'krediKarti' ? computeKrediKartiCurrencyNative(r.project.id)
+                            : key === 'alacaklar' ? computeAlacaklarCurrencyNative(r.project.id)
                             : null;
                         const currencyEntries = currencyGroups ? Object.entries(currencyGroups).filter(([, amt]) => Math.abs(amt) > 0.005) : [];
                         return `
@@ -7742,6 +8314,39 @@
             }
 
             const items = [];
+
+            // Diğer Planlı Ödemeler / Genel Borçlar için "Ödenecek Tarih" — çeklerdeki vade
+            // mantığıyla birebir aynı: 3 gün kala uyarı, vade geçmişse/bugünse acil.
+            debts.filter(d => !d.paid && d.dueDate).forEach(d => {
+                const due = new Date(d.dueDate);
+                const diffDays = Math.ceil((due - TODAY_DATE) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 3) {
+                    items.push({
+                        urgent: diffDays <= 0,
+                        text: diffDays < 0
+                            ? `💰 ${escapeHtml(d.name)} borcu ${Math.abs(diffDays)} gün gecikti (${formatCurrencyAny(d.amount, d.currency || 'TRY')})`
+                            : diffDays === 0
+                                ? `💰 ${escapeHtml(d.name)} borcu BUGÜN vadesinde (${formatCurrencyAny(d.amount, d.currency || 'TRY')})`
+                                : `💰 ${escapeHtml(d.name)} borcu ${diffDays} gün içinde vadesi doluyor (${formatCurrencyAny(d.amount, d.currency || 'TRY')})`
+                    });
+                }
+            });
+
+            // renderDueReminders'daki borç vade mantığının AYNASI — tahsil edilecek alacaklar için.
+            receivables.filter(r => !r.collected && r.dueDate).forEach(r => {
+                const due = new Date(r.dueDate);
+                const diffDays = Math.ceil((due - TODAY_DATE) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 3) {
+                    items.push({
+                        urgent: diffDays <= 0,
+                        text: diffDays < 0
+                            ? `💵 ${escapeHtml(r.name)} alacağı ${Math.abs(diffDays)} gün gecikti (${formatCurrencyAny(r.amount, r.currency || 'TRY')})`
+                            : diffDays === 0
+                                ? `💵 ${escapeHtml(r.name)} alacağı BUGÜN tahsil edilecek (${formatCurrencyAny(r.amount, r.currency || 'TRY')})`
+                                : `💵 ${escapeHtml(r.name)} alacağı ${diffDays} gün içinde tahsil edilecek (${formatCurrencyAny(r.amount, r.currency || 'TRY')})`
+                    });
+                }
+            });
 
             cheques.filter(c => c.status === 'Bekliyor').forEach(c => {
                 const due = new Date(c.due);
@@ -9249,6 +9854,203 @@
         }
 
         // Çek Zaman Çizelgesini (Timeline) Çizen Akıllı Fonksiyon (Son 2 gün ve günü geçenler en üstte)
+        // renderChequeTimeline'ın AYNASI — vadesi olan (dueDate girilmiş), henüz ödenmemiş
+        // borçlar için aynı görsel/kritiklik mantığını kullanan zaman çizelgesi. Kasa sayfasında
+        // gösterilir; "Öde" butonu doğrudan mevcut ödeme akışını (toggleDebtPaid) tetikler.
+        function renderDebtTimeline() {
+            const listContainer = document.getElementById('debt-timeline-list');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            const activeDebts = debts.filter(d => !d.paid && d.dueDate && isWithinDateFilter(d.dueDate));
+            if (activeDebts.length === 0) {
+                listContainer.innerHTML = emptyStateHTML('fa-calendar-check', 'Vadesi yaklaşan borç yok', 'Ödenecek tarihi girilmiş, bekleyen bir borç bulunmuyor.');
+                return;
+            }
+
+            activeDebts.sort((a, b) => {
+                const diffA = Math.ceil((new Date(a.dueDate) - TODAY_DATE) / (1000 * 60 * 60 * 24));
+                const diffB = Math.ceil((new Date(b.dueDate) - TODAY_DATE) / (1000 * 60 * 60 * 24));
+                const isKritikA = (diffA <= 2) ? 1 : 0;
+                const isKritikB = (diffB <= 2) ? 1 : 0;
+                if (isKritikA !== isKritikB) return isKritikB - isKritikA;
+                return diffA - diffB;
+            });
+
+            activeDebts.forEach((d, idx) => {
+                const dueDate = new Date(d.dueDate);
+                const diffDays = Math.ceil((dueDate - TODAY_DATE) / (1000 * 60 * 60 * 24));
+
+                let dayText = '', statusClass = '', blockStyles = "border theme-border", dotClass = "bg-zinc-300 dark:bg-zinc-700 border-2 border-white dark:border-zinc-900";
+                if (diffDays < 0) {
+                    dayText = `Ödeme Yapılmadı! ${Math.abs(diffDays)} Gün Geçti`;
+                    statusClass = "text-red-500 font-extrabold bg-red-500/10 border-red-500/20 border animate-pulse";
+                    blockStyles = "border-2 border-red-500 shadow-lg shadow-red-500/10";
+                    dotClass = "bg-red-500 border-2 border-white dark:border-zinc-900 animate-pulse";
+                } else if (diffDays === 0) {
+                    dayText = "BUGÜN VADESİ!";
+                    statusClass = "text-red-500 font-black bg-red-500/25 border-red-500/30 border animate-pulse";
+                    blockStyles = "border-2 border-red-500 shadow-lg shadow-red-500/20";
+                    dotClass = "bg-red-500 border-2 border-white dark:border-zinc-900 animate-pulse";
+                } else if (diffDays <= 2) {
+                    dayText = `Kritik Süre: Sadece ${diffDays} Gün Kaldı!`;
+                    statusClass = "text-red-500 font-bold bg-red-500/10 border-red-500/20 border";
+                    blockStyles = "border-2 border-red-500 shadow-md shadow-red-500/20";
+                    dotClass = "bg-red-500 border-2 border-white dark:border-zinc-900";
+                } else if (diffDays <= 7) {
+                    dayText = `${diffDays} Gün Kaldı (Yakın Vade)`;
+                    statusClass = "theme-text-main font-bold bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 border";
+                    dotClass = "bg-amber-400 border-2 border-white dark:border-zinc-900";
+                } else {
+                    dayText = `${diffDays} Gün Kaldı`;
+                    statusClass = "theme-text-muted font-medium bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 border";
+                    dotClass = "bg-emerald-400 border-2 border-white dark:border-zinc-900";
+                }
+
+                const row = document.createElement('div');
+                row.className = "flex gap-3";
+                const isLast = idx === activeDebts.length - 1;
+                const railHTML = `
+                    <div class="flex flex-col items-center shrink-0 w-4">
+                        <span class="w-3.5 h-3.5 rounded-full ${dotClass} mt-5 shrink-0"></span>
+                        ${!isLast ? '<span class="w-0.5 flex-1 bg-zinc-300/40 dark:bg-zinc-700/50 mt-1 mb-1"></span>' : ''}
+                    </div>
+                `;
+
+                const card = document.createElement('div');
+                card.className = `p-4 theme-bg-card rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:opacity-90 transition-all flex-1 mb-4 ${blockStyles}`;
+                const warnIcon = (diffDays <= 2) ? `<span class="inline-flex h-2 w-2 rounded-full bg-red-500 animate-ping mr-1"></span>` : "";
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 bg-zinc-100 dark:bg-zinc-950 theme-text-muted border theme-border">
+                            <div class="text-center">
+                                <span class="block text-[8px] uppercase font-black">ÖDENECEK</span>
+                                <i class="fa-solid fa-circle-arrow-up mt-1 text-base"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-bold theme-text-main capitalize text-sm">${maskText(d.name)}</h4>
+                            <div class="flex flex-wrap items-center gap-3 mt-1 text-xs theme-text-muted">
+                                <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> Vade: ${dueDate.toLocaleDateString('tr-TR')}</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] flex items-center ${statusClass}">${warnIcon} ${dayText}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6 justify-between md:justify-end shrink-0">
+                        <div class="text-right">
+                            <span class="text-[10px] theme-text-muted font-bold uppercase tracking-wider block">Borç Tutarı</span>
+                            <span class="text-base font-black ${diffDays <= 2 ? 'text-red-500' : 'theme-text-main'}">${debtAmountDisplay(d)}</span>
+                        </div>
+                        <button onclick="triggerAction(() => toggleDebtPaid(${d.id}))" class="admin-only py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-circle-check"></i> Öde
+                        </button>
+                    </div>
+                `;
+                row.innerHTML = railHTML;
+                row.appendChild(card);
+                listContainer.appendChild(row);
+            });
+        }
+
+        // renderDebtTimeline'ın AYNASI — Alacaklarım sayfasında, vadesi olan tahsil edilecek
+        // alacaklar için. "Tahsil Et" butonu toggleReceivableCollected akışını tetikler.
+        function renderReceivableTimeline() {
+            const listContainer = document.getElementById('receivable-timeline-list');
+            if (!listContainer) return;
+            listContainer.innerHTML = '';
+
+            const activeReceivables = receivables.filter(r => !r.collected && r.dueDate && isWithinDateFilter(r.dueDate));
+            if (activeReceivables.length === 0) {
+                listContainer.innerHTML = emptyStateHTML('fa-calendar-check', 'Vadesi yaklaşan alacak yok', 'Tahsil edilecek tarihi girilmiş, bekleyen bir alacak bulunmuyor.');
+                return;
+            }
+
+            activeReceivables.sort((a, b) => {
+                const diffA = Math.ceil((new Date(a.dueDate) - TODAY_DATE) / (1000 * 60 * 60 * 24));
+                const diffB = Math.ceil((new Date(b.dueDate) - TODAY_DATE) / (1000 * 60 * 60 * 24));
+                const isKritikA = (diffA <= 2) ? 1 : 0;
+                const isKritikB = (diffB <= 2) ? 1 : 0;
+                if (isKritikA !== isKritikB) return isKritikB - isKritikA;
+                return diffA - diffB;
+            });
+
+            activeReceivables.forEach((r, idx) => {
+                const dueDate = new Date(r.dueDate);
+                const diffDays = Math.ceil((dueDate - TODAY_DATE) / (1000 * 60 * 60 * 24));
+
+                let dayText = '', statusClass = '', blockStyles = "border theme-border", dotClass = "bg-zinc-300 dark:bg-zinc-700 border-2 border-white dark:border-zinc-900";
+                if (diffDays < 0) {
+                    dayText = `Ödeme Alınmadı! ${Math.abs(diffDays)} Gün Geçti`;
+                    statusClass = "text-red-500 font-extrabold bg-red-500/10 border-red-500/20 border animate-pulse";
+                    blockStyles = "border-2 border-red-500 shadow-lg shadow-red-500/10";
+                    dotClass = "bg-red-500 border-2 border-white dark:border-zinc-900 animate-pulse";
+                } else if (diffDays === 0) {
+                    dayText = "BUGÜN VADESİ!";
+                    statusClass = "text-red-500 font-black bg-red-500/25 border-red-500/30 border animate-pulse";
+                    blockStyles = "border-2 border-red-500 shadow-lg shadow-red-500/20";
+                    dotClass = "bg-red-500 border-2 border-white dark:border-zinc-900 animate-pulse";
+                } else if (diffDays <= 2) {
+                    dayText = `Kritik Süre: Sadece ${diffDays} Gün Kaldı!`;
+                    statusClass = "text-red-500 font-bold bg-red-500/10 border-red-500/20 border";
+                    blockStyles = "border-2 border-red-500 shadow-md shadow-red-500/20";
+                    dotClass = "bg-red-500 border-2 border-white dark:border-zinc-900";
+                } else if (diffDays <= 7) {
+                    dayText = `${diffDays} Gün Kaldı (Yakın Vade)`;
+                    statusClass = "theme-text-main font-bold bg-zinc-200 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 border";
+                    dotClass = "bg-amber-400 border-2 border-white dark:border-zinc-900";
+                } else {
+                    dayText = `${diffDays} Gün Kaldı`;
+                    statusClass = "theme-text-muted font-medium bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 border";
+                    dotClass = "bg-emerald-400 border-2 border-white dark:border-zinc-900";
+                }
+
+                const row = document.createElement('div');
+                row.className = "flex gap-3";
+                const isLast = idx === activeReceivables.length - 1;
+                const railHTML = `
+                    <div class="flex flex-col items-center shrink-0 w-4">
+                        <span class="w-3.5 h-3.5 rounded-full ${dotClass} mt-5 shrink-0"></span>
+                        ${!isLast ? '<span class="w-0.5 flex-1 bg-zinc-300/40 dark:bg-zinc-700/50 mt-1 mb-1"></span>' : ''}
+                    </div>
+                `;
+
+                const card = document.createElement('div');
+                card.className = `p-4 theme-bg-card rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:opacity-90 transition-all flex-1 mb-4 ${blockStyles}`;
+                const warnIcon = (diffDays <= 2) ? `<span class="inline-flex h-2 w-2 rounded-full bg-red-500 animate-ping mr-1"></span>` : "";
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 bg-zinc-200 dark:bg-zinc-800 theme-text-main border theme-border">
+                            <div class="text-center">
+                                <span class="block text-[8px] uppercase font-black">TAHSİL EDİLECEK</span>
+                                <i class="fa-solid fa-circle-arrow-down mt-1 text-base"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-bold theme-text-main capitalize text-sm">${maskText(r.name)}</h4>
+                            <div class="flex flex-wrap items-center gap-3 mt-1 text-xs theme-text-muted">
+                                <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> Vade: ${dueDate.toLocaleDateString('tr-TR')}</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] flex items-center ${statusClass}">${warnIcon} ${dayText}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6 justify-between md:justify-end shrink-0">
+                        <div class="text-right">
+                            <span class="text-[10px] theme-text-muted font-bold uppercase tracking-wider block">Alacak Tutarı</span>
+                            <span class="text-base font-black ${diffDays <= 2 ? 'text-red-500' : 'text-emerald-500'}">${debtAmountDisplay(r)}</span>
+                        </div>
+                        <button onclick="triggerAction(() => toggleReceivableCollected(${r.id}))" class="admin-only py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-circle-check"></i> Tahsil Et
+                        </button>
+                    </div>
+                `;
+                row.innerHTML = railHTML;
+                row.appendChild(card);
+                listContainer.appendChild(row);
+            });
+        }
+
         function renderChequeTimeline() {
             const listContainer = document.getElementById('cheque-timeline-list');
             if (!listContainer) return;
@@ -9393,7 +10195,7 @@
             if (filteredUrgent.length === 0) {
                 tbody.innerHTML = `
                     <tr class="rt-empty-row">
-                        <td colspan="8">
+                        <td colspan="9">
                             ${emptyStateHTML('fa-champagne-glasses', 'Harika, acil borcunuz yok! 🎉', 'Kritik veya acil ödeme kaydı bulunmuyor.')}
                         </td>
                     </tr>
@@ -9410,14 +10212,14 @@
             itemsToRender.forEach((item, idx) => {
                 const tr = document.createElement('tr');
                 const isNewlyRevealed = urgentExpanded && idx >= MAX_VISIBLE;
-                tr.className = `hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${item.paid ? 'opacity-50' : ''} ${isNewlyRevealed ? 'row-reveal' : ''}`;
+                tr.className = `rt-collapsible hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${item.paid ? 'opacity-50' : ''} ${isNewlyRevealed ? 'row-reveal' : ''}`;
                 
                 const disableState = isAdmin ? '' : 'disabled';
                 const writtenDateText = item.date ? new Date(item.date).toLocaleDateString('tr-TR') : '—';
                 const paidDateText = item.paidDate ? new Date(item.paidDate).toLocaleDateString('tr-TR') : '—';
 
                 tr.innerHTML = `
-                    <td data-label="Alacaklı" class="rt-cell-wide py-4 px-6 font-bold theme-text-main capitalize">
+                    <td data-label="Alacaklı" class="rt-cell-wide rt-always-show py-4 px-6 font-bold theme-text-main capitalize">
                         <div class="flex items-center gap-3">
                             ${initialsAvatar(item.name)}
                             <span class="flex items-center gap-2">
@@ -9425,8 +10227,12 @@
                                 ${maskText(item.name)}
                                 ${isRecordEditedRecently(item.editedAt) ? '<span class="text-[8px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 border border-amber-500/20">Düzenlendi</span>' : ''}
                             </span>
+                            <button onclick="this.closest('tr').classList.toggle('rt-expanded')" class="rt-mobile-expand-btn ml-auto shrink-0 w-6 h-6 items-center justify-center theme-text-muted hover:text-indigo-500" title="Detayları göster/gizle">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </button>
                         </div>
                     </td>
+                    <td data-label="Proje" class="py-4 px-6">${getProjectCellHTML(item.projectId)}</td>
                     <td data-label="Açıklama" class="py-4 px-6 text-xs theme-text-muted">${maskText(item.description || '—')}</td>
                     <td data-label="Kategori" class="py-4 px-6">
                         <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">Acil</span>
@@ -9438,7 +10244,7 @@
                             ${userRole === 'visitor' ? '' : paymentSourceBadge(item)}
                         </div>
                     </td>
-                    <td data-label="Tutar" class="py-4 px-6 text-right font-extrabold theme-text-main ${item.paid ? 'line-through opacity-40' : ''}">
+                    <td data-label="Tutar" class="rt-always-show py-4 px-6 text-right font-extrabold theme-text-main ${item.paid ? 'line-through opacity-40' : ''}">
                         ${debtAmountDisplay(item)}
                     </td>
                     <td data-label="Ödeme Durumu" class="py-4 px-6 text-center">
@@ -9466,7 +10272,7 @@
                 const toggleRow = document.createElement('tr');
                 toggleRow.className = 'rt-empty-row';
                 toggleRow.innerHTML = `
-                    <td colspan="8" class="p-0">
+                    <td colspan="9" class="p-0">
                         <button onclick="toggleUrgentExpanded()" class="w-full py-3 text-xs font-bold text-red-500 hover:bg-red-500/5 transition-all flex items-center justify-center gap-2">
                             <i class="fa-solid fa-chevron-${urgentExpanded ? 'up' : 'down'}"></i>
                             ${urgentExpanded ? 'Daha Az Göster' : `${hiddenCount} Acil Ödeme Daha Göster`}
@@ -9496,7 +10302,7 @@
             if (filteredOther.length === 0) {
                 tbody.innerHTML = `
                     <tr class="rt-empty-row">
-                        <td colspan="8">
+                        <td colspan="10">
                             ${emptyStateHTML('fa-folder-open', 'Kayıt bulunamadı', 'Diğer borç veya planlı ödeme kaydı bulunmuyor.')}
                         </td>
                     </tr>
@@ -9518,31 +10324,55 @@
                 else if (item.category === "Genel") badgeClass = "bg-zinc-100 dark:bg-zinc-950 theme-text-muted border theme-border";
 
                 const tr = document.createElement('tr');
-                tr.className = `hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${item.paid ? 'opacity-50' : ''}`;
+                tr.className = `rt-collapsible hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${item.paid ? 'opacity-50' : ''}`;
                 
                 const disableState = isAdmin ? '' : 'disabled';
                 const writtenDateText = item.date ? new Date(item.date).toLocaleDateString('tr-TR') : '—';
                 const paidDateText = item.paidDate ? new Date(item.paidDate).toLocaleDateString('tr-TR') : '—';
 
+                // Vade (Ödenecek Tarih) uyarı rengi: çeklerdeki mantıkla birebir aynı —
+                // henüz ödenmemiş ve vadesi varsa: geçmiş/bugün kırmızı, 3 gün içinde amber.
+                let dueDateHtml = '<span class="theme-text-muted">—</span>';
+                if (item.dueDate) {
+                    const dueDateText = new Date(item.dueDate).toLocaleDateString('tr-TR');
+                    if (!item.paid) {
+                        const diffDays = Math.ceil((new Date(item.dueDate) - TODAY_DATE) / (1000 * 60 * 60 * 24));
+                        if (diffDays <= 0) {
+                            dueDateHtml = `<span class="text-red-500 font-bold flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> ${dueDateText}</span>`;
+                        } else if (diffDays <= 3) {
+                            dueDateHtml = `<span class="text-amber-500 font-bold">${dueDateText}</span>`;
+                        } else {
+                            dueDateHtml = `<span class="theme-text-main">${dueDateText}</span>`;
+                        }
+                    } else {
+                        dueDateHtml = `<span class="theme-text-muted">${dueDateText}</span>`;
+                    }
+                }
+
                 tr.innerHTML = `
-                    <td data-label="Alacaklı" class="rt-cell-wide py-4 px-6 font-bold theme-text-main capitalize">
+                    <td data-label="Alacaklı" class="rt-cell-wide rt-always-show py-4 px-6 font-bold theme-text-main capitalize">
                         <div class="flex items-center gap-3">
                             ${initialsAvatar(item.name)}
                             <span class="flex items-center gap-2">${maskText(item.name)}${isRecordEditedRecently(item.editedAt) ? '<span class="text-[8px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 border border-amber-500/20">Düzenlendi</span>' : ''}</span>
+                            <button onclick="this.closest('tr').classList.toggle('rt-expanded')" class="rt-mobile-expand-btn ml-auto shrink-0 w-6 h-6 items-center justify-center theme-text-muted hover:text-indigo-500" title="Detayları göster/gizle">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </button>
                         </div>
                     </td>
+                    <td data-label="Proje" class="py-4 px-6">${getProjectCellHTML(item.projectId)}</td>
                     <td data-label="Açıklama" class="py-4 px-6 text-xs theme-text-muted">${maskText(item.description || '—')}</td>
                     <td data-label="Kategori" class="py-4 px-6">
                         <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${badgeClass}">${item.category === "Acil Ödemeler" ? "🚨 Acil" : item.category}</span>
                     </td>
                     <td data-label="Yazıldığı Tarih" class="py-4 px-6 text-xs theme-text-muted font-semibold">${userRole === 'visitor' ? STAR_MASK : writtenDateText}</td>
+                    <td data-label="Ödenecek Tarih" class="py-4 px-6 text-xs font-semibold">${userRole === 'visitor' ? STAR_MASK : dueDateHtml}</td>
                     <td data-label="Ödenen Tarih" class="py-4 px-6 text-xs font-semibold ${item.paidDate ? 'text-emerald-500' : 'theme-text-muted'}">
                         <div class="flex flex-col gap-0.5">
                             <span>${userRole === 'visitor' ? STAR_MASK : paidDateText}</span>
                             ${userRole === 'visitor' ? '' : paymentSourceBadge(item)}
                         </div>
                     </td>
-                    <td data-label="Tutar" class="py-4 px-6 text-right font-extrabold theme-text-main ${item.paid ? 'line-through opacity-40' : ''}">
+                    <td data-label="Tutar" class="rt-always-show py-4 px-6 text-right font-extrabold theme-text-main ${item.paid ? 'line-through opacity-40' : ''}">
                         ${debtAmountDisplay(item)}
                     </td>
                     <td data-label="Ödeme Durumu" class="py-4 px-6 text-center">
@@ -9575,6 +10405,122 @@
             renderOtherTable();
         }
 
+        // renderOtherTable'ın AYNASI — "Alacaklarım (Tahsil Edilecek)" tablosunu çizer.
+        function renderReceivablesTable() {
+            const tbody = document.getElementById('receivables-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let filteredReceivables = receivables.filter(item => {
+                const q = searchQuery.toLowerCase();
+                const matchesSearch = item.name.toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q);
+                return matchesSearch && isWithinDateFilter(item.date);
+            });
+
+            if (filteredReceivables.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="rt-empty-row">
+                        <td colspan="10">
+                            ${emptyStateHTML('fa-hand-holding-dollar', 'Kayıt bulunamadı', 'Tahsil edilecek alacak kaydı bulunmuyor.')}
+                        </td>
+                    </tr>
+                `;
+                safeSetText('total-receivables-value', maskCurrency(0));
+                const emptyPagEl = document.getElementById('receivables-pagination');
+                if (emptyPagEl) emptyPagEl.innerHTML = '';
+                return;
+            }
+
+            const receivablesFragment = document.createDocumentFragment();
+            const page = paginate(filteredReceivables, receivablesPage);
+            receivablesPage = page.currentPage;
+            page.pageItems.forEach(item => {
+                let badgeClass = "bg-zinc-900/10 dark:bg-zinc-900 theme-text-muted border theme-border";
+                if (item.category === "Acil Tahsilat") badgeClass = "bg-red-500/10 text-red-500 border border-red-500/20";
+                else if (item.category === "Normal") badgeClass = "bg-zinc-200 dark:bg-zinc-850 theme-text-main border theme-border";
+                else if (item.category === "Genel") badgeClass = "bg-zinc-100 dark:bg-zinc-950 theme-text-muted border theme-border";
+
+                const tr = document.createElement('tr');
+                tr.className = `rt-collapsible hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${item.collected ? 'opacity-50' : ''}`;
+
+                const disableState = isAdmin ? '' : 'disabled';
+                const writtenDateText = item.date ? new Date(item.date).toLocaleDateString('tr-TR') : '—';
+                const collectedDateText = item.collectedDate ? new Date(item.collectedDate).toLocaleDateString('tr-TR') : '—';
+
+                // Vade uyarı rengi: Diğer Planlı Ödemeler'deki mantıkla birebir aynı.
+                let dueDateHtml = '<span class="theme-text-muted">—</span>';
+                if (item.dueDate) {
+                    const dueDateText = new Date(item.dueDate).toLocaleDateString('tr-TR');
+                    if (!item.collected) {
+                        const diffDays = Math.ceil((new Date(item.dueDate) - TODAY_DATE) / (1000 * 60 * 60 * 24));
+                        if (diffDays <= 0) {
+                            dueDateHtml = `<span class="text-red-500 font-bold flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> ${dueDateText}</span>`;
+                        } else if (diffDays <= 3) {
+                            dueDateHtml = `<span class="text-amber-500 font-bold">${dueDateText}</span>`;
+                        } else {
+                            dueDateHtml = `<span class="theme-text-main">${dueDateText}</span>`;
+                        }
+                    } else {
+                        dueDateHtml = `<span class="theme-text-muted">${dueDateText}</span>`;
+                    }
+                }
+
+                tr.innerHTML = `
+                    <td data-label="Borçlu" class="rt-cell-wide rt-always-show py-4 px-6 font-bold theme-text-main capitalize">
+                        <div class="flex items-center gap-3">
+                            ${initialsAvatar(item.name)}
+                            <span class="flex items-center gap-2">${maskText(item.name)}${isRecordEditedRecently(item.editedAt) ? '<span class="text-[8px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 border border-amber-500/20">Düzenlendi</span>' : ''}</span>
+                            <button onclick="this.closest('tr').classList.toggle('rt-expanded')" class="rt-mobile-expand-btn ml-auto shrink-0 w-6 h-6 items-center justify-center theme-text-muted hover:text-emerald-500" title="Detayları göster/gizle">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td data-label="Proje" class="py-4 px-6">${getProjectCellHTML(item.projectId)}</td>
+                    <td data-label="Açıklama" class="py-4 px-6 text-xs theme-text-muted">${maskText(item.description || '—')}</td>
+                    <td data-label="Kategori" class="py-4 px-6">
+                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${badgeClass}">${item.category === "Acil Tahsilat" ? "🚨 Acil" : item.category}</span>
+                    </td>
+                    <td data-label="Yazıldığı Tarih" class="py-4 px-6 text-xs theme-text-muted font-semibold">${userRole === 'visitor' ? STAR_MASK : writtenDateText}</td>
+                    <td data-label="Tahsil Edilecek Tarih" class="py-4 px-6 text-xs font-semibold">${userRole === 'visitor' ? STAR_MASK : dueDateHtml}</td>
+                    <td data-label="Tahsil Edilen Tarih" class="py-4 px-6 text-xs font-semibold ${item.collectedDate ? 'text-emerald-500' : 'theme-text-muted'}">
+                        <div class="flex flex-col gap-0.5">
+                            <span>${userRole === 'visitor' ? STAR_MASK : collectedDateText}</span>
+                            ${userRole === 'visitor' ? '' : collectionSourceBadge(item)}
+                        </div>
+                    </td>
+                    <td data-label="Tutar" class="rt-always-show py-4 px-6 text-right font-extrabold text-emerald-500 ${item.collected ? 'line-through opacity-40' : ''}">
+                        ${debtAmountDisplay(item)}
+                    </td>
+                    <td data-label="Tahsilat Durumu" class="py-4 px-6 text-center">
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <input type="checkbox" ${item.collected ? 'checked' : ''} onchange="triggerAction(() => toggleReceivableCollected(${item.id}))" ${disableState} class="sr-only peer">
+                            <div class="w-11 h-6 bg-zinc-200 dark:bg-zinc-800 border theme-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-zinc-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-white"></div>
+                        </label>
+                    </td>
+                    <td data-label="İşlem" class="py-4 px-6 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="triggerAction(() => requestEditReceivableModal(${item.id}))" class="admin-only p-2 theme-text-muted hover:text-indigo-500 transition-all rounded-xl hover:bg-zinc-900/10">
+                                <i class="fa-solid fa-pen text-sm"></i>
+                            </button>
+                            <button onclick="triggerAction(() => confirmDeleteReceivable(${item.id}))" class="admin-only p-2 theme-text-muted hover:text-red-500 transition-all rounded-xl hover:bg-zinc-900/10">
+                                <i class="fa-regular fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                receivablesFragment.appendChild(tr);
+            });
+            tbody.appendChild(receivablesFragment);
+            renderPaginationControls('receivables-pagination', page, 'goToReceivablesPage');
+
+            const totalReceivablesOwed = filteredReceivables.filter(i => !i.collected).reduce((sum, i) => sum + getDebtAmountTRY(i), 0);
+            safeSetText('total-receivables-value', maskCurrency(totalReceivablesOwed));
+        }
+        function goToReceivablesPage(pageNum) {
+            receivablesPage = pageNum;
+            renderReceivablesTable();
+        }
+
         function renderMonthlyPayments() {
             const listContainer = document.getElementById('monthly-payments-list');
             if (!listContainer) return;
@@ -9595,7 +10541,10 @@
 
                 div.innerHTML = `
                     <div class="flex items-center justify-between gap-2">
-                        <span class="font-bold theme-text-main uppercase text-xs tracking-wider">${maskText(item.name)}</span>
+                        <span class="flex flex-col">
+                            <span class="font-bold theme-text-main uppercase text-xs tracking-wider">${maskText(item.name)}</span>
+                            ${getProjectOriginLabel(item.projectId)}
+                        </span>
                         <div class="flex items-center gap-2 shrink-0">
                             <span class="text-xs font-semibold theme-text-muted bg-zinc-900/10 dark:bg-zinc-900 px-2.5 py-0.5 rounded-lg border theme-border">Kalan: ${maskCurrency(remaining)}</span>
                             <button onclick="triggerAction(() => confirmDeleteMonthly(${item.id}))" class="admin-only p-1.5 theme-text-muted hover:text-red-500 transition-all rounded-lg hover:bg-zinc-900/10" title="Ödemeyi Sil">
@@ -10386,6 +11335,251 @@
             if (el) el.classList.add('hidden');
         }
 
+        // ================= ALACAKLARIM (TAHSİL EDİLECEK) — CRUD =================
+        let editingReceivableId = null;
+
+        function openAddReceivableModal() {
+            editingReceivableId = null;
+            const el = document.getElementById('receivableModal');
+            safeSetText('receivable-modal-title', 'Yeni Alacak Kalemi Ekle');
+            safeSetText('receivable-modal-save-btn', 'Alacaklara Ekle');
+            document.getElementById('add-receivable-name').value = '';
+            document.getElementById('add-receivable-description').value = '';
+            document.getElementById('add-receivable-amount').value = '';
+            document.getElementById('add-receivable-category').value = 'Normal';
+            document.getElementById('add-receivable-date').value = getTodayDateString();
+            document.getElementById('add-receivable-due-date').value = '';
+            document.getElementById('add-receivable-currency').value = 'TRY';
+            updateReceivableCurrencyHint();
+            if (el) el.classList.remove('hidden');
+        }
+        function requestEditReceivableModal(id) {
+            const item = receivables.find(r => r.id === id);
+            if (!item) return;
+            confirmOldRecordEdit(item.date, () => openEditReceivableModal(id));
+        }
+        function openEditReceivableModal(id) {
+            const item = receivables.find(r => r.id === id);
+            if (!item) return;
+            editingReceivableId = id;
+            const el = document.getElementById('receivableModal');
+            safeSetText('receivable-modal-title', 'Alacak Kalemini Düzenle');
+            safeSetText('receivable-modal-save-btn', 'Değişiklikleri Kaydet');
+            document.getElementById('add-receivable-name').value = item.name;
+            document.getElementById('add-receivable-description').value = item.description || '';
+            document.getElementById('add-receivable-amount').value = item.amount;
+            document.getElementById('add-receivable-category').value = item.category;
+            document.getElementById('add-receivable-date').value = item.date || getTodayDateString();
+            document.getElementById('add-receivable-due-date').value = item.dueDate || '';
+            document.getElementById('add-receivable-currency').value = item.currency || 'TRY';
+            updateReceivableCurrencyHint();
+            if (el) el.classList.remove('hidden');
+        }
+        function closeAddReceivableModal() {
+            const el = document.getElementById('receivableModal');
+            if (el) el.classList.add('hidden');
+            editingReceivableId = null;
+        }
+        function updateReceivableCurrencyHint() {
+            const currency = document.getElementById('add-receivable-currency').value;
+            const amountField = document.getElementById('add-receivable-amount');
+            const hint = document.getElementById('add-receivable-currency-hint');
+            amountField.oninput = () => {
+                if (currency === 'TRY') { hint.classList.add('hidden'); return; }
+                const val = parseFloat(amountField.value);
+                const rate = exchangeRates[currency];
+                if (!isNaN(val) && rate) {
+                    hint.innerText = `≈ ${formatCurrency(val * rate)} (kur: 1 ${currency} = ${rate} ₺)`;
+                    hint.classList.remove('hidden');
+                } else if (!rate) {
+                    hint.innerText = `⚠️ Bu para birimi için güncel kur henüz alınamadı — Yönetici Paneli'nden kurları güncelleyin.`;
+                    hint.classList.remove('hidden');
+                } else {
+                    hint.classList.add('hidden');
+                }
+            };
+            amountField.oninput();
+        }
+        function saveNewReceivable() {
+            const name = document.getElementById('add-receivable-name').value.trim();
+            const description = document.getElementById('add-receivable-description').value.trim();
+            const amount = parseFloat(document.getElementById('add-receivable-amount').value);
+            const category = document.getElementById('add-receivable-category').value;
+            const currency = document.getElementById('add-receivable-currency').value;
+            const dateVal = document.getElementById('add-receivable-date').value || getTodayDateString();
+            const dueDateVal = document.getElementById('add-receivable-due-date').value || null;
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                showAlert('Eksik Bilgi', 'Lütfen geçerli bir borçlu adı ve pozitif bir alacak tutarı giriniz.');
+                return;
+            }
+            if (dueDateVal && dueDateVal < dateVal) {
+                showAlert('Geçersiz Vade Tarihi', 'Tahsil edilecek tarih, kayıt tarihinden önce olamaz.');
+                return;
+            }
+            const rate = currency !== 'TRY' ? exchangeRates[currency] : null;
+            if (currency !== 'TRY' && !rate) {
+                showAlert('Kur Bulunamadı', `${CURRENCY_LABELS[currency]} için güncel kur bilgisi yok. Lütfen önce Yönetici Paneli'nden kurları güncelleyin, ya da TL olarak giriniz.`);
+                return;
+            }
+            const amountTRY = currency === 'TRY' ? amount : Math.round(amount * rate * 100) / 100;
+
+            if (editingReceivableId !== null) {
+                allReceivables = allReceivables.map(r => r.id === editingReceivableId ? {
+                    ...r, name, description, amount, currency, amountTRY, rateUsed: rate,
+                    rateDate: currency !== 'TRY' ? getTodayDateString() : r.rateDate,
+                    category, date: dateVal, dueDate: dueDateVal, editedAt: new Date().toISOString()
+                } : r);
+                logAudit('Alacak Düzenlendi', `"${name}" — ${formatCurrencyAny(amount, currency)}`);
+                updateDashboard();
+                closeAddReceivableModal();
+                showToast('Güncellendi', `"${name}" alacak kaydı güncellendi.`, 'success');
+            } else {
+                allReceivables.push({
+                    id: Date.now(),
+                    projectId: activeProjectId === 'ana-kasa' ? (projects[0] && projects[0].id) : activeProjectId,
+                    name, description, amount, currency, amountTRY, rateUsed: rate,
+                    rateDate: currency !== 'TRY' ? getTodayDateString() : null,
+                    collected: false, category, date: dateVal, dueDate: dueDateVal
+                });
+                logAudit('Alacak Eklendi', `"${name}" — ${formatCurrencyAny(amount, currency)}`);
+                updateDashboard();
+                closeAddReceivableModal();
+                document.getElementById('add-receivable-name').value = '';
+                document.getElementById('add-receivable-description').value = '';
+                document.getElementById('add-receivable-amount').value = '';
+            }
+        }
+        function confirmDeleteReceivable(id) {
+            const item = receivables.find(r => r.id === id);
+            if (!item) return;
+            showConfirm(
+                'Alacak Kaydı Siliniyor',
+                `"${item.name}" alacak kaydını (${formatCurrencyAny(item.amount, item.currency || 'TRY')}) kalıcı olarak silmek istediğinize emin misiniz?`,
+                () => {
+                    allReceivables = allReceivables.filter(r => r.id !== id);
+                    logAudit('Alacak Silindi', `"${item.name}" — ${formatCurrencyAny(item.amount, item.currency || 'TRY')}`);
+                    updateDashboard();
+                    showToast('Silindi', `"${item.name}" alacak kaydı silindi.`, 'success');
+                }
+            );
+        }
+
+        // ================= ALACAK TAHSİLATI: PARA NEREYE GİTTİ? (Borç ödemesinin AYNASI) =================
+        let pendingCollectionReceivableId = null;
+        let pendingCollectionSource = null;
+
+        function toggleReceivableCollected(id) {
+            const item = receivables.find(r => r.id === id);
+            if (!item) return;
+
+            if (!item.collected) {
+                updateDashboard();
+                openCollectionSourceModal(id);
+            } else {
+                updateDashboard();
+                const sourceWarning = item.collectionSource === 'banka'
+                    ? ` "${item.collectionBankName}" hesabından tutar geri düşülecektir.`
+                    : ' Kasa bakiyesinden tutar geri düşülecektir.';
+                showConfirm(
+                    'Tahsilat Durumu Geri Alınsın mı?',
+                    `"${item.name}" kalemini tekrar "TAHSİL EDİLMEDİ" durumuna almak istediğinizden emin misiniz?${sourceWarning}`,
+                    () => {
+                        const collectedCurrency = item.currency || 'TRY';
+                        if (item.collectionSource === 'banka' && item.collectionBankId) {
+                            const bankItem = allBanks.find(b => b.id === item.collectionBankId);
+                            const bankCurrency = bankItem ? (bankItem.currency || 'TRY') : 'TRY';
+                            const amountInBankCurrency = convertBetweenCurrencies(item.amount, collectedCurrency, bankCurrency);
+                            adjustBankBalance(item.collectionBankId, 'çıkış', `Tahsilat geri alındı: ${item.name}`, amountInBankCurrency, getTodayDateString());
+                        } else if (item.collectionSource === 'kasa') {
+                            addKasaTransaction(`Tahsilat geri alındı: ${item.name}`, item.amount, 'çıkış', getTodayDateString(), collectedCurrency);
+                        }
+                        allReceivables = allReceivables.map(r => r.id === id ? { ...r, collected: false, collectedDate: null, collectionSource: null, collectionBankId: null, collectionBankName: null } : r);
+                        logAudit('Tahsilat Geri Alındı', `"${item.name}" — ${formatCurrencyAny(item.amount, collectedCurrency)}`);
+                        updateDashboard();
+                        showToast('Geri Alındı', `"${item.name}" tekrar "tahsil edilmedi" durumuna alındı.`, 'info');
+                    }
+                );
+            }
+        }
+
+        function openCollectionSourceModal(receivableId) {
+            const item = receivables.find(r => r.id === receivableId);
+            if (!item) return;
+            pendingCollectionReceivableId = receivableId;
+            pendingCollectionSource = null;
+
+            safeSetText('collection-source-debt-name', `"${item.name}" carisinden tahsil ettiğiniz ${formatCurrencyAny(item.amount, item.currency || 'TRY')} nereye yatırıldı?`);
+            document.getElementById('collection-source-step-1').classList.remove('hidden');
+            document.getElementById('collection-source-step-2-bank').classList.add('hidden');
+
+            const el = document.getElementById('collectionSourceModal');
+            if (el) el.classList.remove('hidden');
+        }
+        function backToCollectionSourceStep1() {
+            document.getElementById('collection-source-step-1').classList.remove('hidden');
+            document.getElementById('collection-source-step-2-bank').classList.add('hidden');
+        }
+        function selectCollectionSource(type) {
+            pendingCollectionSource = type;
+            if (type === 'kasa') {
+                finalizeCollectionSource();
+                return;
+            }
+            // type === 'banka'
+            const payableBanks = getPayableBankOptions();
+            if (payableBanks.length === 0) {
+                showAlert('Banka Hesabı Yok', 'Kayıtlı banka hesabı bulunmuyor. Önce Bankalar sayfasından bir hesap ekleyin, ya da "Kasaya" seçeneğini kullanın.');
+                document.getElementById('collection-source-step-1').classList.remove('hidden');
+                return;
+            }
+            const sel = document.getElementById('collection-source-bank-select');
+            sel.innerHTML = payableBanks.map(b => `<option value="${b.id}">${b.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(b.name)} (${b.currency && b.currency !== 'TRY' ? formatCurrencyAny(b.balance, b.currency) : formatCurrency(b.balance)})</option>`).join('');
+            document.getElementById('collection-source-step-1').classList.add('hidden');
+            document.getElementById('collection-source-step-2-bank').classList.remove('hidden');
+        }
+        function finalizeCollectionSource() {
+            const item = receivables.find(r => r.id === pendingCollectionReceivableId);
+            if (!item) return;
+            const receivableCurrency = item.currency || 'TRY';
+            let collectionBankId = null, collectionBankName = null, sourceLabel = 'Kasaya (Nakit)';
+
+            if (pendingCollectionSource === 'kasa') {
+                // Kendi para biriminde (çevrilmeden) doğrudan Kasa'ya işlenir — Kasa zaten
+                // çoklu para birimini destekliyor (Bankalar/Çekler ile aynı tutarlı yaklaşım).
+                addKasaTransaction(`Tahsilat: ${item.name}`, item.amount, 'giriş', getTodayDateString(), receivableCurrency);
+            } else if (pendingCollectionSource === 'banka') {
+                const bankId = parseInt(document.getElementById('collection-source-bank-select').value);
+                const bankItem = allBanks.find(b => b.id === bankId);
+                if (!bankItem) return;
+                const bankCurrency = bankItem.currency || 'TRY';
+                const amountInBankCurrency = convertBetweenCurrencies(item.amount, receivableCurrency, bankCurrency);
+                adjustBankBalance(bankId, 'giriş', `Tahsilat: ${item.name}`, amountInBankCurrency, getTodayDateString());
+                collectionBankId = bankId;
+                collectionBankName = bankItem.name;
+                const bankLabel = bankItem.projectId === 'ana-kasa' ? `Ana Kasa: ${bankItem.name}` : bankItem.name;
+                const conversionNote = receivableCurrency !== bankCurrency ? ` (${formatCurrencyAny(amountInBankCurrency, bankCurrency)} olarak, güncel kur)` : '';
+                sourceLabel = `${bankLabel} hesabına${conversionNote}`;
+            } else {
+                return;
+            }
+
+            allReceivables = allReceivables.map(r => r.id === item.id ? {
+                ...r, collected: true, collectedDate: getTodayDateString(),
+                collectionSource: pendingCollectionSource, collectionBankId, collectionBankName
+            } : r);
+            logAudit('Alacak Tahsil Edildi', `"${item.name}" — ${formatCurrencyAny(item.amount, receivableCurrency)} — ${sourceLabel}`);
+            updateDashboard();
+            closeCollectionSourceModal();
+            showToast('Tahsilat Kaydedildi', `"${item.name}" tahsilatı ${sourceLabel} işlendi.`, 'success');
+        }
+        function closeCollectionSourceModal() {
+            const el = document.getElementById('collectionSourceModal');
+            if (el) el.classList.add('hidden');
+            pendingCollectionReceivableId = null;
+            pendingCollectionSource = null;
+        }
+
         // Cari Borç Ekle / Sil
         let editingDebtId = null; // null => yeni ekleme modu, sayı => düzenleme modu
 
@@ -10400,6 +11594,8 @@
             document.getElementById('add-debt-category').value = 'Acil Ödemeler';
             const dateField = document.getElementById('add-debt-date');
             if (dateField) dateField.value = getTodayDateString();
+            const dueDateField = document.getElementById('add-debt-due-date');
+            if (dueDateField) dueDateField.value = '';
             document.getElementById('add-debt-currency').value = 'TRY';
             updateDebtCurrencyHint();
             populateCarilerSelect();
@@ -10425,6 +11621,7 @@
             document.getElementById('add-debt-amount').value = item.amount;
             document.getElementById('add-debt-category').value = item.category;
             document.getElementById('add-debt-date').value = item.date || getTodayDateString();
+            document.getElementById('add-debt-due-date').value = item.dueDate || '';
             document.getElementById('add-debt-currency').value = item.currency || 'TRY';
             updateDebtCurrencyHint();
             if (el) el.classList.remove('hidden');
@@ -10463,9 +11660,14 @@
             const category = document.getElementById('add-debt-category').value;
             const currency = document.getElementById('add-debt-currency').value;
             const dateVal = document.getElementById('add-debt-date').value || getTodayDateString();
+            const dueDateVal = document.getElementById('add-debt-due-date').value || null;
 
             if (!name || isNaN(amount) || amount <= 0) {
                 showAlert('Eksik Bilgi', 'Lütfen geçerli bir alacaklı adı ve pozitif bir borç tutarı giriniz.');
+                return;
+            }
+            if (dueDateVal && dueDateVal < dateVal) {
+                showAlert('Geçersiz Vade Tarihi', 'Ödenecek tarih, kayıt tarihinden önce olamaz.');
                 return;
             }
 
@@ -10489,6 +11691,7 @@
                     rateDate: currency !== 'TRY' ? getTodayDateString() : d.rateDate,
                     category: category,
                     date: dateVal,
+                    dueDate: dueDateVal,
                     editedAt: new Date().toISOString()
                 } : d);
                 logAudit('Borç Düzenlendi', `"${name}" — ${formatCurrencyAny(amount, currency)}`);
@@ -10509,7 +11712,8 @@
                     rateDate: currency !== 'TRY' ? getTodayDateString() : null,
                     paid: false,
                     category: category,
-                    date: dateVal
+                    date: dateVal,
+                    dueDate: dueDateVal
                 };
                 allDebts.push(newDebt);
                 logAudit('Borç Eklendi', `"${name}" — ${formatCurrencyAny(amount, currency)}`);
@@ -11338,8 +12542,10 @@
         function searchDebts(query) {
             searchQuery = query;
             otherDebtsPage = 1; // yeni arama başladığında sayfalamayı başa al
+            receivablesPage = 1;
             renderUrgentTable();
             renderOtherTable();
+            renderReceivablesTable();
         }
         const searchDebtsDebounced = debounce(searchDebts, 250);
 
@@ -11389,6 +12595,18 @@
                 'çek': { icon: 'fa-money-check', label: 'Çek', cls: 'bg-amber-500/10 text-amber-500 border-amber-500/20' }
             };
             const info = map[item.paymentSource];
+            if (!info) return '';
+            return `<span class="inline-flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded-md border ${info.cls} mt-0.5" title="${info.label}"><i class="fa-solid ${info.icon}"></i> ${info.label}</span>`;
+        }
+        // paymentSourceBadge'in AYNASI — tahsil edilen bir alacağın parasının nereye (Kasa/hangi
+        // Banka) yatırıldığını gösterir.
+        function collectionSourceBadge(item) {
+            if (!item.collected || !item.collectionSource) return '';
+            const map = {
+                kasa: { icon: 'fa-wallet', label: 'Kasa', cls: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' },
+                banka: { icon: 'fa-building-columns', label: item.collectionBankName || 'Banka', cls: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' }
+            };
+            const info = map[item.collectionSource];
             if (!info) return '';
             return `<span class="inline-flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded-md border ${info.cls} mt-0.5" title="${info.label}"><i class="fa-solid ${info.icon}"></i> ${info.label}</span>`;
         }
@@ -11611,6 +12829,9 @@
             allDebts.filter(d => matchesProject(d.projectId) && d.name.toLowerCase().includes(q)).forEach(d => hits.push({
                 icon: 'fa-scale-balanced', color: 'text-indigo-500', label: d.name, sub: `Borç · ${formatCurrencyAny(d.amount, d.currency || 'TRY')} · ${d.paid ? 'Ödendi' : 'Açık'}${getSearchResultProjectLabel(d.projectId)}`, tab: 'kasa-tab'
             }));
+            allReceivables.filter(r => matchesProject(r.projectId) && r.name.toLowerCase().includes(q)).forEach(r => hits.push({
+                icon: 'fa-hand-holding-dollar', color: 'text-emerald-500', label: r.name, sub: `Alacak · ${formatCurrencyAny(r.amount, r.currency || 'TRY')} · ${r.collected ? 'Tahsil Edildi' : 'Bekliyor'}${getSearchResultProjectLabel(r.projectId)}`, tab: 'receivables-tab'
+            }));
             allIncomes.filter(i => matchesProject(i.projectId) && i.name.toLowerCase().includes(q)).forEach(i => hits.push({
                 icon: 'fa-wallet', color: 'text-emerald-500', label: i.name, sub: `Gelir · ${formatCurrencyAny(i.amount, i.currency || 'TRY')} · ${new Date(i.date).toLocaleDateString('tr-TR')}${getSearchResultProjectLabel(i.projectId)}`, tab: 'kasa-tab'
             }));
@@ -11652,7 +12873,7 @@
             resultsWrapper.classList.remove('hidden');
         }
         function goToGlobalSearchResult(tabId) {
-            const navMap = { 'dashboard-tab': 'nav-dashboard', 'kasa-tab': 'nav-kasa', 'banka-cek-tab': 'nav-banka-cek', 'credit-card-tab': 'nav-credit-card', 'cariler-tab': 'nav-cariler' };
+            const navMap = { 'dashboard-tab': 'nav-dashboard', 'kasa-tab': 'nav-kasa', 'receivables-tab': 'nav-receivables', 'banka-cek-tab': 'nav-banka-cek', 'credit-card-tab': 'nav-credit-card', 'cariler-tab': 'nav-cariler' };
             const btn = document.getElementById(navMap[tabId]);
             if (btn) switchTab(tabId, btn);
             document.getElementById('global-search-results').classList.add('hidden');
@@ -11783,8 +13004,10 @@
 
             renderIncomeList();
             otherDebtsPage = 1; // filtre değiştiğinde sayfalamayı başa al
+            receivablesPage = 1;
             renderUrgentTable();
             renderOtherTable();
+            renderReceivablesTable();
             renderChequeLedgers();
             renderChequeTimeline();
             renderBankAccounts();
@@ -12414,8 +13637,8 @@
         // "Tümünü Seç" ile de eskisi gibi komple sıfırlama yapılabilir.
         const RESET_CATEGORIES = {
             kasa: {
-                label: 'Kasa (Borç/Gelir)',
-                keys: ['debts_rev4', 'monthly_rev4', 'incomes_rev4'],
+                label: 'Kasa (Borç/Gelir/Alacak)',
+                keys: ['debts_rev4', 'monthly_rev4', 'incomes_rev4', 'receivables_rev4'],
                 resetMemory: () => {
                     // Sadece AKTİF PROJENİN Kasa kayıtlarını siler (Ana Kasa aktifken tümünü siler) —
                     // diğer projelerin Kasa verisine dokunulmaz.
@@ -12423,6 +13646,7 @@
                     allDebts = allDebts.filter(d => !belongsToActive(d));
                     allMonthly = allMonthly.filter(d => !belongsToActive(d));
                     allIncomes = allIncomes.filter(d => !belongsToActive(d));
+                    allReceivables = allReceivables.filter(d => !belongsToActive(d));
                     applyProjectFilter();
                 }
             },
@@ -12859,7 +14083,7 @@
 
             // "light" kelimesi geçmeyen yeni açık renkli temalar (Okyanus/Orman/Gün Batımı) da
             // açık tema olarak sayılmalı — aksi halde grafikler yanlışlıkla karanlık mod renkleriyle kalır.
-            const isLight = themeName.includes('light') || ['okyanus', 'orman'].includes(themeName);
+            const isLight = themeName.includes('light') || ['okyanus', 'orman', 'porselen', 'kum'].includes(themeName);
             const labelColor = isLight ? '#475569' : '#94a3b8';
             const gridColor = isLight ? '#e2e8f0' : '#1e293b';
 
@@ -13117,6 +14341,7 @@
             });
 
             safeInit('backupReminder', checkMonthlyBackupReminder);
+            safeInit('sidebarSwipeGesture', initSidebarSwipeGesture);
             safeInit('sessionTimeoutWatcher', initSessionTimeoutWatcher);
         }
     </script>
