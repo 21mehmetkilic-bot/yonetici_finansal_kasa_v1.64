@@ -274,7 +274,10 @@
         /* Tıklayınca Genişleyen Akıllı Arama Kutusu */
         #debt-search-wrapper.search-expanded,
         #cc-search-wrapper.search-expanded,
-        #global-search-wrapper.search-expanded {
+        #recv-search-wrapper.search-expanded,
+        #cheque-search-wrapper.search-expanded,
+        #global-search-wrapper.search-expanded,
+        .section-search-wrapper.search-expanded {
             width: 220px !important;
         }
 
@@ -486,6 +489,29 @@
         @media (prefers-reduced-motion: reduce) {
             .animate-pulse, .animate-spin, .animate-ping, .animate-bounce {
                 animation: none !important;
+            }
+        }
+
+        /* Arama sonucu vurgusu (Excel "Bul" benzeri) */
+        @keyframes searchRowPulse {
+            0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-primary) 55%, transparent); background-color: color-mix(in srgb, var(--accent-primary) 22%, transparent); }
+            60% { box-shadow: 0 0 0 8px transparent; background-color: color-mix(in srgb, var(--accent-primary) 12%, transparent); }
+            100% { box-shadow: none; background-color: transparent; }
+        }
+        tr.search-row-highlight,
+        .search-row-highlight {
+            animation: searchRowPulse 2.2s ease-out 1;
+            outline: 2px solid var(--accent-primary);
+            outline-offset: -2px;
+            border-radius: 0.75rem;
+            position: relative;
+            z-index: 2;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            tr.search-row-highlight,
+            .search-row-highlight {
+                animation: none;
+                background-color: color-mix(in srgb, var(--accent-primary) 18%, transparent) !important;
             }
         }
 
@@ -769,19 +795,7 @@
                         <button onclick="openPrintOptionsModal()" class="hidden sm:flex auth-required-action py-2 px-3 bg-zinc-900/10 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-850 border theme-border rounded-lg text-[11px] font-bold theme-text-main transition-all items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-print text-zinc-400 text-xs"></i> Yazdır
                         </button>
-                        <!-- Tarih Filtresi (global panel açar) — MOBİLDE GİZLİ -->
-                        <button onclick="toggleDateFilterPanel(this)" class="hidden sm:flex auth-required-action date-filter-trigger-btn relative w-8 h-8 items-center justify-center theme-input border theme-border rounded-lg theme-text-muted hover:text-indigo-500 transition-all shrink-0" title="Tarih Filtresi">
-                            <i class="fa-solid fa-calendar-days text-xs"></i>
-                            <span class="date-filter-active-dot hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 theme-bg-card"></span>
-                        </button>
-                        <!-- Tıklayınca Genişleyen Akıllı Arama (sadece Borçlar) -->
-                        <div id="debt-search-wrapper" class="auth-required-action flex items-center theme-input border theme-border rounded-lg overflow-hidden transition-all duration-300" style="width: 32px;">
-                            <button onclick="toggleDebtSearch()" class="w-8 h-8 flex items-center justify-center shrink-0 theme-text-muted hover:text-indigo-500 transition-all" title="Borçlarda Ara">
-                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                            </button>
-                            <input id="debt-search-input" oninput="searchDebtsDebounced(this.value)" type="text" placeholder="Alacaklı adı veya açıklama..." class="w-full bg-transparent border-none focus:outline-none text-xs pr-3 theme-text-main">
-                        </div>
-                        <!-- Global Arama (Borç/Banka/Çek/Kredi Kartı/Gelir hepsinde) -->
+                        <!-- Global Arama (üstte kalır; tarih/borç arama ilgili bölüm başlıklarına taşındı) -->
                         <div class="relative">
                             <div id="global-search-wrapper" class="auth-required-action flex items-center theme-input border theme-border rounded-lg overflow-hidden transition-all duration-300" style="width: 32px;">
                                 <button onclick="toggleGlobalSearch()" class="w-8 h-8 flex items-center justify-center shrink-0 theme-text-muted hover:text-emerald-500 transition-all" title="Her Yerde Ara">
@@ -963,14 +977,6 @@
                     </div>
                 </div>
 
-                <!-- SON EKLENEN 10 KAYIT: her türden (borç/alacak/çek/kredi kartı/gelir/banka hareketi)
-                     en son eklenen kayıtları tek listede gösterir, tıklayınca ilgili sayfaya götürür. -->
-                <div id="recent-activity-widget" class="glass-card p-6 rounded-3xl">
-                    <h3 class="text-lg font-extrabold theme-text-main flex items-center gap-2 mb-1"><i class="fa-solid fa-clock-rotate-left theme-text-muted"></i> Son Eklenenler</h3>
-                    <p class="text-xs theme-text-muted mb-4">En son eklediğiniz 10 kayıt — birine tıklayınca ilgili sayfaya gidersiniz.</p>
-                    <div id="recent-activity-list" class="space-y-1.5"></div>
-                </div>
-
                 <!-- PROJE BAZINDA ÖZET: SADECE ANA KASA AKTİFKEN GÖRÜNÜR -->
                 <div id="project-breakdown-section" class="hidden glass-card p-6 rounded-3xl">
                     <h3 class="text-lg font-extrabold theme-text-main flex items-center gap-2 mb-1"><i class="fa-solid fa-diagram-project theme-text-muted"></i> Proje Bazında Özet</h3>
@@ -1035,6 +1041,13 @@
                         </div>
                     </div>
                 </div>
+                <!-- SON EKLENEN KAYITLAR: dashboard en altında — tıklayınca ilgili satıra gider -->
+                <div id="recent-activity-widget" class="glass-card p-6 rounded-3xl">
+                    <h3 class="text-lg font-extrabold theme-text-main flex items-center gap-2 mb-1"><i class="fa-solid fa-clock-rotate-left theme-text-muted"></i> Son Eklenenler</h3>
+                    <p class="text-xs theme-text-muted mb-4">En son eklediğiniz kayıtlar (en fazla 20) — listede kaydırarak gezin; tıklayınca ilgili satıra gidip vurgulanır.</p>
+                    <div id="recent-activity-list" class="space-y-1.5 max-h-[280px] overflow-y-auto overscroll-contain pr-1" style="scrollbar-gutter: stable;"></div>
+                </div>
+
             </div>
 
             <!-- ================= SEKME 2: KASA VE BORÇ TAKİBİ ================= -->
@@ -1233,7 +1246,17 @@
                                         <p class="text-[11px] theme-text-muted">Acil dahil tüm borç kalemlerinizin tam listesi.</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-3">
+                                <div class="flex flex-wrap items-center gap-2 justify-end">
+                                    <button type="button" onclick="toggleDateFilterPanel(this)" class="auth-required-action date-filter-trigger-btn relative w-8 h-8 flex items-center justify-center theme-input border theme-border rounded-lg theme-text-muted hover:text-indigo-500 transition-all shrink-0" title="Tarih Filtresi">
+                                        <i class="fa-solid fa-calendar-days text-xs"></i>
+                                        <span class="date-filter-active-dot hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 theme-bg-card"></span>
+                                    </button>
+                                    <div id="debt-search-wrapper" class="auth-required-action section-search-wrapper flex items-center theme-input border theme-border rounded-lg overflow-hidden transition-all duration-300" style="width: 32px;">
+                                        <button type="button" onclick="toggleDebtSearch()" class="w-8 h-8 flex items-center justify-center shrink-0 theme-text-muted hover:text-indigo-500 transition-all" title="Borçlarda Ara">
+                                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                        </button>
+                                        <input id="debt-search-input" oninput="searchDebtsDebounced(this.value)" type="text" placeholder="Alacaklı adı veya açıklama..." class="w-full bg-transparent border-none focus:outline-none text-xs pr-3 theme-text-main min-w-0">
+                                    </div>
                                     <span id="other-badge-count" class="theme-table-header theme-text-muted text-xs px-3 py-1 rounded-full font-bold border theme-border">0 Borç</span>
                                     <button onclick="triggerAction(openAddDebtModal)" class="admin-only text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
                                         <i class="fa-solid fa-circle-plus"></i> Borç Ekle
@@ -1327,7 +1350,17 @@
                                 <p class="text-[11px] theme-text-muted">Size borçlu olan carilerin tam listesi.</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-2 justify-end">
+                                    <button type="button" onclick="toggleDateFilterPanel(this)" class="auth-required-action date-filter-trigger-btn relative w-8 h-8 flex items-center justify-center theme-input border theme-border rounded-lg theme-text-muted hover:text-indigo-500 transition-all shrink-0" title="Tarih Filtresi">
+                                        <i class="fa-solid fa-calendar-days text-xs"></i>
+                                        <span class="date-filter-active-dot hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 theme-bg-card"></span>
+                                    </button>
+                                    <div id="recv-search-wrapper" class="auth-required-action section-search-wrapper flex items-center theme-input border theme-border rounded-lg overflow-hidden transition-all duration-300" style="width: 32px;">
+                                        <button type="button" onclick="toggleSectionSearch('recv-search-wrapper','recv-search-input')" class="w-8 h-8 flex items-center justify-center shrink-0 theme-text-muted hover:text-emerald-500 transition-all" title="Alacaklarda Ara">
+                                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                        </button>
+                                        <input id="recv-search-input" oninput="searchDebtsDebounced(this.value)" type="text" placeholder="Borçlu adı veya açıklama..." class="w-full bg-transparent border-none focus:outline-none text-xs pr-3 theme-text-main min-w-0">
+                                    </div>
                             <span id="receivables-badge-count" class="theme-table-header theme-text-muted text-xs px-3 py-1 rounded-full font-bold border theme-border">0 Alacak</span>
                             <button onclick="triggerAction(openAddReceivableModal)" class="admin-only text-xs text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-2 rounded-xl font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0">
                                 <i class="fa-solid fa-circle-plus"></i> Alacak Ekle
@@ -1430,6 +1463,19 @@
                     </div>
                 </div>
 
+                <!-- ÇEK DEFTERLERİ: tarih + arama araç çubuğu -->
+                <div class="flex flex-wrap items-center justify-end gap-2 no-print">
+                                    <button type="button" onclick="toggleDateFilterPanel(this)" class="auth-required-action date-filter-trigger-btn relative w-8 h-8 flex items-center justify-center theme-input border theme-border rounded-lg theme-text-muted hover:text-indigo-500 transition-all shrink-0" title="Tarih Filtresi">
+                                        <i class="fa-solid fa-calendar-days text-xs"></i>
+                                        <span class="date-filter-active-dot hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 theme-bg-card"></span>
+                                    </button>
+                    <div id="cheque-search-wrapper" class="auth-required-action section-search-wrapper flex items-center theme-input border theme-border rounded-lg overflow-hidden transition-all duration-300" style="width: 32px;">
+                        <button type="button" onclick="toggleSectionSearch('cheque-search-wrapper','cheque-search-input')" class="w-8 h-8 flex items-center justify-center shrink-0 theme-text-muted hover:text-amber-500 transition-all" title="Çeklerde Ara">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </button>
+                        <input id="cheque-search-input" oninput="searchChequesDebounced(this.value)" type="text" placeholder="Çek sahibi veya numara..." class="w-full bg-transparent border-none focus:outline-none text-xs pr-3 theme-text-main min-w-0">
+                    </div>
+                </div>
                 <!-- ÇEK DEFTERLERİ LİSTESİ -->
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                     
@@ -1549,6 +1595,10 @@
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <span id="cc-badge-count" class="theme-table-header theme-text-muted text-xs px-3 py-1 rounded-full font-bold border theme-border">0 Harcama</span>
+                                    <button type="button" onclick="toggleDateFilterPanel(this)" class="auth-required-action date-filter-trigger-btn relative w-8 h-8 flex items-center justify-center theme-input border theme-border rounded-lg theme-text-muted hover:text-indigo-500 transition-all shrink-0" title="Tarih Filtresi">
+                                        <i class="fa-solid fa-calendar-days text-xs"></i>
+                                        <span class="date-filter-active-dot hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 theme-bg-card"></span>
+                                    </button>
                             <select id="cc-card-filter" onchange="filterCreditCardTable()" class="auth-required-action theme-input border theme-border rounded-xl text-[11px] font-bold py-2 px-2.5">
                                 <option value="all">Tüm Kartlar</option>
                             </select>
@@ -4253,42 +4303,44 @@
         // yeni kayıtlar hep Date.now() tabanlı id alır, yani id'ye göre büyükten küçüğe sıralamak
         // otomatik olarak "en son eklenen en üstte" sırasını verir; ayrı bir "createdAt" alanına
         // gerek kalmaz.
-        function getRecentActivityItems(limit = 10) {
+        function getRecentActivityItems(limit = 20) {
             const items = [];
 
             allDebts.forEach(d => items.push({
-                id: d.id, icon: 'fa-scale-balanced', color: 'text-indigo-500',
+                id: d.id, type: 'debt', projectId: d.projectId, icon: 'fa-scale-balanced', color: 'text-indigo-500',
                 label: d.name, sub: `Borç · ${formatCurrencyAny(d.amount, d.currency || 'TRY')}`, tab: 'kasa-tab'
             }));
             allReceivables.forEach(r => items.push({
-                id: r.id, icon: 'fa-hand-holding-dollar', color: 'text-emerald-500',
+                id: r.id, type: 'receivable', projectId: r.projectId, icon: 'fa-hand-holding-dollar', color: 'text-emerald-500',
                 label: r.name, sub: `Alacak · ${formatCurrencyAny(r.amount, r.currency || 'TRY')}`, tab: 'receivables-tab'
             }));
             allCheques.forEach(c => items.push({
-                id: c.id, icon: 'fa-money-check', color: 'text-amber-500',
+                id: c.id, type: 'cheque', projectId: c.projectId, icon: 'fa-money-check', color: 'text-amber-500',
                 label: c.drawer, sub: `Çek (${c.type === 'gelen' ? 'Alınan' : 'Verilen'}) · ${formatCurrencyAny(c.amount, c.currency || 'TRY')}`, tab: 'banka-cek-tab'
             }));
             allIncomes.forEach(i => items.push({
-                id: i.id, icon: 'fa-wallet', color: 'text-emerald-500',
+                id: i.id, type: 'income', projectId: i.projectId, icon: 'fa-wallet', color: 'text-emerald-500',
                 label: i.name, sub: `Gelir · ${formatCurrencyAny(i.amount, i.currency || 'TRY')}`, tab: 'kasa-tab'
             }));
             allCreditCardExpenses.forEach(e => {
                 const card = allCreditCards.find(c => c.id === e.cardId);
                 items.push({
-                    id: e.id, icon: 'fa-credit-card', color: 'text-violet-500',
+                    id: e.id, type: 'ccexpense', projectId: card ? card.projectId : null, icon: 'fa-credit-card', color: 'text-violet-500',
                     label: e.creditor || e.description || 'Kredi Kartı Harcaması',
                     sub: `Kredi Kartı${card ? ' (' + card.bankName + ')' : ''} · ${formatCurrencyAny(e.amount, card ? (card.currency || 'TRY') : 'TRY')}`,
                     tab: 'credit-card-tab'
                 });
             });
             bankTransactions.forEach(t => items.push({
-                id: t.id, icon: 'fa-building-columns', color: 'text-blue-500',
+                id: t.id, type: 'banktx', projectId: null, icon: 'fa-building-columns', color: 'text-blue-500',
                 label: t.description || t.bankName, sub: `Banka Hareketi (${t.bankName}) · ${t.type === 'giriş' ? '+' : '−'}${formatCurrency(t.amount)}`, tab: 'banka-cek-tab'
             }));
 
             items.sort((a, b) => b.id - a.id);
             return items.slice(0, limit);
         }
+
+        const RECENT_TOTAL = 20;
 
         function renderRecentActivity() {
             const list = document.getElementById('recent-activity-list');
@@ -4297,13 +4349,20 @@
                 list.innerHTML = `<p class="text-xs theme-text-muted text-center py-4">Detayları görmek için giriş yapmanız gerekiyor.</p>`;
                 return;
             }
-            const items = getRecentActivityItems(10);
+            const items = getRecentActivityItems(RECENT_TOTAL);
             if (items.length === 0) {
                 list.innerHTML = `<p class="text-xs theme-text-muted text-center py-4">Henüz bir kayıt eklenmedi.</p>`;
                 return;
             }
+            // Tümü listelenir; kutu max-height ile ~5 satır gösterir, geri kalanı kaydırarak görülür
             list.innerHTML = items.map(it => `
-                <button onclick="goToRecentActivityItem('${it.tab}')" class="w-full flex items-center gap-3 p-2.5 hover:bg-zinc-900/10 dark:hover:bg-zinc-900/40 rounded-xl transition-all text-left">
+                <button type="button"
+                    data-ra-tab="${escapeHtml(it.tab || '')}"
+                    data-ra-type="${escapeHtml(it.type || '')}"
+                    data-ra-id="${escapeHtml(String(it.id == null ? '' : it.id))}"
+                    data-ra-pid="${escapeHtml(String(it.projectId == null ? '' : it.projectId))}"
+                    onclick="handleRecentActivityClick(this)"
+                    class="w-full flex items-center gap-3 p-2.5 hover:bg-zinc-900/10 dark:hover:bg-zinc-900/40 rounded-xl transition-all text-left">
                     <div class="w-8 h-8 rounded-lg bg-zinc-900/10 dark:bg-zinc-900 flex items-center justify-center shrink-0 ${it.color}">
                         <i class="fa-solid ${it.icon} text-xs"></i>
                     </div>
@@ -4314,6 +4373,15 @@
                     <i class="fa-solid fa-chevron-right text-[10px] theme-text-muted shrink-0"></i>
                 </button>
             `).join('');
+        }
+        function handleRecentActivityClick(btn) {
+            if (!btn || !btn.dataset) return;
+            goToGlobalSearchResult(
+                btn.dataset.raTab || '',
+                btn.dataset.raType || '',
+                btn.dataset.raId || '',
+                btn.dataset.raPid || ''
+            );
         }
         function goToRecentActivityItem(tabId) {
             const navMap = { 'dashboard-tab': 'nav-dashboard', 'kasa-tab': 'nav-kasa', 'receivables-tab': 'nav-receivables', 'banka-cek-tab': 'nav-banka-cek', 'credit-card-tab': 'nav-credit-card', 'cariler-tab': 'nav-cariler' };
@@ -5400,7 +5468,7 @@
                 changes: [
                     "📱 Mobilde üst çubuk sadeleştirildi — PDF Rapor, Yazdır, Tarih Filtresi ve Canlı Saat sadece masaüstünde (sm+ ekranlarda) görünüyor, mobilde sadece Excel ve arama kutuları kalıyor. Masaüstü hiç etkilenmedi",
                     "📌 Diğer Planlı Ödemeler ve Alacaklarım tablolarına yapışkan (sticky) başlık eklendi — kaydırırken sütun adları üstte sabit kalıyor; bu iki tablonun görünür yüksekliği de en az 10 satır sığacak şekilde artırıldı",
-                    "🆕 Genel Durum Paneli'ne 'Son Eklenenler' widget'ı eklendi — Borç/Alacak/Çek/Kredi Kartı/Gelir/Banka Hareketi'nin hepsinden en son eklenen 10 kayıt tek listede, tıklayınca ilgili sayfaya gidiliyor",
+                    "🆕 Genel Durum Paneli'ne 'Son Eklenenler' widget'ı eklendi — Borç/Alacak/Çek/Kredi Kartı/Gelir/Banka Hareketi'nin hepsinden en son eklenen 20 kayıt (5 görünür) tek listede, tıklayınca ilgili sayfaya gidiliyor",
                     "⏳ Kasa sayfasına 'Borç Vade Zaman Çizelgesi', Alacaklarım sayfasına 'Alacak Vade Zaman Çizelgesi' eklendi — Çekler'deki kırmızı alarm tasarımıyla birebir aynı, vadesi yaklaşan/geçmiş kalemleri öne çıkarıyor",
                     "🐞 Kritik düzeltme: Sekme değiştirirken çalışan render fonksiyonunda, grafikle ilgisi olmayan üç widget (Proje Özeti, Tasarruf Hedefi, Son Eklenenler) yanlışlıkla Chart.js'in yüklenmesini bekleyen bir bloğun içine girmişti — bu, yavaş/başarısız CDN bağlantılarında bu widget'ların hiç görünmemesine yol açabilirdi. Artık sadece gerçekten grafik gerektiren kısım bekliyor"
                 ]
@@ -7550,32 +7618,85 @@
         // Sadece dar ekranlarda (mobil/tablet, <1024px) etkindir; masaüstünde hiçbir etkisi yoktur.
         // "passive: true" ile eklendiği için normal dikey kaydırmayı (scroll) hiç engellemez.
         function initSidebarSwipeGesture() {
-            let swipeStartX = null, swipeStartY = null;
-            document.addEventListener('touchstart', (e) => {
-                if (window.innerWidth >= 1024) { swipeStartX = null; return; }
+            // Mobil tarayıcılar (Chrome/Safari) sol kenardan sağa kaydırmayı "geri" olarak yorumlar.
+            // Bu yüzden: (1) tarayıcının sahiplik alanı olan en sol 8px'i bilinçli olarak YOK SAYARIZ,
+            // (2) menü açma jesti 8–36px bandından başlar, (3) yatay niyet kesinleşince
+            // touchmove'da preventDefault ile tarayıcı geri hareketini engelleriz,
+            // (4) açık menüde sola kaydırınca kapanır.
+            let swipeStartX = null, swipeStartY = null, swipeMode = null, swipeLocked = false;
+            const EDGE_MIN = 8;   // 0–8px: tarayıcıya bırak
+            const EDGE_MAX = 36;  // 8–36px: menü açma adayı
+            const OPEN_DX = 70;
+            const CLOSE_DX = -70;
+            const MAX_DY = 50;
+
+            function isMobileNav() { return window.innerWidth < 1024; }
+            function sidebarOpen() {
                 const sidebar = document.getElementById('sidebar-drawer');
-                if (sidebar && !sidebar.classList.contains('hidden')) { swipeStartX = null; return; } // zaten açıksa yok say
+                return sidebar && !sidebar.classList.contains('hidden');
+            }
+            function openSidebar() {
+                const sidebar = document.getElementById('sidebar-drawer');
+                const backdrop = document.getElementById('sidebar-backdrop');
+                if (sidebar) sidebar.classList.remove('hidden');
+                if (backdrop) backdrop.classList.remove('hidden');
+            }
+            function closeSidebar() {
+                const sidebar = document.getElementById('sidebar-drawer');
+                const backdrop = document.getElementById('sidebar-backdrop');
+                if (sidebar) sidebar.classList.add('hidden');
+                if (backdrop) backdrop.classList.add('hidden');
+            }
+
+            document.addEventListener('touchstart', (e) => {
+                swipeStartX = null; swipeStartY = null; swipeMode = null; swipeLocked = false;
+                if (!isMobileNav() || e.touches.length !== 1) return;
+                // Modal / arama paneli açıkken jesti devre dışı bırak
+                if (document.querySelector('.fixed:not(.hidden)[id$="Modal"], #global-search-results:not(.hidden), #date-filter-panel:not(.hidden)')) return;
                 const touch = e.touches[0];
-                if (touch.clientX > 24) { swipeStartX = null; return; } // sadece SOL KENARDAN (ilk 24px) başlayan dokunuşlar
-                swipeStartX = touch.clientX;
-                swipeStartY = touch.clientY;
+                const x = touch.clientX;
+                if (sidebarOpen()) {
+                    // Açık menüde sola kaydırarak kapatma — menü alanından başlasın
+                    const sidebar = document.getElementById('sidebar-drawer');
+                    if (sidebar && sidebar.contains(touch.target)) {
+                        swipeStartX = x; swipeStartY = touch.clientY; swipeMode = 'close';
+                    }
+                    return;
+                }
+                // Menü kapalı: tarayıcı geri alanını (0–8px) atla, 8–36px bandından aç
+                if (x >= EDGE_MIN && x <= EDGE_MAX) {
+                    swipeStartX = x; swipeStartY = touch.clientY; swipeMode = 'open';
+                }
             }, { passive: true });
 
-            document.addEventListener('touchend', (e) => {
-                if (swipeStartX === null) return;
-                const touch = e.changedTouches[0];
-                const diffX = touch.clientX - swipeStartX;
-                const diffY = Math.abs(touch.clientY - swipeStartY);
-                // Yeterince sağa (80px+) VE büyük ölçüde yatay (dikey kaymadan belirgin fazla) bir
-                // hareketse aç — aksi halde normal yukarı/aşağı kaydırmayla karışmasın.
-                if (diffX > 80 && diffY < 60) {
-                    const sidebar = document.getElementById('sidebar-drawer');
-                    const backdrop = document.getElementById('sidebar-backdrop');
-                    if (sidebar) sidebar.classList.remove('hidden');
-                    if (backdrop) backdrop.classList.remove('hidden');
+            document.addEventListener('touchmove', (e) => {
+                if (swipeStartX === null || !swipeMode || e.touches.length !== 1) return;
+                const touch = e.touches[0];
+                const dx = touch.clientX - swipeStartX;
+                const dy = Math.abs(touch.clientY - swipeStartY);
+                if (dy > MAX_DY && !swipeLocked) {
+                    // Dikey kaydırma baskın — jesti iptal et, scroll'a izin ver
+                    swipeStartX = null; swipeMode = null;
+                    return;
                 }
-                swipeStartX = null;
-                swipeStartY = null;
+                const horizontalIntent = (swipeMode === 'open' && dx > 18) || (swipeMode === 'close' && dx < -18);
+                if (horizontalIntent && dy < MAX_DY) {
+                    swipeLocked = true;
+                    // Tarayıcının geri / ileri jestini engelle (passive:false gerekli)
+                    if (e.cancelable) e.preventDefault();
+                }
+            }, { passive: false });
+
+            document.addEventListener('touchend', (e) => {
+                if (swipeStartX === null || !swipeMode) return;
+                const touch = e.changedTouches[0];
+                const dx = touch.clientX - swipeStartX;
+                const dy = Math.abs(touch.clientY - swipeStartY);
+                if (dy < MAX_DY) {
+                    if (swipeMode === 'open' && dx > OPEN_DX) openSidebar();
+                    if (swipeMode === 'close' && dx < CLOSE_DX) closeSidebar();
+                }
+                swipeStartX = null; swipeStartY = null; swipeMode = null; swipeLocked = false;
             }, { passive: true });
         }
 
@@ -7991,6 +8112,7 @@
             filteredBanks.forEach(item => {
                 const card = document.createElement('div');
                 card.className = "glass-card p-5 rounded-2xl border theme-border hover:border-zinc-500 transition-all duration-300 relative group";
+                card.setAttribute('data-row-key', 'bank-' + item.id);
                 const bankColor = AVATAR_COLORS[stringToColorIndex(item.name || '?', AVATAR_COLORS.length)];
                 const bankDateText = item.date ? new Date(item.date).toLocaleDateString('tr-TR') : '—';
                 card.innerHTML = `
@@ -9535,6 +9657,7 @@
             creditCardTablePage = page.currentPage;
             page.pageItems.forEach(item => {
                     const tr = document.createElement('tr');
+                    tr.setAttribute('data-row-key', 'ccexpense-' + item.id);
                     tr.className = "hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border";
                     const dateText = item.paidDate ? new Date(item.paidDate).toLocaleDateString('tr-TR') : '—';
                     const cardItem = creditCards.find(c => c.id === item.cardId);
@@ -9762,8 +9885,16 @@
             const incomingFragment = document.createDocumentFragment();
             const outgoingFragment = document.createDocumentFragment();
 
-            cheques.filter(c => isWithinDateFilter(c.due)).forEach(c => {
+            cheques.filter(c => {
+                if (!isWithinDateFilter(c.due)) return false;
+                if (chequeSearchQuery) {
+                    const hay = ((c.drawer || '') + ' ' + (c.number || '') + ' ' + (c.status || '')).toLowerCase();
+                    if (!hay.includes(chequeSearchQuery)) return false;
+                }
+                return true;
+            }).forEach(c => {
                 const tr = document.createElement('tr');
+                tr.setAttribute('data-row-key', 'cheque-' + c.id);
                 const isOverdue = new Date(c.due) < TODAY_DATE && c.status === 'Bekliyor';
                 const overdueDays = isOverdue ? Math.ceil((TODAY_DATE - new Date(c.due)) / (1000 * 60 * 60 * 24)) : 0;
                 tr.className = `hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${c.status !== 'Bekliyor' ? 'opacity-40' : ''} ${isOverdue ? 'bg-red-500/5' : ''}`;
@@ -9919,6 +10050,7 @@
 
                 const card = document.createElement('div');
                 card.className = `p-4 theme-bg-card rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:opacity-90 transition-all flex-1 mb-4 ${blockStyles}`;
+                card.setAttribute('data-row-key', 'debt-' + d.id);
                 const warnIcon = (diffDays <= 2) ? `<span class="inline-flex h-2 w-2 rounded-full bg-red-500 animate-ping mr-1"></span>` : "";
 
                 card.innerHTML = `
@@ -10213,6 +10345,7 @@
                 const tr = document.createElement('tr');
                 const isNewlyRevealed = urgentExpanded && idx >= MAX_VISIBLE;
                 tr.className = `rt-collapsible hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${item.paid ? 'opacity-50' : ''} ${isNewlyRevealed ? 'row-reveal' : ''}`;
+                tr.setAttribute('data-row-key', 'debt-' + item.id);
                 
                 const disableState = isAdmin ? '' : 'disabled';
                 const writtenDateText = item.date ? new Date(item.date).toLocaleDateString('tr-TR') : '—';
@@ -10325,6 +10458,7 @@
 
                 const tr = document.createElement('tr');
                 tr.className = `rt-collapsible hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${item.paid ? 'opacity-50' : ''}`;
+                tr.setAttribute('data-row-key', 'debt-' + item.id);
                 
                 const disableState = isAdmin ? '' : 'disabled';
                 const writtenDateText = item.date ? new Date(item.date).toLocaleDateString('tr-TR') : '—';
@@ -10442,6 +10576,7 @@
 
                 const tr = document.createElement('tr');
                 tr.className = `rt-collapsible hover:bg-zinc-900/10 dark:hover:bg-zinc-900/30 transition-all border-b theme-border ${item.collected ? 'opacity-50' : ''}`;
+                tr.setAttribute('data-row-key', 'receivable-' + item.id);
 
                 const disableState = isAdmin ? '' : 'disabled';
                 const writtenDateText = item.date ? new Date(item.date).toLocaleDateString('tr-TR') : '—';
@@ -10607,6 +10742,7 @@
             filteredIncomes.forEach(item => {
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between p-3 bg-zinc-900/10 dark:bg-zinc-900 border theme-border rounded-xl hover:opacity-90 transition-all text-xs";
+                div.setAttribute('data-row-key', 'income-' + item.id);
                 const isBank = item.destination === 'banka';
                 const isOutflow = item.flowType === 'çıkış';
                 const destBadge = isBank
@@ -12538,16 +12674,40 @@
             );
         }
 
-        // Borç Arama Filtresi
+        // Borç / Alacak Arama Filtresi (bölüm başlıklarındaki arama kutuları)
         function searchDebts(query) {
             searchQuery = query;
-            otherDebtsPage = 1; // yeni arama başladığında sayfalamayı başa al
+            otherDebtsPage = 1;
             receivablesPage = 1;
             renderUrgentTable();
             renderOtherTable();
             renderReceivablesTable();
         }
         const searchDebtsDebounced = debounce(searchDebts, 250);
+
+        // Çek arama
+        let chequeSearchQuery = '';
+        function searchCheques(query) {
+            chequeSearchQuery = (query || '').toLowerCase().trim();
+            if (typeof renderChequeLedgers === 'function') renderChequeLedgers();
+        }
+        const searchChequesDebounced = debounce(searchCheques, 250);
+
+        // Bölüm başlığındaki genişleyen arama kutusu (genel)
+        function toggleSectionSearch(wrapperId, inputId) {
+            const wrapper = document.getElementById(wrapperId);
+            const input = document.getElementById(inputId);
+            if (!wrapper || !input) return;
+            const isOpen = wrapper.classList.toggle('search-expanded');
+            if (isOpen) {
+                setTimeout(() => input.focus(), 150);
+            } else if (input.value) {
+                input.value = '';
+                if (wrapperId === 'recv-search-wrapper' || wrapperId === 'debt-search-wrapper') searchDebts('');
+                if (wrapperId === 'cheque-search-wrapper') searchCheques('');
+                if (wrapperId === 'cc-search-wrapper' && typeof filterCreditCardTable === 'function') filterCreditCardTable();
+            }
+        }
 
         // ================= GÖRSEL YARDIMCI FONKSİYONLAR =================
         // İsme göre tutarlı bir renk üreten basit hash fonksiyonu
@@ -12827,38 +12987,44 @@
 
             const hits = [];
             allDebts.filter(d => matchesProject(d.projectId) && d.name.toLowerCase().includes(q)).forEach(d => hits.push({
-                icon: 'fa-scale-balanced', color: 'text-indigo-500', label: d.name, sub: `Borç · ${formatCurrencyAny(d.amount, d.currency || 'TRY')} · ${d.paid ? 'Ödendi' : 'Açık'}${getSearchResultProjectLabel(d.projectId)}`, tab: 'kasa-tab'
+                icon: 'fa-scale-balanced', color: 'text-indigo-500', label: d.name, sub: `Borç · ${formatCurrencyAny(d.amount, d.currency || 'TRY')} · ${d.paid ? 'Ödendi' : 'Açık'}${getSearchResultProjectLabel(d.projectId)}`, tab: 'kasa-tab', type: 'debt', id: d.id, projectId: d.projectId
             }));
             allReceivables.filter(r => matchesProject(r.projectId) && r.name.toLowerCase().includes(q)).forEach(r => hits.push({
-                icon: 'fa-hand-holding-dollar', color: 'text-emerald-500', label: r.name, sub: `Alacak · ${formatCurrencyAny(r.amount, r.currency || 'TRY')} · ${r.collected ? 'Tahsil Edildi' : 'Bekliyor'}${getSearchResultProjectLabel(r.projectId)}`, tab: 'receivables-tab'
+                icon: 'fa-hand-holding-dollar', color: 'text-emerald-500', label: r.name, sub: `Alacak · ${formatCurrencyAny(r.amount, r.currency || 'TRY')} · ${r.collected ? 'Tahsil Edildi' : 'Bekliyor'}${getSearchResultProjectLabel(r.projectId)}`, tab: 'receivables-tab', type: 'receivable', id: r.id, projectId: r.projectId
             }));
             allIncomes.filter(i => matchesProject(i.projectId) && i.name.toLowerCase().includes(q)).forEach(i => hits.push({
-                icon: 'fa-wallet', color: 'text-emerald-500', label: i.name, sub: `Gelir · ${formatCurrencyAny(i.amount, i.currency || 'TRY')} · ${new Date(i.date).toLocaleDateString('tr-TR')}${getSearchResultProjectLabel(i.projectId)}`, tab: 'kasa-tab'
+                icon: 'fa-wallet', color: 'text-emerald-500', label: i.name, sub: `Gelir · ${formatCurrencyAny(i.amount, i.currency || 'TRY')} · ${new Date(i.date).toLocaleDateString('tr-TR')}${getSearchResultProjectLabel(i.projectId)}`, tab: 'kasa-tab', type: 'income', id: i.id, projectId: i.projectId
             }));
             allBanks.filter(b => matchesProject(b.projectId) && b.name.toLowerCase().includes(q)).forEach(b => hits.push({
-                icon: 'fa-building-columns', color: 'text-blue-500', label: b.name, sub: `Banka · ${formatCurrencyAny(b.balance, b.currency || 'TRY')}${getSearchResultProjectLabel(b.projectId)}`, tab: 'banka-cek-tab'
+                icon: 'fa-building-columns', color: 'text-blue-500', label: b.name, sub: `Banka · ${formatCurrencyAny(b.balance, b.currency || 'TRY')}${getSearchResultProjectLabel(b.projectId)}`, tab: 'banka-cek-tab', type: 'bank', id: b.id, projectId: b.projectId
             }));
             allCheques.filter(c => matchesProject(c.projectId) && c.drawer.toLowerCase().includes(q)).forEach(c => hits.push({
-                icon: 'fa-money-check', color: 'text-amber-500', label: c.drawer, sub: `Çek (${c.type === 'gelen' ? 'Alınan' : 'Verilen'}) · ${formatCurrencyAny(c.amount, c.currency || 'TRY')} · ${c.status}${getSearchResultProjectLabel(c.projectId)}`, tab: 'banka-cek-tab'
+                icon: 'fa-money-check', color: 'text-amber-500', label: c.drawer, sub: `Çek (${c.type === 'gelen' ? 'Alınan' : 'Verilen'}) · ${formatCurrencyAny(c.amount, c.currency || 'TRY')} · ${c.status}${getSearchResultProjectLabel(c.projectId)}`, tab: 'banka-cek-tab', type: 'cheque', id: c.id, projectId: c.projectId
             }));
             allCreditCardExpenses.filter(e => e.creditor.toLowerCase().includes(q) || (e.description || '').toLowerCase().includes(q)).forEach(e => {
                 const card = allCreditCards.find(c => c.id === e.cardId);
                 if (card && !matchesProject(card.projectId)) return;
-                hits.push({ icon: 'fa-credit-card', color: 'text-violet-500', label: e.creditor, sub: `Kredi Kartı${card ? ' (' + card.bankName + ')' : ''} · ${card ? formatCurrencyAny(e.amount, card.currency || 'TRY') : formatCurrency(e.amount)}${card ? getSearchResultProjectLabel(card.projectId) : ''}`, tab: 'credit-card-tab' });
+                hits.push({ icon: 'fa-credit-card', color: 'text-violet-500', label: e.creditor, sub: `Kredi Kartı${card ? ' (' + card.bankName + ')' : ''} · ${card ? formatCurrencyAny(e.amount, card.currency || 'TRY') : formatCurrency(e.amount)}${card ? getSearchResultProjectLabel(card.projectId) : ''}`, tab: 'credit-card-tab', type: 'ccexpense', id: e.id, projectId: card ? card.projectId : null });
             });
             const carilerSeen = new Set();
             allCarilerList.filter(c => matchesProject(c.projectId) && c.name.toLowerCase().includes(q)).forEach(c => {
                 const key = c.name.toLowerCase() + '|' + c.projectId;
                 if (carilerSeen.has(key)) return;
                 carilerSeen.add(key);
-                hits.push({ icon: 'fa-address-book', color: 'text-teal-500', label: c.name, sub: `Cari${getSearchResultProjectLabel(c.projectId)}`, tab: 'cariler-tab' });
+                hits.push({ icon: 'fa-address-book', color: 'text-teal-500', label: c.name, sub: `Cari${getSearchResultProjectLabel(c.projectId)}`, tab: 'cariler-tab', type: 'cari', id: c.name, projectId: c.projectId });
             });
 
             if (hits.length === 0) {
                 results.innerHTML = `<p class="text-xs theme-text-muted text-center py-4">"${escapeHtml(query)}" için sonuç bulunamadı.</p>`;
             } else {
                 results.innerHTML = hits.slice(0, 25).map(h => `
-                    <button onclick="goToGlobalSearchResult('${h.tab}')" class="w-full flex items-center gap-3 p-2.5 hover:bg-zinc-900/10 dark:hover:bg-zinc-900/40 rounded-xl transition-all text-left">
+                    <button type="button"
+                        data-gs-tab="${escapeHtml(h.tab || '')}"
+                        data-gs-type="${escapeHtml(h.type || '')}"
+                        data-gs-id="${escapeHtml(String(h.id == null ? '' : h.id))}"
+                        data-gs-pid="${escapeHtml(String(h.projectId == null ? '' : h.projectId))}"
+                        onclick="handleGlobalSearchClick(this)"
+                        class="w-full flex items-center gap-3 p-2.5 hover:bg-zinc-900/10 dark:hover:bg-zinc-900/40 rounded-xl transition-all text-left">
                         <div class="w-8 h-8 rounded-lg bg-zinc-900/10 dark:bg-zinc-900 flex items-center justify-center shrink-0 ${h.color}">
                             <i class="fa-solid ${h.icon} text-xs"></i>
                         </div>
@@ -12872,11 +13038,142 @@
             }
             resultsWrapper.classList.remove('hidden');
         }
-        function goToGlobalSearchResult(tabId) {
+
+        function handleGlobalSearchClick(btn) {
+            if (!btn || !btn.dataset) return;
+            goToGlobalSearchResult(
+                btn.dataset.gsTab || '',
+                btn.dataset.gsType || '',
+                btn.dataset.gsId || '',
+                btn.dataset.gsPid || ''
+            );
+        }
+
+        // Excel "Bul" benzeri: ilgili sekmeye geç, gerekirse doğru sayfaya git, satırı ortala ve vurgula.
+        function highlightSearchRow(el) {
+            if (!el) return;
+            document.querySelectorAll('.search-row-highlight').forEach(n => n.classList.remove('search-row-highlight'));
+            el.classList.add('search-row-highlight');
+            // Mobil kart görünümünde daraltılmış satırı aç
+            if (el.classList.contains('rt-collapsible')) el.classList.add('rt-expanded');
+            try {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+            } catch (e) {
+                el.scrollIntoView(true);
+            }
+            setTimeout(() => el.classList.remove('search-row-highlight'), 2600);
+        }
+
+        function ensureDebtOnVisiblePage(entityId) {
+            // other-debts tablosu sayfalanır; satır görünür değilse doğru sayfaya geç.
+            const filteredOther = debts.filter(item => {
+                const q = (typeof searchQuery === 'string' ? searchQuery : '').toLowerCase();
+                const matchesSearch = item.name.toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q);
+                return matchesSearch && isWithinDateFilter(item.date);
+            });
+            const idx = filteredOther.findIndex(i => String(i.id) === String(entityId));
+            if (idx < 0) return false;
+            const pageSize = (typeof PAGE_SIZE === 'number' ? PAGE_SIZE : 30);
+            const targetPage = Math.floor(idx / pageSize) + 1;
+            if (otherDebtsPage !== targetPage) {
+                otherDebtsPage = targetPage;
+                renderOtherTable();
+            }
+            // Acil tabloda da olabilir — acil listede gizlenmişse genişlet
+            const isUrgent = filteredOther[idx] && filteredOther[idx].category === 'Acil Ödemeler';
+            if (isUrgent && typeof urgentExpanded !== 'undefined' && !urgentExpanded) {
+                const urgentList = debts.filter(item => {
+                    const q = (typeof searchQuery === 'string' ? searchQuery : '').toLowerCase();
+                    const matchesSearch = item.name.toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q);
+                    return matchesSearch && item.category === 'Acil Ödemeler' && isWithinDateFilter(item.date);
+                });
+                const uIdx = urgentList.findIndex(i => String(i.id) === String(entityId));
+                if (uIdx >= 5) {
+                    urgentExpanded = true;
+                    renderUrgentTable();
+                }
+            }
+            return true;
+        }
+
+        function ensureReceivableOnVisiblePage(entityId) {
+            if (typeof receivablesPage === 'undefined') return;
+            const filtered = (typeof receivables !== 'undefined' ? receivables : allReceivables).filter(item => {
+                const q = (typeof searchQuery === 'string' ? searchQuery : '').toLowerCase();
+                const matchesSearch = item.name.toLowerCase().includes(q) || (item.description || '').toLowerCase().includes(q);
+                return matchesSearch && isWithinDateFilter(item.date);
+            });
+            const idx = filtered.findIndex(i => String(i.id) === String(entityId));
+            if (idx < 0) return;
+            const pageSize = (typeof PAGE_SIZE === 'number' ? PAGE_SIZE : 30);
+            const targetPage = Math.floor(idx / pageSize) + 1;
+            if (receivablesPage !== targetPage) {
+                receivablesPage = targetPage;
+                if (typeof renderReceivablesTable === 'function') renderReceivablesTable();
+            }
+        }
+
+        function goToGlobalSearchResult(tabId, entityType, entityId, projectId) {
             const navMap = { 'dashboard-tab': 'nav-dashboard', 'kasa-tab': 'nav-kasa', 'receivables-tab': 'nav-receivables', 'banka-cek-tab': 'nav-banka-cek', 'credit-card-tab': 'nav-credit-card', 'cariler-tab': 'nav-cariler' };
-            const btn = document.getElementById(navMap[tabId]);
-            if (btn) switchTab(tabId, btn);
-            document.getElementById('global-search-results').classList.add('hidden');
+            const resultsEl = document.getElementById('global-search-results');
+            if (resultsEl) resultsEl.classList.add('hidden');
+            const wrapper = document.getElementById('global-search-wrapper');
+            if (wrapper) wrapper.classList.remove('search-expanded');
+
+            if (projectId && activeProjectId !== 'ana-kasa' && String(projectId) !== String(activeProjectId)) {
+                activeProjectId = projectId;
+                safeSetStorage('activeProjectId_rev4', activeProjectId);
+                applyProjectFilter();
+                updateActiveProjectLabel();
+                if (typeof updateDashboard === 'function') updateDashboard();
+            }
+
+            const navBtn = document.getElementById(navMap[tabId]);
+            if (typeof switchTab === 'function') {
+                switchTab(tabId, navBtn || null);
+            }
+
+            if (entityType === 'cari' && entityId) {
+                try {
+                    if (typeof selectedCariNames !== 'undefined') {
+                        if (selectedCariNames instanceof Set) {
+                            selectedCariNames.clear();
+                            selectedCariNames.add(entityId);
+                        } else if (Array.isArray(selectedCariNames)) {
+                            selectedCariNames.length = 0;
+                            selectedCariNames.push(entityId);
+                        }
+                        if (typeof updateCariPickerLabel === 'function') updateCariPickerLabel();
+                        if (typeof renderCarilerPage === 'function') renderCarilerPage();
+                        if (typeof renderCariPickerChecklist === 'function') renderCariPickerChecklist();
+                    }
+                } catch (e) { /* ignore */ }
+            }
+
+            const rowKey = (entityType && entityId !== '' && entityId != null)
+                ? (String(entityType) + '-' + String(entityId))
+                : null;
+
+            const tryScroll = () => {
+                if (!rowKey) return false;
+                try {
+                    if (entityType === 'debt') ensureDebtOnVisiblePage(entityId);
+                    if (entityType === 'receivable') ensureReceivableOnVisiblePage(entityId);
+                } catch (e) { /* */ }
+                let el = null;
+                try {
+                    el = document.querySelector('[data-row-key="' + String(rowKey).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]');
+                } catch (e2) {
+                    el = document.querySelector('[data-row-key="' + rowKey + '"]');
+                }
+                if (el) {
+                    highlightSearchRow(el);
+                    return true;
+                }
+                return false;
+            };
+
+            [0, 50, 120, 280, 500, 900].forEach(ms => setTimeout(tryScroll, ms));
         }
 
         // ================= TARİH ARALIĞI FİLTRESİ =================
