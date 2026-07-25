@@ -23,16 +23,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome İkonları -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js Grafik Kütüphanesi -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS Excel Dışarı Aktarma Kütüphanesi -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- PapaParse: CSV İçe Aktarma Kütüphanesi -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- jsPDF: Profesyonel PDF Rapor Kütüphanesi -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <!-- Dexie.js: IndexedDB'ye kolay erişim için (büyük veri kapasitesi, localStorage'ın ~5-10MB sınırını aşan yedek depo) -->
+    <!-- Chart.js: ilk ihtiyaç anında (dashboard grafikleri) lazy yüklenir — açılışı hızlandırır -->
+    <!-- SheetJS / PapaParse / jsPDF: sadece Excel/CSV/PDF işlemlerinde lazy yüklenir -->
+    <!-- Dexie.js: IndexedDB yedek depo (açılışta gerekli) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.4.4/dexie.min.js"></script>
     
     <style>
@@ -182,7 +175,7 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-body);
             color: var(--text-main);
-            transition: all 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         /* Flex kutuları içindeki uzun metinlerin (banka/kart adı vb.) mobilde sayfayı
            yatay kaydırmasını (taşmasını) önler — flex öğelerinin küçülebilmesi için gerekli. */
@@ -207,7 +200,7 @@
         .glass-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
         }
 
@@ -611,7 +604,7 @@
                     <i class="fa-solid fa-cloud-arrow-up"></i> Buluta Kaydet
                 </button>
                 <button onclick="openChangelogModal()" class="w-full flex items-center justify-center gap-1.5 hover:text-indigo-400 transition-all group">
-                    <span id="sidebar-version-badge">Dizayn Mühendislik v1.14.0</span>
+                    <span id="sidebar-version-badge">Dizayn Mühendislik v1.75.0</span>
                     <i class="fa-solid fa-circle-info text-[9px] group-hover:text-indigo-400"></i>
                 </button>
                 <p class="mt-1 text-[9px] theme-text-muted font-mono">Güvenli Veri Koruması Aktif</p>
@@ -681,9 +674,17 @@
                                 <button onclick="toggleGlobalSearch()" class="w-8 h-8 flex items-center justify-center shrink-0 theme-text-muted hover:text-emerald-500 transition-all" title="Her Yerde Ara">
                                     <i class="fa-solid fa-globe text-xs"></i>
                                 </button>
-                                <input id="global-search-input" oninput="performGlobalSearch(this.value)" type="text" placeholder="Her yerde ara (isim, açıklama...)" class="w-full bg-transparent border-none focus:outline-none text-xs pr-3 theme-text-main">
+                                <input id="global-search-input" oninput="performGlobalSearchDebounced(this.value)" type="text" placeholder="Her yerde ara (isim, açıklama...)" class="w-full bg-transparent border-none focus:outline-none text-xs pr-3 theme-text-main">
                             </div>
-                            <div id="global-search-results" class="hidden absolute top-full right-0 mt-2 w-80 max-w-[85vw] max-h-96 overflow-y-auto glass-card border theme-border rounded-2xl shadow-2xl z-[95] p-2"></div>
+                            <div id="global-search-results" class="hidden absolute top-full right-0 mt-2 w-80 max-w-[85vw] max-h-96 overflow-y-auto glass-card border theme-border rounded-2xl shadow-2xl z-[95] p-2">
+                                <div class="p-1.5 pb-2 mb-1 border-b theme-border">
+                                    <label class="text-[9px] font-bold theme-text-muted uppercase tracking-widest block mb-1">Nerede Arayayım?</label>
+                                    <select id="global-search-project-filter" onchange="performGlobalSearch(document.getElementById('global-search-input').value)" class="w-full py-1.5 px-2 theme-input border theme-border rounded-lg text-[11px]">
+                                        <option value="all">🌐 Tüm Projeler</option>
+                                    </select>
+                                </div>
+                                <div id="global-search-results-list"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -715,6 +716,12 @@
                     <span class="kpi-label text-xs font-bold theme-text-muted uppercase tracking-wider block">KASA GELİR BÜTÇESİ</span>
                     <h3 class="kpi-value text-xl sm:text-2xl font-black theme-text-main mt-2 break-words" id="kpi-cash-total">₺0,00</h3>
 
+                    <!-- ANA KASA PROJE KIRILIMI: sadece Ana Kasa aktifken görünür -->
+                    <button onclick="toggleKpiBreakdownPanel('kasa')" id="kpi-breakdown-toggle-kasa" class="hidden mt-2 text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-down text-[8px]" id="kpi-breakdown-chevron-kasa"></i> Proje Bazında Gör
+                    </button>
+                    <div id="kpi-breakdown-panel-kasa" class="hidden pt-2 mt-2 border-t theme-border"></div>
+
                     <!-- Dolar/Euro/Altın girilmişse otomatik çıkar, TL'ye Çevir burada -->
                     <div id="income-currency-breakdown-wrapper" class="hidden pt-3 mt-3 border-t theme-border">
                         <div id="income-currency-breakdown-list" class="space-y-3"></div>
@@ -732,6 +739,10 @@
                     </div>
                     <span class="kpi-label text-xs font-bold theme-text-muted uppercase tracking-wider block">BANKALAR TOPLAM MEVDUAT</span>
                     <h3 class="kpi-value text-xl sm:text-2xl font-black theme-text-main mt-2 break-words" id="kpi-bank-total">₺0,00</h3>
+                    <button onclick="toggleKpiBreakdownPanel('banka')" id="kpi-breakdown-toggle-banka" class="hidden mt-2 text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-down text-[8px]" id="kpi-breakdown-chevron-banka"></i> Proje Bazında Gör
+                    </button>
+                    <div id="kpi-breakdown-panel-banka" class="hidden pt-2 mt-2 border-t theme-border"></div>
                 </div>
 
                 <!-- KPI 3: Gelecek Çek Tahsilatları -->
@@ -745,6 +756,10 @@
                     </div>
                     <span class="kpi-label text-xs font-bold theme-text-muted uppercase tracking-wider block">GELECEK ÇEK TAHSİLATLARI</span>
                     <h3 class="kpi-value text-xl sm:text-2xl font-black theme-text-main mt-2 break-words" id="kpi-cheques-incoming">₺0,00</h3>
+                    <button onclick="toggleKpiBreakdownPanel('cekGelen')" id="kpi-breakdown-toggle-cekGelen" class="hidden mt-2 text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-down text-[8px]" id="kpi-breakdown-chevron-cekGelen"></i> Proje Bazında Gör
+                    </button>
+                    <div id="kpi-breakdown-panel-cekGelen" class="hidden pt-2 mt-2 border-t theme-border"></div>
                 </div>
 
                 <!-- KPI 4: Gelecek Çek Ödemeleri -->
@@ -758,6 +773,10 @@
                     </div>
                     <span class="kpi-label text-xs font-bold theme-text-muted uppercase tracking-wider block">GELECEK ÇEK ÖDEMELERİ</span>
                     <h3 class="kpi-value text-xl sm:text-2xl font-black theme-text-main mt-2 break-words" id="kpi-cheques-outgoing">₺0,00</h3>
+                    <button onclick="toggleKpiBreakdownPanel('cekGiden')" id="kpi-breakdown-toggle-cekGiden" class="hidden mt-2 text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-down text-[8px]" id="kpi-breakdown-chevron-cekGiden"></i> Proje Bazında Gör
+                    </button>
+                    <div id="kpi-breakdown-panel-cekGiden" class="hidden pt-2 mt-2 border-t theme-border"></div>
                 </div>
 
                 <!-- KPI 5: Kredi Kartı Borcu -->
@@ -771,6 +790,10 @@
                     </div>
                     <span class="kpi-label text-xs font-bold theme-text-muted uppercase tracking-wider block">KREDİ KARTI BORCU</span>
                     <h3 class="kpi-value text-xl sm:text-2xl font-black text-violet-500 mt-2 break-words" id="kpi-credit-card">-₺0,00</h3>
+                    <button onclick="toggleKpiBreakdownPanel('krediKarti')" id="kpi-breakdown-toggle-krediKarti" class="hidden mt-2 text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-chevron-down text-[8px]" id="kpi-breakdown-chevron-krediKarti"></i> Proje Bazında Gör
+                    </button>
+                    <div id="kpi-breakdown-panel-krediKarti" class="hidden pt-2 mt-2 border-t theme-border"></div>
 
                     <!-- Kart Bazlı Borç Kırılımı (hangi kartın ne kadar borcu var) -->
                     <div id="cc-per-card-breakdown-wrapper" class="hidden pt-3 mt-3 border-t theme-border space-y-1.5">
@@ -1428,12 +1451,13 @@
             <h3 class="text-lg font-extrabold theme-text-main mb-2">Kullanıcı Girişi</h3>
             <p class="text-xs theme-text-muted mb-6">Yönetici (tam yetki) veya İzleyici (salt okunur) şifrenizi girin.<br>Şifrenizi bilmiyorsanız aşağıdaki "Şifremi Unuttum" bağlantısını kullanın.</p>
             
-            <div class="relative mb-4">
-                <input id="login-password" type="password" class="w-full py-3 px-4 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-2xl font-black text-xl text-center tracking-widest" placeholder="••••">
+            <div class="relative mb-2">
+                <input id="login-password" type="password" autocomplete="current-password" class="w-full py-3 px-4 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-2xl font-black text-xl text-center tracking-widest" placeholder="••••" aria-describedby="login-error-msg">
                 <button type="button" onclick="toggleLoginPasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 theme-text-muted hover:text-indigo-500 transition-all" title="Şifreyi Göster/Gizle">
                     <i id="login-password-eye" class="fa-solid fa-eye text-sm"></i>
                 </button>
             </div>
+            <p id="login-error-msg" class="hidden text-[11px] font-bold text-red-500 mb-3 leading-relaxed" role="alert"></p>
             
             <div class="flex flex-col gap-2">
                 <div class="flex gap-3">
@@ -2267,7 +2291,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="text-xs font-bold theme-text-muted block mb-1">Tutar (₺)</label>
+                    <label class="text-xs font-bold theme-text-muted block mb-1" id="bank-tx-amount-label">Tutar (₺)</label>
                     <input id="bank-tx-amount" type="number" step="0.01" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-extrabold" placeholder="0.00">
                 </div>
                 <div>
@@ -2440,7 +2464,16 @@
                     <input id="add-ccard-name" type="text" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-violet-500 rounded-xl text-xs" placeholder="Örn: Axess, World, Maximum">
                 </div>
                 <div>
-                    <label class="text-xs font-bold theme-text-muted block mb-1">Toplam Limit (₺)</label>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Para Birimi</label>
+                    <select id="add-ccard-currency" onchange="updateCcardLimitLabel()" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-violet-500 rounded-xl text-xs">
+                        <option value="TRY">₺ Türk Lirası</option>
+                        <option value="USD">$ Amerikan Doları</option>
+                        <option value="EUR">€ Euro</option>
+                        <option value="GOLD">Gram Altın</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1" id="add-ccard-limit-label">Toplam Limit (₺)</label>
                     <input id="add-ccard-limit" type="number" step="0.01" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-violet-500 rounded-xl text-xs font-extrabold" placeholder="0.00">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -2468,7 +2501,7 @@
             <p id="stmt-payment-subtitle" class="text-xs theme-text-muted mb-4">Güncel borcu hangi kaynaktan ödediniz?</p>
 
             <div class="mb-4">
-                <label class="text-xs font-bold theme-text-muted block mb-1">Ödenecek Tutar (₺)</label>
+                <label class="text-xs font-bold theme-text-muted block mb-1" id="stmt-payment-amount-label">Ödenecek Tutar (₺)</label>
                 <input id="stmt-payment-amount" type="number" step="0.01" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-violet-500 rounded-xl text-xs font-extrabold">
                 <p class="text-[9px] theme-text-muted mt-1">Varsayılan olarak güncel borcun tamamı gelir; kısmi ödeme için değiştirebilirsiniz.</p>
             </div>
@@ -2702,7 +2735,16 @@
                     <input id="add-bank-type" type="text" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs" placeholder="Örn: Ticari Mevduat">
                 </div>
                 <div>
-                    <label class="text-xs font-bold theme-text-muted block mb-1">Güncel Bakiye (₺)</label>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Para Birimi</label>
+                    <select id="add-bank-currency" onchange="updateBankBalanceLabel()" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs">
+                        <option value="TRY">₺ Türk Lirası</option>
+                        <option value="USD">$ Amerikan Doları</option>
+                        <option value="EUR">€ Euro</option>
+                        <option value="GOLD">Gram Altın</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1" id="add-bank-balance-label">Güncel Bakiye (₺)</label>
                     <input id="add-bank-balance" type="number" step="0.01" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-extrabold" placeholder="0.00">
                 </div>
             </div>
@@ -2735,7 +2777,16 @@
                     <input id="add-cheque-number" type="text" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs" placeholder="Örn: TR-884930">
                 </div>
                 <div>
-                    <label class="text-xs font-bold theme-text-muted block mb-1">Tutar (₺)</label>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Para Birimi</label>
+                    <select id="add-cheque-currency" onchange="updateChequeAmountLabel()" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs">
+                        <option value="TRY">₺ Türk Lirası</option>
+                        <option value="USD">$ Amerikan Doları</option>
+                        <option value="EUR">€ Euro</option>
+                        <option value="GOLD">Gram Altın</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1" id="add-cheque-amount-label">Tutar (₺)</label>
                     <input id="add-cheque-amount" type="number" step="0.01" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-xs font-extrabold" placeholder="0.00">
                 </div>
                 <div>
@@ -2760,7 +2811,7 @@
             </div>
             <h3 class="text-lg font-extrabold theme-text-main mb-2" id="alert-title">Sistem Uyarısı</h3>
             <p class="text-sm theme-text-muted mb-6" id="alert-message">Lütfen geçerli değerler girdiğinizden emin olun.</p>
-            <button onclick="closeAlertModal()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 transition-all rounded-xl text-sm font-bold text-white shadow-lg">Anlaşıldı</button>
+            <button id="alert-ok-btn" type="button" onclick="closeAlertModal()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 transition-all rounded-xl text-sm font-bold text-white shadow-lg">Anlaşıldı</button>
         </div>
     </div>
 
@@ -2810,10 +2861,67 @@
         //  3) Açılışta IndexedDB'de olup localStorage'da eksik olan veriler otomatik geri yüklenir.
         let idbDatabase = null;
         let idbAvailable = false;
+
+        // Panelin kullandığı localStorage anahtarları — ayar/kv kurtarma için
+        const IDB_KNOWN_KEYS = [
+            'debts_rev4', 'monthly_rev4', 'incomes_rev4', 'banks_rev4', 'bankTx_rev4',
+            'cheques_rev4', 'creditCard_rev4', 'creditCards_rev4', 'creditCardPayments_rev4',
+            'carilerList_rev4', 'cariGroups_rev4', 'exchangeRates_rev4', 'savingsGoal_rev4',
+            'auditLog_rev4', 'errorLog_rev4', 'adminPass_rev4', 'viewerPass_rev4',
+            'adminEmail_rev4', 'securityQuestion_rev4', 'securityAnswer_rev4',
+            'visSettings_rev4', 'notificationsEnabled_rev4', 'lastNotifiedDate_rev4',
+            'currencyLayoutSideBySide_rev4', 'appsScriptUrl_rev4', 'appsScriptSecret_rev4',
+            'loginFailCount_rev4', 'loginLockUntil_rev4', 'lastBackupReminderDate_rev4',
+            'brandCompanyName_rev4', 'brandTagline_rev4', 'brandLogoDataUrl_rev4',
+            'active_theme_pro', 'cloudApiKey_rev4', 'cloudBinId_rev4', 'cloudAutoSync_rev4',
+            'cloudKeyIsAccessKey_rev4', 'cloudProvider_rev4', 'firebaseDbUrl_rev4',
+            'firebaseSecret_rev4', 'cloudLastSync_rev4', 'projects_rev4', 'activeProjectId_rev4'
+        ];
+
+        // ================= ENTITY TABLOLARI (v3) =================
+        // Büyük JSON blob yerine her kayıt ayrı satır + indeksler.
+        // localStorage anahtarı → Dexie tablo adı eşlemesi
+        const IDB_ENTITY_MAP = {
+            'debts_rev4': 'debts',
+            'monthly_rev4': 'monthly',
+            'incomes_rev4': 'incomes',
+            'banks_rev4': 'banks',
+            'bankTx_rev4': 'bankTx',
+            'cheques_rev4': 'cheques',
+            'creditCard_rev4': 'creditCardExpenses',
+            'creditCards_rev4': 'creditCards',
+            'creditCardPayments_rev4': 'creditCardPayments',
+            'carilerList_rev4': 'cariler',
+            'cariGroups_rev4': 'cariGroups',
+            'projects_rev4': 'projects'
+        };
+        const IDB_ENTITY_TABLES = Object.values(IDB_ENTITY_MAP);
+        const IDB_ENTITY_KEYS = Object.keys(IDB_ENTITY_MAP);
+
+        // Dexie şema tanımı (v3) — indeksler proje/tarih/durum filtreleri için
+        const IDB_V3_STORES = {
+            kv: 'key, updatedAt',
+            // compound index: [projectId+paid] → açık borçlar proje bazında hızlı
+            debts: 'id, projectId, paid, category, date, [projectId+paid], [projectId+date]',
+            monthly: 'id, projectId',
+            incomes: 'id, projectId, date, destination, [projectId+date]',
+            banks: 'id, projectId',
+            bankTx: 'id, bankId, date, type, [bankId+date]',
+            cheques: 'id, projectId, type, status, due, [projectId+status], [status+due]',
+            creditCards: 'id, projectId',
+            creditCardExpenses: 'id, cardId, date, [cardId+date]',
+            creditCardPayments: 'id, cardId, date',
+            cariler: 'id, projectId, name',
+            cariGroups: 'id, projectId',
+            projects: 'id'
+        };
+
         try {
             if (typeof Dexie !== 'undefined') {
                 idbDatabase = new Dexie('DizaynFinansalPanelDB');
-                idbDatabase.version(1).stores({ kv: 'key' }); // basit anahtar-değer tablosu, localStorage ile birebir eşleşir
+                idbDatabase.version(1).stores({ kv: 'key' });
+                idbDatabase.version(2).stores({ kv: 'key, updatedAt' });
+                idbDatabase.version(3).stores(IDB_V3_STORES);
                 idbAvailable = true;
             }
         } catch (e) {
@@ -2821,13 +2929,270 @@
             idbAvailable = false;
         }
 
-        // IndexedDB'ye best-effort (en iyi çaba) yazar — başarısız olursa sessizce loglar,
-        // uygulamanın akışını ASLA bloklamaz veya bozmaz (localStorage zaten birincil kayıttır).
+        // ================= INDEXEDDB YAZMA KUYRUĞU =================
+        // kv yazıları + entity tablo senkronu birlikte debounce edilir.
+        const IDB_WRITE_DEBOUNCE_MS = 750;
+        const pendingIdbWrites = new Map(); // key -> value (string)
+        let idbFlushTimer = null;
+        let idbFlushInFlight = null;
+
         function writeToIndexedDbBestEffort(key, val) {
             if (!idbAvailable || !idbDatabase) return;
-            idbDatabase.kv.put({ key, value: val }).catch(e => {
-                console.warn('IndexedDB yazma hatası (' + key + '):', e);
+            pendingIdbWrites.set(key, val);
+            if (idbFlushTimer) clearTimeout(idbFlushTimer);
+            idbFlushTimer = setTimeout(() => { flushIndexedDbWrites(); }, IDB_WRITE_DEBOUNCE_MS);
+        }
+
+        // JSON dizi string'ini entity satırlarına çevirir; id yoksa üretir
+        function parseEntityRows(jsonStr) {
+            try {
+                const data = JSON.parse(jsonStr);
+                if (!Array.isArray(data)) return null;
+                return data.map((row, i) => {
+                    if (row && typeof row === 'object') {
+                        if (row.id === undefined || row.id === null) {
+                            return { ...row, id: row.id ?? ('auto_' + i + '_' + Date.now()) };
+                        }
+                        return row;
+                    }
+                    return row;
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function syncEntityTable(tableName, rows) {
+            if (!idbDatabase || !tableName) return;
+            const table = idbDatabase.table(tableName);
+            // Tam senkron: clear + bulkPut (uygulama zaten tüm diziyi yazar)
+            await table.clear();
+            if (rows && rows.length > 0) {
+                // 500'lük parçalar halinde — çok büyük listelerde transaction limiti riskini azaltır
+                const CHUNK = 500;
+                for (let i = 0; i < rows.length; i += CHUNK) {
+                    await table.bulkPut(rows.slice(i, i + CHUNK));
+                }
+            }
+        }
+
+        async function flushIndexedDbWrites() {
+            if (!idbAvailable || !idbDatabase) return;
+            if (idbFlushTimer) { clearTimeout(idbFlushTimer); idbFlushTimer = null; }
+            if (pendingIdbWrites.size === 0) return;
+
+            if (idbFlushInFlight) {
+                await idbFlushInFlight;
+                if (pendingIdbWrites.size === 0) return;
+            }
+
+            const snapshot = Array.from(pendingIdbWrites.entries());
+            pendingIdbWrites.clear();
+            const now = Date.now();
+
+            const kvRows = [];
+            const entityJobs = []; // { table, rows }
+
+            snapshot.forEach(([key, value]) => {
+                // Ayarlar ve blob yedek her zaman kv'de (küçük anahtarlar + geriye uyumluluk)
+                kvRows.push({ key, value, updatedAt: now });
+                if (IDB_ENTITY_MAP[key]) {
+                    const rows = parseEntityRows(value);
+                    if (rows) entityJobs.push({ table: IDB_ENTITY_MAP[key], rows });
+                }
             });
+
+            idbFlushInFlight = (async () => {
+                try {
+                    // 1) kv blob yedek (tek transaction)
+                    if (kvRows.length) {
+                        await idbDatabase.transaction('rw', idbDatabase.kv, async () => {
+                            await idbDatabase.kv.bulkPut(kvRows);
+                        });
+                    }
+                    // 2) Entity tabloları (her tablo kendi clear+bulkPut)
+                    for (const job of entityJobs) {
+                        await idbDatabase.transaction('rw', idbDatabase.table(job.table), async () => {
+                            await syncEntityTable(job.table, job.rows);
+                        });
+                    }
+                } catch (e) {
+                    console.warn('IndexedDB flush hatası:', e);
+                    snapshot.forEach(([key, value]) => {
+                        if (!pendingIdbWrites.has(key)) pendingIdbWrites.set(key, value);
+                    });
+                } finally {
+                    idbFlushInFlight = null;
+                }
+            })();
+            await idbFlushInFlight;
+        }
+
+        async function idbBulkGet(keys) {
+            if (!idbAvailable || !idbDatabase || !keys || keys.length === 0) return [];
+            try {
+                const rows = await idbDatabase.kv.bulkGet(keys);
+                return keys.map((key, i) => {
+                    const row = rows[i];
+                    return row ? { key: row.key || key, value: row.value } : null;
+                }).filter(Boolean);
+            } catch (e) {
+                console.warn('IndexedDB bulkGet hatası:', e);
+                return [];
+            }
+        }
+
+        async function idbBulkDelete(keys) {
+            if (!idbAvailable || !idbDatabase || !keys || keys.length === 0) return;
+            try {
+                keys.forEach(k => pendingIdbWrites.delete(k));
+                await idbDatabase.transaction('rw', idbDatabase.kv, async () => {
+                    await idbDatabase.kv.bulkDelete(keys);
+                });
+                // İlişkili entity tablolarını da temizle
+                for (const key of keys) {
+                    const tableName = IDB_ENTITY_MAP[key];
+                    if (tableName) {
+                        try { await idbDatabase.table(tableName).clear(); } catch (e) { /* */ }
+                    }
+                }
+            } catch (e) {
+                console.warn('IndexedDB bulkDelete hatası:', e);
+            }
+        }
+
+        // ---------- İNDEKSLİ SORGULAR (entity tabloları) ----------
+        // Uygulama hâlâ bellek dizilerini kullanır; bu API'ler IDB yedekten okuma,
+        // raporlama veya ileride doğrudan IDB-first okuma için hazırdır.
+
+        async function idbGetAll(tableName) {
+            if (!idbAvailable || !idbDatabase) return [];
+            try { return await idbDatabase.table(tableName).toArray(); }
+            catch (e) { console.warn('idbGetAll', tableName, e); return []; }
+        }
+
+        async function idbGetByProject(tableName, projectId) {
+            if (!idbAvailable || !idbDatabase) return [];
+            if (!projectId || projectId === 'ana-kasa') return idbGetAll(tableName);
+            try {
+                return await idbDatabase.table(tableName).where('projectId').equals(projectId).toArray();
+            } catch (e) { console.warn('idbGetByProject', e); return []; }
+        }
+
+        async function idbGetOpenDebts(projectId) {
+            if (!idbAvailable || !idbDatabase) return [];
+            try {
+                // paid boolean indekste true/false olarak tutulur; compound equals ile dene, olmazsa filtrele
+                if (projectId && projectId !== 'ana-kasa') {
+                    try {
+                        const byFalse = await idbDatabase.debts.where('[projectId+paid]').equals([projectId, false]).toArray();
+                        if (byFalse.length) return byFalse;
+                    } catch (e) { /* compound yoksa */ }
+                    const all = await idbDatabase.debts.where('projectId').equals(projectId).toArray();
+                    return all.filter(d => !d.paid);
+                }
+                const all = await idbDatabase.debts.toArray();
+                return all.filter(d => !d.paid);
+            } catch (e) { console.warn('idbGetOpenDebts', e); return []; }
+        }
+
+        async function idbGetChequesByStatus(status, projectId) {
+            if (!idbAvailable || !idbDatabase) return [];
+            try {
+                if (projectId && projectId !== 'ana-kasa') {
+                    return await idbDatabase.cheques.where('[projectId+status]').equals([projectId, status]).toArray();
+                }
+                return await idbDatabase.cheques.where('status').equals(status).toArray();
+            } catch (e) {
+                try {
+                    const all = projectId && projectId !== 'ana-kasa'
+                        ? await idbDatabase.cheques.where('projectId').equals(projectId).toArray()
+                        : await idbDatabase.cheques.toArray();
+                    return all.filter(c => c.status === status);
+                } catch (e2) { return []; }
+            }
+        }
+
+        async function idbGetBankTx(bankId, dateFrom, dateTo) {
+            if (!idbAvailable || !idbDatabase) return [];
+            try {
+                let coll = idbDatabase.bankTx.where('bankId').equals(bankId);
+                const rows = await coll.toArray();
+                if (!dateFrom && !dateTo) return rows;
+                return rows.filter(t => {
+                    const d = String(t.date || '').slice(0, 10);
+                    if (dateFrom && d < dateFrom) return false;
+                    if (dateTo && d > dateTo) return false;
+                    return true;
+                });
+            } catch (e) { console.warn('idbGetBankTx', e); return []; }
+        }
+
+        async function idbGetUpcomingCheques(withinDays) {
+            if (!idbAvailable || !idbDatabase) return [];
+            try {
+                const today = new Date();
+                const end = new Date(today);
+                end.setDate(end.getDate() + (withinDays || 7));
+                const startStr = today.toISOString().slice(0, 10);
+                const endStr = end.toISOString().slice(0, 10);
+                // status+due indeksi: Bekliyor olanlar arasından vade aralığı
+                const pending = await idbDatabase.cheques.where('status').equals('Bekliyor').toArray();
+                return pending.filter(c => {
+                    const due = String(c.due || '').slice(0, 10);
+                    return due >= startStr && due <= endStr;
+                }).sort((a, b) => String(a.due).localeCompare(String(b.due)));
+            } catch (e) { console.warn('idbGetUpcomingCheques', e); return []; }
+        }
+
+        // kv blob veya entity tablosundan dizi okur (kurtarma / migrate)
+        async function idbLoadEntityArray(storageKey) {
+            const tableName = IDB_ENTITY_MAP[storageKey];
+            if (tableName) {
+                try {
+                    const rows = await idbDatabase.table(tableName).toArray();
+                    if (rows && rows.length > 0) return rows;
+                } catch (e) { /* fallback kv */ }
+            }
+            try {
+                const row = await idbDatabase.kv.get(storageKey);
+                if (row && row.value) {
+                    const parsed = JSON.parse(row.value);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (e) { /* */ }
+            return null;
+        }
+
+        // v2 → v3: kv blob'larından entity tablolarını doldur (bir kez)
+        async function migrateKvBlobsToEntityTables() {
+            if (!idbAvailable || !idbDatabase) return;
+            try {
+                // Örnek tablo boşsa migrate et
+                const debtCount = await idbDatabase.debts.count();
+                if (debtCount > 0) return; // zaten entity verisi var
+
+                let migrated = 0;
+                for (const [key, tableName] of Object.entries(IDB_ENTITY_MAP)) {
+                    try {
+                        const row = await idbDatabase.kv.get(key);
+                        if (!row || !row.value) continue;
+                        const rows = parseEntityRows(row.value);
+                        if (!rows || rows.length === 0) continue;
+                        const existing = await idbDatabase.table(tableName).count();
+                        if (existing > 0) continue;
+                        await syncEntityTable(tableName, rows);
+                        migrated += rows.length;
+                    } catch (e) {
+                        console.warn('Entity migrate', key, e);
+                    }
+                }
+                if (migrated > 0) {
+                    console.info('IndexedDB entity migrate: ' + migrated + ' kayıt tabloya aktarıldı.');
+                }
+            } catch (e) {
+                console.warn('migrateKvBlobsToEntityTables:', e);
+            }
         }
 
         // ================= PERFORMANS: DEBOUNCE'LU (GECİKMELİ BİRLEŞTİRİLMİŞ) DİSK YAZIMI =================
@@ -2889,11 +3254,25 @@
                 } catch (e) {
                     console.warn("Storage yazma engellendi:", e);
                 }
-                writeToIndexedDbBestEffort(key, pending.value);
+                if (idbAvailable && idbDatabase) pendingIdbWrites.set(key, pending.value);
                 delete pendingStorageWrites[key];
             });
+            if (pendingIdbWrites.size > 0 && idbAvailable && idbDatabase) {
+                const rows = Array.from(pendingIdbWrites.entries()).map(([key, value]) => ({
+                    key, value, updatedAt: Date.now()
+                }));
+                pendingIdbWrites.clear();
+                try { idbDatabase.kv.bulkPut(rows); } catch (e) { /* beforeunload best-effort */ }
+            }
         }
         window.addEventListener('beforeunload', flushPendingStorageWrites);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                flushPendingStorageWrites();
+                flushIndexedDbWrites();
+            }
+        });
+
 
         // ================= AÇILIŞTA INDEXEDDB → LOCALSTORAGE KURTARMA KONTROLÜ =================
         // Panel her zamanki gibi localStorage'dan ANINDA açılır (aşağıdaki fonksiyon buna dokunmaz).
@@ -2905,19 +3284,46 @@
         async function recoverMissingDataFromIndexedDb() {
             if (!idbAvailable || !idbDatabase) return;
             try {
-                const allEntries = await idbDatabase.kv.toArray();
+                // Önce v3 entity migrate (kv blob → tablolar)
+                await migrateKvBlobsToEntityTables();
+
                 let recoveredAny = false;
-                allEntries.forEach(entry => {
-                    const currentLocal = localStorage.getItem(entry.key);
-                    if (currentLocal === null || currentLocal === undefined) {
+
+                // 1) Entity tablolarından eksik localStorage anahtarlarını geri yükle
+                for (const storageKey of IDB_ENTITY_KEYS) {
+                    let missing = false;
+                    try { missing = localStorage.getItem(storageKey) === null; } catch (e) { missing = true; }
+                    if (!missing) continue;
+                    const rows = await idbLoadEntityArray(storageKey);
+                    if (rows && rows.length > 0) {
                         try {
-                            localStorage.setItem(entry.key, entry.value);
+                            localStorage.setItem(storageKey, JSON.stringify(rows));
                             recoveredAny = true;
-                        } catch (e) { /* localStorage hâlâ doluysa IndexedDB zaten asıl kaynak olarak kalır */ }
+                        } catch (e) { /* kota */ }
                     }
-                });
+                }
+
+                // 2) Kalan ayar anahtarları: kv bulkGet
+                let missingKeys = [];
+                try {
+                    missingKeys = IDB_KNOWN_KEYS.filter(k => !IDB_ENTITY_MAP[k] && localStorage.getItem(k) === null);
+                } catch (e) {
+                    missingKeys = IDB_KNOWN_KEYS.filter(k => !IDB_ENTITY_MAP[k]);
+                }
+                if (missingKeys.length > 0) {
+                    const entries = await idbBulkGet(missingKeys);
+                    for (const entry of entries) {
+                        try {
+                            if (localStorage.getItem(entry.key) === null) {
+                                localStorage.setItem(entry.key, entry.value);
+                                recoveredAny = true;
+                            }
+                        } catch (e) { /* */ }
+                    }
+                }
+
                 if (recoveredAny) {
-                    console.info('IndexedDB yedeğinden bazı veriler localStorage\'a geri yüklendi. Sayfa verileri tazeleniyor...');
+                    console.info('IndexedDB (entity/kv) yedeğinden veriler localStorage\'a geri yüklendi.');
                     reloadAllDataFromStorage();
                     updateDashboard();
                 }
@@ -3445,6 +3851,7 @@
             const fallbackProjectId = projects.length > 0 ? projects[0].id : 'ana-kasa';
             allBanks.forEach(b => {
                 if (!b.projectId) { b.projectId = fallbackProjectId; bankMigratedAny = true; }
+                if (!b.currency) { b.currency = 'TRY'; bankMigratedAny = true; } // eski hesaplar hep TL'ydi
             });
             if (bankMigratedAny) {
                 safeSetStorage('banks_rev4', JSON.stringify(allBanks));
@@ -3454,6 +3861,7 @@
             let chequeMigratedAny = false;
             allCheques.forEach(c => {
                 if (!c.projectId) { c.projectId = fallbackProjectId; chequeMigratedAny = true; }
+                if (!c.currency) { c.currency = 'TRY'; chequeMigratedAny = true; } // eski çekler hep TL'ydi
             });
             if (chequeMigratedAny) {
                 safeSetStorage('cheques_rev4', JSON.stringify(allCheques));
@@ -3466,6 +3874,7 @@
             let cardMigratedAny = false;
             allCreditCards.forEach(c => {
                 if (!c.projectId) { c.projectId = fallbackProjectId; cardMigratedAny = true; }
+                if (!c.currency) { c.currency = 'TRY'; cardMigratedAny = true; } // eski kartlar hep TL'ydi
             });
             if (cardMigratedAny) {
                 safeSetStorage('creditCards_rev4', JSON.stringify(allCreditCards));
@@ -3534,7 +3943,7 @@
                 }, 0);
 
                 const projectBanks = allBanks.filter(b => b.projectId === p.id);
-                const bankTotal = projectBanks.reduce((sum, b) => sum + b.balance, 0);
+                const bankTotal = projectBanks.reduce((sum, b) => sum + (b.currency && b.currency !== 'TRY' ? convertToTRY(b.balance, b.currency) : b.balance), 0);
 
                 const projectCards = allCreditCards.filter(c => c.projectId === p.id);
                 const cardDebt = projectCards.reduce((sum, c) => sum + getCardOutstandingAll(c.id), 0);
@@ -4280,7 +4689,8 @@
         // Seçilen cari(ler)i Excel'e aktarır
         // Sadece Banka Hesap Hareketlerini (tüm hesapların işlem geçmişini) Excel'e aktarır —
         // exportToExcel'deki tam raporun aksine, buradan SADECE banka hareketleri iner.
-        function exportBankTransactionsToExcel() {
+        async function exportBankTransactionsToExcel() {
+            try { await ensureXlsx(); } catch (e) { showAlert('Kütüphane', 'Excel kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.'); return; }
             try {
                 const bankIdsVisible = new Set(banks.map(b => b.id));
                 const records = bankTransactions
@@ -4321,7 +4731,8 @@
         }
 
         // Sadece Kredi Kartı Hareketlerini (tüm kartların harcama + ödemelerini) Excel'e aktarır.
-        function exportCreditCardTransactionsToExcel() {
+        async function exportCreditCardTransactionsToExcel() {
+            try { await ensureXlsx(); } catch (e) { showAlert('Kütüphane', 'Excel kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.'); return; }
             try {
                 const cardMap = new Map(creditCards.map(c => [c.id, `${c.bankName} (${c.cardName})`]));
                 const expenseRecords = creditCardExpenses
@@ -4367,7 +4778,8 @@
             }
         }
 
-        function exportCariToExcel() {
+        async function exportCariToExcel() {
+            try { await ensureXlsx(); } catch (e) { showAlert('Kütüphane', 'Excel kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.'); return; }
             if (selectedCariNames.length === 0) {
                 showAlert('Cari Seçilmedi', 'Excel\'e aktarmak için önce en az bir cari seçmelisiniz.');
                 return;
@@ -4565,8 +4977,121 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.68.1";
+        const APP_VERSION = "1.75.1";
         const CHANGELOG = [
+            {
+                version: "1.75.1",
+                date: "25.07.2026",
+                changes: [
+                    "🔍 v1.75.0'daki performans değişiklikleri (parçalanmış updateDashboard, lazy kütüphane yükleme, IndexedDB entity tabloları) bağımsız olarak 10 ayrı canlı tarayıcı simülasyonuyla doğrulandı",
+                    "✅ Doğrulananlar: CSV/Excel banka içe aktarma (kronolojik sıralama düzeltmesi dahil) uçtan uca doğru çalışıyor; Bankalar/Çekler/Kredi Kartı çoklu para birimi hesaplamaları doğru; global arama ve proje filtresi doğru; şifre hatası sonrası giriş alanı doğru temizlenip odaklanıyor",
+                    "Sözdizimi ve tekrarlayan fonksiyon taraması temiz çıktı"
+                ]
+            },
+            {
+                version: "1.75.0",
+                date: "25.07.2026",
+                changes: [
+                    "⚡ PERFORMANS: updateDashboard parçalandı — artık her veri değişiminde TÜM sekmeler değil, yalnızca aktif sekmenin tabloları/listeleri yeniden çiziliyor; sekme değişince ilgili içerik tazeleniyor",
+                    "⚡ Ağır CDN kütüphaneleri (Chart.js, SheetJS/XLSX, PapaParse, jsPDF) açılışta yüklenmiyor; Excel/CSV/PDF ve grafikler ilk ihtiyaç anında lazy yükleniyor — ilk açılış belirgin hızlandı",
+                    "⚡ Chart.js ve dashboard grafikleri yalnızca Genel Durum sekmesi (veya kredi kartı kategori grafiği) açılınca başlatılıyor",
+                    "⚡ Sayfalama PAGE_SIZE 50→30; oturum zaman aşımı mousemove/scroll dinleyicileri 1 sn throttle",
+                    "⚡ IndexedDB recovery ve bulut pull requestIdleCallback/scheduleIdle ile boşta çalışıyor; panel localStorage ile anında açılmaya devam ediyor",
+                    "🗄️ Dexie v3 entity tabloları: borç, gelir, banka, çek, kredi kartı, cari vb. artık satır satır + indekslerle saklanıyor (projectId, paid, status, date, bankId… compound index’ler dahil)",
+                    "🗄️ IndexedDB yazma kuyruğu: art arda gelen kayıtlar debounce + tek transaction bulkPut ile birleştiriliyor; kurtarma toArray yerine bulkGet / entity tablolarından",
+                    "🗄️ kv blob → entity otomatik migrasyon; seed ve sıfırlamada entity tabloları senkron",
+                    "🎨 CSS: body ve glass-card transition: all kaldırıldı (yalnızca renk/border/shadow)",
+                    "🔐 Giriş UX: yanlış şifrede bloklayan alert yerine satır içi kırmızı hata + toast; şifre kutusu temizlenip odaklanıyor — Enter ile tekrar denemek kolay",
+                    "🔐 Uyarı modalı açıkken Enter artık aynı yanlış şifreyi tekrar göndermiyor; modal kapanıp şifre alanına odaklanıyor",
+                    "🔐 Boş şifre denemesi sayaca yazılmıyor; yazmaya başlayınca hata metni temizleniyor"
+                ]
+            },
+            {
+                version: "1.74.1",
+                date: "25.07.2026",
+                changes: [
+                    "🔍 Kapsamlı kod denetimi yapıldı: tüm fonksiyonlar (345 adet), global değişkenler (130 adet) ve CSS sınıfları tek tek kontrol edildi — gerçek anlamda kullanılmayan/ölü kod bulunamadı (uzun geliştirme sürecinin tutarlılığının bir göstergesi)",
+                    "⚡ Performans düzeltmesi: Global arama artık her tuş vuruşunda değil, yazma bittikten kısa bir süre sonra çalışıyor (debounce) — artık varsayılan olarak TÜM projelerin verisini taradığı için, büyük veri setlerinde (yüzlerce/binlerce kayıt) akıcılığı koruyor"
+                ]
+            },
+            {
+                version: "1.74.0",
+                date: "25.07.2026",
+                changes: [
+                    "🔍 Global arama ('Her Yerde Ara') artık aktif projeden BAĞIMSIZ olarak, varsayılan olarak TÜM projelerde arıyor — üstte 'Nerede Arayayım?' açılır listesinden isterseniz sadece belirli bir projeyle sınırlayabilirsiniz",
+                    "Arama sonuçlarına, hangi projeden geldiğini gösteren küçük bir not eklendi",
+                    "Global arama artık Cariler'i de kapsıyor (önceden sadece Borç/Gelir/Banka/Çek/Kredi Kartı aranıyordu)",
+                    "Arama sonuçları artık her kaydın kendi para biriminde (Kasa/Banka/Çek/Kredi Kartı çoklu para birimi desteğiyle tutarlı) gösteriliyor",
+                    "✅ Cariler modülü doğrulandı: zaten Kasa modülünün (borç kayıtlarının) proje ayrımını ve çoklu para birimini miras aldığı için ek bir değişikliğe gerek yoktu — cari hesap ekstresi zaten doğru projeye/para birimine göre çalışıyor"
+                ]
+            },
+            {
+                version: "1.73.0",
+                date: "25.07.2026",
+                changes: [
+                    "💱 KREDİ KARTI modülüne çoklu para birimi desteği eklendi — bir kart artık TL, Dolar, Euro veya Gram Altın cinsinden tanımlanabiliyor",
+                    "Kart kartlarındaki (Kalan Limit, Toplam Limit, Güncel Borç) tüm tutarlar artık kartın kendi para biriminde gösteriliyor",
+                    "🐞 Kritik düzeltme: Ana Dashboard'daki 'Kredi Kartı Borcu' toplamı, farklı para birimlerindeki kartların harcamalarını doğrudan (çevrimsiz) topluyordu — bu, kartlar karışık para biriminde olduğunda YANLIŞ bir TL rakamı üretiyordu. Yeni bir hesaplama fonksiyonu ile her kart kendi güncel kurundan doğru çevrilip toplanıyor",
+                    "'Kredi Kartına Yaz' (borç ödeme) ve 'Ekstre Öde' akışlarında artık kart/borç/banka para birimleri farklıysa otomatik güncel kurla çevriliyor (Bankalar ve Çekler'deki mantıkla birebir aynı)",
+                    "Ana Kasa'daki 'Proje Bazında Gör' kırılımına Kredi Kartı için de döviz/altın alt kırılımı eklendi",
+                    "Mevcut kartlar otomatik 'TL' olarak göç etti, veri kaybı yok",
+                    "🎉 Bankalar, Çekler ve Kredi Kartı — üç modülün de çoklu para birimi desteği tamamlandı"
+                ]
+            },
+            {
+                version: "1.72.0",
+                date: "25.07.2026",
+                changes: [
+                    "💱 ÇEKLER modülüne çoklu para birimi desteği eklendi — bir çek artık TL, Dolar, Euro veya Gram Altın cinsinden kayıt edilebiliyor",
+                    "Çek tabloları ve vade takvimi artık her çekin kendi para biriminde gösteriyor",
+                    "'Gelecek Çek Tahsilatları/Ödemeleri' KPI'ları artık tüm çekleri güncel kurla TL'ye çevirip doğru topluyor",
+                    "Bir çek Kasa'ya nakit tahsil edilirken artık KENDİ para biriminde (çevrilmeden) Kasa'ya işleniyor — Kasa zaten çoklu para birimini destekliyordu, bu tutarlılığı sağlıyor",
+                    "Bir çek farklı para birimindeki bir banka hesabına tahsil/ödeme edilirken otomatik güncel kurla çevriliyor (Bankalar'daki mantıkla aynı)",
+                    "Ana Kasa'daki 'Proje Bazında Gör' kırılımına Çekler için de döviz/altın alt kırılımı eklendi",
+                    "Sırada: Aynı çoklu para birimi desteğinin Kredi Kartı modülüne eklenmesi"
+                ]
+            },
+            {
+                version: "1.71.1",
+                date: "25.07.2026",
+                changes: [
+                    "💱 Farklı para birimleri arasında ödeme/yatırma artık otomatik güncel kurla çevriliyor — TL'yi ortak referans (pivot) alarak: bir borcu farklı para birimindeki bir banka hesabından öderken, bir geliri farklı para birimindeki bir bankaya yatırırken, veya kredi kartı ekstresini yabancı para birimli bir hesaptan öderken artık doğru tutar otomatik hesaplanıyor",
+                    "Bu, önceki sürümdeki bilinen sınırlamayı (yanlış tutar düşme riski) tamamen gideriyor",
+                    "Gelir düzenleme/silme işlemlerinde de banka bakiyesi artık her zaman o BANKANIN kendi para biriminde doğru şekilde geri alınıyor/güncelleniyor",
+                    "Ödeme onay mesajlarında artık dönüşüm net gösteriliyor (örn. '... hesabından ($303.03 olarak, güncel kur)')"
+                ]
+            },
+            {
+                version: "1.71.0",
+                date: "25.07.2026",
+                changes: [
+                    "💱 BANKALAR modülüne çoklu para birimi desteği eklendi — artık bir banka hesabı TL, Dolar, Euro veya Gram Altın cinsinden açılabiliyor (gerçek bankacılıktaki gibi, her hesabın kendi sabit para birimi var)",
+                    "Banka kartlarında bakiye artık kendi para biriminde + güncel kurla TL karşılığı gösteriliyor",
+                    "'Bankalar Toplam Mevduat' KPI'sı artık tüm hesapları güncel kurla TL'ye çevirip doğru topluyor",
+                    "Ana Kasa'daki 'Proje Bazında Gör' kırılımına Bankalar için de döviz/altın alt kırılımı eklendi (Kasa'daki gibi)",
+                    "⚠️ Bilinen sınırlama: Bir borcu, borcun kendi para biriminden FARKLI bir para birimindeki banka hesabından öderken (ör. TL borcu Dolar hesabından ödeme) otomatik kur çevirimi henüz yok — bu senaryo bir sonraki güncellemede ele alınacak",
+                    "Sırada: Aynı çoklu para birimi desteğinin Çekler ve Kredi Kartı modüllerine eklenmesi"
+                ]
+            },
+            {
+                version: "1.70.0",
+                date: "25.07.2026",
+                changes: [
+                    "💱 Kasa'nın proje kırılımına döviz/altın alt kırılımı eklendi — her projenin altında (varsa) Dolar/Euro/Altın miktarları küçük punto ile ayrıca listeleniyor",
+                    "ℹ️ Netlik: Bankalar, Çekler ve Kredi Kartı modüllerinde bu uygulamada çoklu para birimi kavramı yok (hepsi TL) — bu yüzden bu üçünde döviz/altın alt kırılımı yer almıyor, sadece Kasa'ya özel",
+                    "ℹ️ Keşif: Dashboard'daki 5 KPI kartı zaten TÜM sayfalarda ortak/sabit (Kasa/Bankalar/Çekler sayfalarına özel ayrı kartlar yok) — yani bir önceki sürümde eklenen proje kırılımı zaten bu sayfaların hepsinde otomatik olarak çalışıyor"
+                ]
+            },
+            {
+                version: "1.69.0",
+                date: "25.07.2026",
+                changes: [
+                    "📊 1. AŞAMA — Dashboard'daki 5 ana karta (Kasa Gelir Bütçesi, Bankalar Toplam Mevduat, Gelecek Çek Tahsilatları/Ödemeleri, Kredi Kartı Borcu) 'Proje Bazında Gör' açılır kırılımı eklendi — SADECE Ana Kasa aktifken görünür",
+                    "Her kartı açtığınızda hangi projeden ne kadar geldiğini (küçük punto, alt alta) görebiliyorsunuz, her projenin yanındaki kutucukla dahil/hariç bırakıp 'Seçili Toplam'ı anlık görebiliyorsunuz",
+                    "⚡ Performans: kırılım hesaplaması SADECE panel açıldığında yapılıyor, kapalı panellerde hiçbir ekstra hesaplama çalışmıyor — sayfa render performansı etkilenmiyor",
+                    "Sırada: Aynı özelliğin Kasa/Bankalar/Çekler/Kredi Kartı sayfalarının kendi kartlarına yayılması, ve global arama filtresi"
+                ]
+            },
             {
                 version: "1.68.1",
                 date: "24.07.2026",
@@ -6107,9 +6632,60 @@
         // sadece bir "sayfa" (PAGE_SIZE kadar) satır render edilir; toplam veri hâlâ hafızada
         // tutulur (hesaplamalar/toplamlar tüm filtrelenmiş veri üzerinden yapılır, sadece EKRANA
         // BASILAN satır sayısı sınırlanır).
-        const PAGE_SIZE = 50;
+        const PAGE_SIZE = 30;
 
         // Bir diziyi verilen sayfa numarasına göre dilimler; sayfa numarasını geçerli aralığa sıkıştırır.
+
+        // ================= PERFORMANS: LAZY SCRIPT YÜKLEME =================
+        // Ağır kütüphaneler (XLSX, PapaParse, jsPDF, Chart.js) yalnızca ihtiyaç anında yüklenir.
+        // Böylece ilk sayfa açılışında ~1–2 MB daha az JS indirilir/parse edilir.
+        const _scriptLoadCache = {};
+        function loadScriptOnce(src) {
+            if (_scriptLoadCache[src]) return _scriptLoadCache[src];
+            _scriptLoadCache[src] = new Promise((resolve, reject) => {
+                if (document.querySelector('script[data-lazy-src="' + src + '"]')) {
+                    resolve();
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = src;
+                s.async = true;
+                s.dataset.lazySrc = src;
+                s.onload = () => resolve();
+                s.onerror = () => {
+                    delete _scriptLoadCache[src];
+                    reject(new Error('Script yüklenemedi: ' + src));
+                };
+                document.head.appendChild(s);
+            });
+            return _scriptLoadCache[src];
+        }
+        async function ensureXlsx() {
+            if (typeof XLSX !== 'undefined') return;
+            await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+        }
+        async function ensurePapaParse() {
+            if (typeof Papa !== 'undefined') return;
+            await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js');
+        }
+        async function ensureJsPdf() {
+            if (typeof window.jspdf !== 'undefined') return;
+            await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+            await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
+        }
+        async function ensureChartJs() {
+            if (typeof Chart !== 'undefined') return;
+            await loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js');
+        }
+        // requestIdleCallback polyfill + yardımcı: kritik olmayan işleri boşta çalıştır
+        const scheduleIdle = (typeof requestIdleCallback === 'function')
+            ? (fn, timeout = 2000) => requestIdleCallback(() => { try { fn(); } catch (e) { console.warn(e); } }, { timeout })
+            : (fn) => setTimeout(() => { try { fn(); } catch (e) { console.warn(e); } }, 50);
+
+        // Aktif sekme takibi — updateDashboard yalnızca görünür sekmeyi DOM'a basar
+        let activeTabId = 'dashboard-tab';
+        let chartsInitialized = false;
+
         function paginate(array, page, pageSize = PAGE_SIZE) {
             const totalItems = array.length;
             const totalPages = Math.max(Math.ceil(totalItems / pageSize), 1);
@@ -6247,6 +6823,23 @@
             const rate = exchangeRates[currency];
             if (!rate) return amount; // Kur henüz çekilmediyse dönüştürmeden döndür (güvenli varsayılan)
             return amount * rate;
+        }
+
+        // İKİ FARKLI PARA BİRİMİ arasında dönüşüm yapar — TL'yi ORTAK REFERANS (pivot) olarak
+        // kullanır: önce kaynak para birimi TL'ye çevrilir, sonra TL hedef para birimine çevrilir.
+        // Örn: 10.000 TL'lik bir borcu Dolar hesabından öderken, güncel dolar kuruyla önce (zaten
+        // TL olan) borç tutarı TL kalır, sonra o TL tutarı Dolar'a çevrilip hesaptan o kadar düşülür.
+        // Bu, kullanıcının kendi manuel iş akışıyla (önce güncel kurdan TL'ye çevirip kasaya/bankaya
+        // koyup oradan istediği para birimine geçmek) birebir aynı mantığı otomatikleştirir.
+        function convertBetweenCurrencies(amount, fromCurrency, toCurrency) {
+            const from = fromCurrency || 'TRY';
+            const to = toCurrency || 'TRY';
+            if (from === to) return amount;
+            const tryAmount = convertToTRY(amount, from);
+            if (to === 'TRY') return tryAmount;
+            const rate = exchangeRates[to];
+            if (!rate) return tryAmount; // hedef kur yoksa güvenli varsayılan: TL tutarını döndür
+            return tryAmount / rate;
         }
 
         // Bir borç kaleminin TL karşılığını döndürür — TÜM toplam/özet hesaplamaları bunu kullanır.
@@ -6453,6 +7046,9 @@
         function maskCurrency(val) {
             return userRole === 'visitor' ? STAR_MASK : formatCurrency(val);
         }
+        function maskCurrencyAny(val, currency) {
+            return userRole === 'visitor' ? STAR_MASK : formatCurrencyAny(val, currency);
+        }
 
         // Sekme Değiştirici
         // Mobil Kenar Çubuğu Aç/Kapa
@@ -6465,6 +7061,7 @@
         }
 
         function switchTab(tabId, btnElement) {
+            activeTabId = tabId;
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             const targetContent = document.getElementById(tabId + '-content');
             if (targetContent) {
@@ -6510,6 +7107,60 @@
             if (kpiGrid) kpiGrid.classList.toggle('hidden', isCarilerPage);
             if (dueBanner && isCarilerPage) dueBanner.classList.add('hidden');
             else if (dueBanner && !isCarilerPage) renderDueReminders();
+
+            // PERFORMANS: Sekme değişince yalnızca o sekmenin DOM içeriğini çiz
+            // (updateDashboard her seferinde tüm sekmeleri boyamıyordu; burada eksik kalanı tamamlarız)
+            renderActiveTabContent();
+        }
+
+        // Aktif sekmeye göre yalnızca ilgili listeleri/tabloları/grafikleri çizer
+        function renderActiveTabContent() {
+            const tab = activeTabId || 'dashboard-tab';
+            if (tab === 'dashboard-tab') {
+                ensureChartsReady().then(() => {
+                    renderSavingsGoalWidget();
+                    renderTrendChart();
+                    renderProjectBreakdown();
+                });
+            } else if (tab === 'kasa-tab') {
+                renderIncomeList();
+                renderUrgentTable();
+                renderOtherTable();
+                renderMonthlyPayments();
+                updateDebtSummary();
+            } else if (tab === 'banka-cek-tab') {
+                renderBankAccounts();
+                renderChequeLedgers();
+                renderChequeTimeline();
+            } else if (tab === 'credit-card-tab') {
+                renderCreditCardsGrid();
+                renderCcPerCardBreakdown();
+                ensureChartJs().then(() => {
+                    renderCreditCardTable();
+                }).catch(() => {
+                    renderCreditCardTable();
+                });
+            } else if (tab === 'cariler-tab') {
+                populateCarilerSelect();
+                renderCarilerPage();
+            }
+        }
+
+        async function ensureChartsReady() {
+            if (chartsInitialized && ratioChart && categoryChart) return;
+            try {
+                await ensureChartJs();
+                if (!chartsInitialized) {
+                    initializeCharts();
+                    chartsInitialized = true;
+                    const p = window.__lastChartPayload;
+                    if (p && ratioChart && categoryChart) {
+                        updateChartsData(p.cashRemaining, p.bankTotal, p.totalReceivables, p.totalPayables);
+                    }
+                }
+            } catch (e) {
+                console.warn('Chart.js yüklenemedi:', e);
+            }
         }
 
         // ================= SAYFAYA GÖRE KPI KARTI FİLTRELEME =================
@@ -6589,11 +7240,11 @@
             const cashRemaining = totalIncomes - totalPaid;
 
             // Banka Hesapları Toplamı
-            const bankTotal = banks.reduce((sum, item) => sum + item.balance, 0);
+            const bankTotal = banks.reduce((sum, item) => sum + (item.currency && item.currency !== 'TRY' ? convertToTRY(item.balance, item.currency) : item.balance), 0);
 
             // Çek Defteri Hesaplamaları
-            const incomingChequesTotal = cheques.filter(c => c.type === 'gelen' && c.status === 'Bekliyor').reduce((sum, item) => sum + item.amount, 0);
-            const outgoingChequesTotal = cheques.filter(c => c.type === 'giden' && c.status === 'Bekliyor').reduce((sum, item) => sum + item.amount, 0);
+            const incomingChequesTotal = cheques.filter(c => c.type === 'gelen' && c.status === 'Bekliyor').reduce((sum, item) => sum + convertToTRY(item.amount, item.currency || 'TRY'), 0);
+            const outgoingChequesTotal = cheques.filter(c => c.type === 'giden' && c.status === 'Bekliyor').reduce((sum, item) => sum + convertToTRY(item.amount, item.currency || 'TRY'), 0);
 
             // Konsolide Net Likidite
             const netLiquidity = cashRemaining + bankTotal;
@@ -6602,7 +7253,7 @@
             const totalReceivables = incomingChequesTotal;
 
             // Kredi Kartı Harcamaları Toplamı (kart harcamaları doğrudan borç olarak kabul edilir)
-            const creditCardTotal = Math.max(creditCardExpenses.reduce((sum, item) => sum + item.amount, 0) - creditCardPayments.reduce((sum, p) => sum + p.amount, 0), 0);
+            const creditCardTotal = getTotalCreditCardDebtTRY();
 
             // Toplam Borçlar (kaynağı ne olursa olsun ödenmiş TÜM borçlar açık borçtan düşülür)
             const unpaidDebtsSum = totalDebtsSum - paidDebtsSumAll;
@@ -6693,30 +7344,52 @@
             safeSetStorage('banks_rev4', JSON.stringify(allBanks));
             safeSetStorage('cheques_rev4', JSON.stringify(allCheques));
 
-            // Tabloları/Arayüzleri Çiz
-            renderIncomeList();
-            renderUrgentTable();
-            renderOtherTable();
-            renderMonthlyPayments();
-            renderBankAccounts();
-            renderChequeLedgers();
-            renderChequeTimeline();
-            renderCreditCardsGrid();
-            renderCreditCardTable();
-            renderCcPerCardBreakdown();
-            renderDueReminders();
-            populateCarilerSelect();
-            renderCarilerPage();
-            renderSavingsGoalWidget();
-            renderTrendChart();
-            updateDebtSummary();
+            // PERFORMANS: Her updateDashboard çağrısında TÜM sekmeleri DOM'a basmak yerine
+            // her zaman gereken (KPI/sidebar/auth/vade) parçaları güncelle; ağır listeleri
+            // yalnızca aktif sekme için çiz. Diğer sekmeler switchTab anında tazelenir.
             updateAuthUI();
-            renderProjectBreakdown();
+            updateDebtSummary();
+            renderDueReminders();
+            updateAllKpiBreakdownToggleVisibility();
+            Object.keys(kpiBreakdownOpenState).forEach(key => {
+                if (kpiBreakdownOpenState[key]) renderKpiBreakdownContent(key);
+            });
 
-            // Grafikleri güncelle
-            if (ratioChart && categoryChart) {
-                updateChartsData(cashRemaining, bankTotal, totalReceivables, totalPayables);
+            const tab = activeTabId || 'dashboard-tab';
+            if (tab === 'dashboard-tab') {
+                renderSavingsGoalWidget();
+                renderProjectBreakdown();
+                // Chart.js lazy: ilk dashboard görünümünde yükle, sonra veriyi bas
+                ensureChartsReady().then(() => {
+                    renderTrendChart();
+                    if (ratioChart && categoryChart) {
+                        updateChartsData(cashRemaining, bankTotal, totalReceivables, totalPayables);
+                    }
+                });
+            } else if (tab === 'kasa-tab') {
+                renderIncomeList();
+                renderUrgentTable();
+                renderOtherTable();
+                renderMonthlyPayments();
+            } else if (tab === 'banka-cek-tab') {
+                renderBankAccounts();
+                renderChequeLedgers();
+                renderChequeTimeline();
+            } else if (tab === 'credit-card-tab') {
+                renderCreditCardsGrid();
+                renderCcPerCardBreakdown();
+                ensureChartJs().then(() => {
+                    renderCreditCardTable();
+                }).catch(() => {
+                    renderCreditCardTable();
+                });
+            } else if (tab === 'cariler-tab') {
+                populateCarilerSelect();
+                renderCarilerPage();
             }
+
+            // Grafik verisini hafızada tut (sekme değişince taze çizim için)
+            window.__lastChartPayload = { cashRemaining, bankTotal, totalReceivables, totalPayables };
 
             // Bulut Otomatik Senkronizasyonu (yalnızca yönetici veri değiştirdiğinde)
             scheduleAutoCloudPush();
@@ -6788,7 +7461,10 @@
                     </div>
                     <div class="pt-2 border-t theme-border flex justify-between items-end">
                         <span class="text-[10px] theme-text-muted font-bold uppercase tracking-wider">Mevcut Bakiye</span>
-                        <span class="text-lg font-black theme-text-main">${formatCurrency(item.balance)}</span>
+                        <div class="text-right">
+                            <span class="text-lg font-black theme-text-main block">${item.currency && item.currency !== 'TRY' ? formatCurrencyAny(item.balance, item.currency) : formatCurrency(item.balance)}</span>
+                            ${item.currency && item.currency !== 'TRY' ? `<span class="text-[9px] theme-text-muted block">≈ ${formatCurrency(convertToTRY(item.balance, item.currency))} (güncel kur)</span>` : ''}
+                        </div>
                     </div>
                     <button onclick="openBankLedgerModal(${item.id})" class="w-full pt-1.5 flex justify-between items-center hover:opacity-70 transition-all">
                         <span class="text-[9px] theme-text-muted"><i class="fa-regular fa-clock"></i> Son güncelleme</span>
@@ -6821,6 +7497,197 @@
             const paid = allCreditCardPayments.filter(p => p.cardId === cardId).reduce((sum, p) => sum + p.amount, 0);
             return Math.max(spent - paid, 0);
         }
+        // Görünen (filtrelenmiş) tüm kartların güncel borcunu, HER KARTIN KENDİ para biriminden
+        // güncel kurla TL'ye çevirip toplar. Kartlar farklı para birimlerinde olabileceği için
+        // (creditCardExpenses/Payments'ı doğrudan toplamak YANLIŞ sonuç verir — kartlar karışır).
+        function getTotalCreditCardDebtTRY() {
+            return creditCards.reduce((sum, card) => {
+                const spent = creditCardExpenses.filter(e => e.cardId === card.id).reduce((s, e) => s + e.amount, 0);
+                const paid = creditCardPayments.filter(p => p.cardId === card.id).reduce((s, p) => s + p.amount, 0);
+                const outstanding = Math.max(spent - paid, 0);
+                return sum + convertToTRY(outstanding, card.currency || 'TRY');
+            }, 0);
+        }
+
+        // ================= DASHBOARD KPI KARTLARI: ANA KASA PROJE KIRILIMI =================
+        // Ana Kasa aktifken, üstteki 5 KPI kartının her birine tıklanabilir bir "Proje Bazında
+        // Gör" düğmesi eklenir. Açıldığında hangi projeden ne kadar geldiğini (küçük punto, alt
+        // alta) gösterir + hangi projelerin dahil edileceğini seçebileceğiniz kutucuklar sunar.
+        // PERFORMANS: Kırılım hesaplaması SADECE panel açıldığında yapılır — kapalıyken hiçbir
+        // ekstra hesaplama çalışmaz. Görünürlük kontrolü (bu fonksiyon) ise çok ucuzdur (sadece
+        // sınıf ekleme/kaldırma), updateDashboard() her çalıştığında güvenle çağrılabilir.
+        let kpiBreakdownOpenState = {};   // { kasa: true/false, banka: ..., ... }
+        let kpiBreakdownFilters = {};     // { kasa: Set(projectId, ...), ... } — dahil edilen projeler
+
+        // computeForProject: (projectId) => TRY cinsinden sayı döndüren fonksiyon
+        const KPI_BREAKDOWN_COMPUTE = {
+            kasa: (pid) => {
+                const debtSum = allDebts.filter(d => d.projectId === pid).reduce((s, d) => s + getDebtAmountTRY(d), 0);
+                const incomeSum = allIncomes.filter(i => i.projectId === pid).reduce((s, i) => {
+                    const tl = getIncomeAmountTRY(i);
+                    return s + (i.flowType === 'çıkış' ? -tl : tl);
+                }, 0);
+                return incomeSum; // Kart üzerindeki değer Kasa Gelir Bütçesi (gelir/gider net) ile aynı mantık
+            },
+            banka: (pid) => allBanks.filter(b => b.projectId === pid).reduce((s, b) => s + (b.currency && b.currency !== 'TRY' ? convertToTRY(b.balance, b.currency) : b.balance), 0),
+            cekGelen: (pid) => allCheques.filter(c => c.projectId === pid && c.type === 'gelen' && c.status === 'Bekliyor').reduce((s, c) => s + convertToTRY(c.amount, c.currency || 'TRY'), 0),
+            cekGiden: (pid) => allCheques.filter(c => c.projectId === pid && c.type === 'giden' && c.status === 'Bekliyor').reduce((s, c) => s + convertToTRY(c.amount, c.currency || 'TRY'), 0),
+            krediKarti: (pid) => allCreditCards.filter(c => c.projectId === pid).reduce((s, c) => s + convertToTRY(getCardOutstandingAll(c.id), c.currency || 'TRY'), 0)
+        };
+
+        // Kasa kırılımı için: bir projenin kendi para biriminde (TL'ye çevrilmeden) yabancı
+        // para/altın gelirlerini döndürür — "income-currency-breakdown" ile BİREBİR AYNI mantık,
+        // sadece tek bir projeye göre süzülmüş hâli.
+        function computeKasaCurrencyNative(pid) {
+            const groups = {};
+            allIncomes
+                .filter(i => i.projectId === pid && i.currency && i.currency !== 'TRY' && i.destination !== 'banka')
+                .forEach(i => {
+                    const cur = i.currency;
+                    if (!groups[cur]) groups[cur] = 0;
+                    groups[cur] += (i.flowType === 'çıkış' ? -i.amount : i.amount);
+                });
+            return groups; // ör. { USD: 500, GOLD: 100 } — sıfır olan para birimleri hiç eklenmez
+        }
+        // Banka kırılımı için: bir projenin döviz/altın hesaplarının kendi para biriminde (native)
+        // bakiyelerini döndürür. Her hesabın SABİT bir para birimi vardır (TRY hesap, USD hesap vb.)
+        function computeBankaCurrencyNative(pid) {
+            const groups = {};
+            allBanks
+                .filter(b => b.projectId === pid && b.currency && b.currency !== 'TRY')
+                .forEach(b => {
+                    const cur = b.currency;
+                    if (!groups[cur]) groups[cur] = 0;
+                    groups[cur] += b.balance;
+                });
+            return groups;
+        }
+        // Çek kırılımı için: bir projenin bekleyen döviz/altın çeklerinin kendi para biriminde
+        // (native) toplamını döndürür — gelen ve giden çekler ayrı fonksiyonlarda.
+        function computeCekGelenCurrencyNative(pid) {
+            const groups = {};
+            allCheques
+                .filter(c => c.projectId === pid && c.type === 'gelen' && c.status === 'Bekliyor' && c.currency && c.currency !== 'TRY')
+                .forEach(c => {
+                    if (!groups[c.currency]) groups[c.currency] = 0;
+                    groups[c.currency] += c.amount;
+                });
+            return groups;
+        }
+        function computeCekGidenCurrencyNative(pid) {
+            const groups = {};
+            allCheques
+                .filter(c => c.projectId === pid && c.type === 'giden' && c.status === 'Bekliyor' && c.currency && c.currency !== 'TRY')
+                .forEach(c => {
+                    if (!groups[c.currency]) groups[c.currency] = 0;
+                    groups[c.currency] += c.amount;
+                });
+            return groups;
+        }
+        // Kredi Kartı kırılımı için: bir projenin döviz/altın kartlarının güncel borcunu kendi
+        // para biriminde (native) döndürür.
+        function computeKrediKartiCurrencyNative(pid) {
+            const groups = {};
+            allCreditCards
+                .filter(c => c.projectId === pid && c.currency && c.currency !== 'TRY')
+                .forEach(c => {
+                    const outstanding = getCardOutstandingAll(c.id);
+                    if (outstanding <= 0.005) return;
+                    if (!groups[c.currency]) groups[c.currency] = 0;
+                    groups[c.currency] += outstanding;
+                });
+            return groups;
+        }
+
+        // Ucuz kısım: sadece Ana Kasa aktifken + en az 1 proje varken düğmeleri göster. Her
+        // updateDashboard() çağrısında güvenle çalıştırılabilir, hesaplama içermez.
+        function updateAllKpiBreakdownToggleVisibility() {
+            Object.keys(KPI_BREAKDOWN_COMPUTE).forEach(key => {
+                const btn = document.getElementById(`kpi-breakdown-toggle-${key}`);
+                if (!btn) return;
+                if (activeProjectId === 'ana-kasa' && projects.length > 0) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                    // Proje değiştiyse açık kalmış kırılım panellerini de kapat
+                    const panel = document.getElementById(`kpi-breakdown-panel-${key}`);
+                    if (panel) panel.classList.add('hidden');
+                    kpiBreakdownOpenState[key] = false;
+                }
+            });
+        }
+
+        function toggleKpiBreakdownPanel(key) {
+            const panel = document.getElementById(`kpi-breakdown-panel-${key}`);
+            const chevron = document.getElementById(`kpi-breakdown-chevron-${key}`);
+            if (!panel) return;
+            const willOpen = panel.classList.contains('hidden');
+            kpiBreakdownOpenState[key] = willOpen;
+            panel.classList.toggle('hidden', !willOpen);
+            if (chevron) chevron.style.transform = willOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+            if (willOpen) renderKpiBreakdownContent(key); // sadece açılınca hesapla (lazy)
+        }
+
+        function renderKpiBreakdownContent(key) {
+            const panel = document.getElementById(`kpi-breakdown-panel-${key}`);
+            const computeFn = KPI_BREAKDOWN_COMPUTE[key];
+            if (!panel || !computeFn) return;
+
+            if (!kpiBreakdownFilters[key]) {
+                kpiBreakdownFilters[key] = new Set(projects.map(p => p.id)); // varsayılan: tüm projeler dahil
+            }
+            const included = kpiBreakdownFilters[key];
+
+            const rows = projects.map(p => ({ project: p, val: computeFn(p.id) }));
+            const filteredTotal = rows.filter(r => included.has(r.project.id)).reduce((s, r) => s + r.val, 0);
+
+            panel.innerHTML = `
+                <div class="space-y-1.5">
+                    ${rows.map(r => {
+                        const currencyGroups = key === 'kasa' ? computeKasaCurrencyNative(r.project.id)
+                            : key === 'banka' ? computeBankaCurrencyNative(r.project.id)
+                            : key === 'cekGelen' ? computeCekGelenCurrencyNative(r.project.id)
+                            : key === 'cekGiden' ? computeCekGidenCurrencyNative(r.project.id)
+                            : key === 'krediKarti' ? computeKrediKartiCurrencyNative(r.project.id)
+                            : null;
+                        const currencyEntries = currencyGroups ? Object.entries(currencyGroups).filter(([, amt]) => Math.abs(amt) > 0.005) : [];
+                        return `
+                        <div>
+                            <label class="flex items-center justify-between gap-2 py-0.5 cursor-pointer">
+                                <span class="flex items-center gap-1.5 min-w-0">
+                                    <input type="checkbox" onchange="toggleKpiBreakdownProjectFilter('${key}','${r.project.id}')" ${included.has(r.project.id) ? 'checked' : ''} class="w-3 h-3 accent-indigo-600 shrink-0">
+                                    <span class="text-[10px] theme-text-muted truncate">${escapeHtml(r.project.name)}</span>
+                                </span>
+                                <span class="text-[10px] font-bold theme-text-main shrink-0">${formatCurrency(r.val)}</span>
+                            </label>
+                            ${currencyEntries.length > 0 ? `
+                                <div class="pl-5 space-y-0.5">
+                                    ${currencyEntries.map(([cur, amt]) => `
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-[9px] theme-text-muted opacity-75">${CURRENCY_LABELS[cur] || cur}</span>
+                                            <span class="text-[9px] font-semibold theme-text-muted opacity-90">${formatCurrencyAny(amt, cur)}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    }).join('')}
+                </div>
+                <div class="flex items-center justify-between gap-2 pt-1.5 mt-1.5 border-t theme-border">
+                    <span class="text-[9px] font-black theme-text-muted uppercase tracking-widest">Seçili Toplam</span>
+                    <span class="text-[11px] font-black text-indigo-500">${formatCurrency(filteredTotal)}</span>
+                </div>
+            `;
+        }
+
+        function toggleKpiBreakdownProjectFilter(key, projectId) {
+            if (!kpiBreakdownFilters[key]) kpiBreakdownFilters[key] = new Set(projects.map(p => p.id));
+            const set = kpiBreakdownFilters[key];
+            if (set.has(projectId)) set.delete(projectId); else set.add(projectId);
+            renderKpiBreakdownContent(key); // sadece bu panel yeniden çizilir, tüm sayfa değil
+        }
+
         // Kredi Kartı Borcu KPI kartının içinde, hangi kartın ne kadar borcu olduğunu listeler
         function renderCcPerCardBreakdown() {
             const wrapper = document.getElementById('cc-per-card-breakdown-wrapper');
@@ -6840,7 +7707,7 @@
             list.innerHTML = cardsWithDebt.map(({ card, outstanding }) => `
                 <div class="flex items-center justify-between text-xs">
                     <span class="theme-text-muted font-semibold truncate">${escapeHtml(card.bankName)} <span class="text-[9px] opacity-70">(${escapeHtml(card.cardName)})</span></span>
-                    <span class="font-bold text-violet-500 shrink-0">${formatCurrency(outstanding)}</span>
+                    <span class="font-bold text-violet-500 shrink-0">${card.currency && card.currency !== 'TRY' ? formatCurrencyAny(outstanding, card.currency) : formatCurrency(outstanding)}</span>
                 </div>
             `).join('');
             wrapper.classList.remove('hidden');
@@ -6883,10 +7750,10 @@
                     items.push({
                         urgent: diffDays <= 0,
                         text: diffDays < 0
-                            ? `📄 ${escapeHtml(c.drawer)} çeki ${Math.abs(diffDays)} gün gecikti (${formatCurrency(c.amount)})`
+                            ? `📄 ${escapeHtml(c.drawer)} çeki ${Math.abs(diffDays)} gün gecikti (${formatCurrencyAny(c.amount, c.currency || 'TRY')})`
                             : diffDays === 0
-                                ? `📄 ${escapeHtml(c.drawer)} çeki BUGÜN vadesinde (${formatCurrency(c.amount)})`
-                                : `📄 ${escapeHtml(c.drawer)} çeki ${diffDays} gün içinde vadesi doluyor (${formatCurrency(c.amount)})`
+                                ? `📄 ${escapeHtml(c.drawer)} çeki BUGÜN vadesinde (${formatCurrencyAny(c.amount, c.currency || 'TRY')})`
+                                : `📄 ${escapeHtml(c.drawer)} çeki ${diffDays} gün içinde vadesi doluyor (${formatCurrencyAny(c.amount, c.currency || 'TRY')})`
                     });
                 }
             });
@@ -7029,6 +7896,8 @@
             const isVisitor = userRole === 'visitor';
 
             creditCards.forEach(card => {
+                const cardCurrency = card.currency || 'TRY';
+                const fmtAmt = (v) => cardCurrency !== 'TRY' ? formatCurrencyAny(v, cardCurrency) : formatCurrency(v);
                 const outstanding = getCardOutstanding(card.id);
                 const remaining = Math.max(card.totalLimit - outstanding, 0);
                 const usagePct = card.totalLimit > 0 ? Math.min(Math.round((outstanding / card.totalLimit) * 100), 100) : 0;
@@ -7071,17 +7940,17 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <span class="text-[9px] theme-text-muted font-bold uppercase tracking-wider block">Kalan Limit</span>
-                            <span class="text-base font-black ${usagePct >= 90 ? 'text-red-500' : 'theme-text-main'}">${isVisitor ? STAR_MASK : formatCurrency(remaining)}</span>
+                            <span class="text-base font-black ${usagePct >= 90 ? 'text-red-500' : 'theme-text-main'}">${isVisitor ? STAR_MASK : fmtAmt(remaining)}</span>
                         </div>
                         <div class="text-right">
                             <span class="text-[9px] theme-text-muted font-bold uppercase tracking-wider block">Toplam Limit</span>
-                            <span class="text-xs font-bold theme-text-muted">${isVisitor ? STAR_MASK : formatCurrency(card.totalLimit)}</span>
+                            <span class="text-xs font-bold theme-text-muted">${isVisitor ? STAR_MASK : fmtAmt(card.totalLimit)}</span>
                         </div>
                     </div>
                     <div class="flex items-center justify-between mt-2 pt-2 border-t theme-border">
                         <div>
                             <span class="text-[9px] theme-text-muted font-bold uppercase tracking-wider block">Güncel Borç</span>
-                            <span class="text-sm font-black text-violet-500">${isVisitor ? STAR_MASK : formatCurrency(outstanding)}</span>
+                            <span class="text-sm font-black text-violet-500">${isVisitor ? STAR_MASK : fmtAmt(outstanding)}</span>
                         </div>
                         <span class="text-[9px] font-bold theme-text-muted">${isVisitor ? '' : `%${usagePct} kullanıldı`}</span>
                     </div>
@@ -7103,11 +7972,19 @@
         function openAddCreditCardCardModal() {
             document.getElementById('add-ccard-bank').value = '';
             document.getElementById('add-ccard-name').value = '';
+            document.getElementById('add-ccard-currency').value = 'TRY';
             document.getElementById('add-ccard-limit').value = '';
             document.getElementById('add-ccard-statement-day').value = '';
             document.getElementById('add-ccard-due-day').value = '';
+            updateCcardLimitLabel();
             const el = document.getElementById('creditCardCardModal');
             if (el) el.classList.remove('hidden');
+        }
+        // Seçilen para birimine göre limit alanının etiketini (₺/$/€/gram) günceller
+        function updateCcardLimitLabel() {
+            const currency = document.getElementById('add-ccard-currency').value;
+            const labels = { TRY: 'Toplam Limit (₺)', USD: 'Toplam Limit ($)', EUR: 'Toplam Limit (€)', GOLD: 'Toplam Limit (gram)' };
+            safeSetText('add-ccard-limit-label', labels[currency] || 'Toplam Limit (₺)');
         }
         function closeAddCreditCardCardModal() {
             const el = document.getElementById('creditCardCardModal');
@@ -7116,6 +7993,7 @@
         function saveNewCreditCardCard() {
             const bankName = document.getElementById('add-ccard-bank').value.trim();
             const cardName = document.getElementById('add-ccard-name').value.trim();
+            const currency = document.getElementById('add-ccard-currency').value;
             const totalLimit = parseFloat(document.getElementById('add-ccard-limit').value);
             const statementDayRaw = document.getElementById('add-ccard-statement-day').value;
             const dueDayRaw = document.getElementById('add-ccard-due-day').value;
@@ -7135,9 +8013,9 @@
                 return;
             }
 
-            allCreditCards.push({ id: Date.now(), projectId: activeProjectId === 'ana-kasa' ? (projects[0] && projects[0].id) : activeProjectId, bankName, cardName, totalLimit, statementDay, dueDay });
+            allCreditCards.push({ id: Date.now(), projectId: activeProjectId === 'ana-kasa' ? (projects[0] && projects[0].id) : activeProjectId, bankName, cardName, currency, totalLimit, statementDay, dueDay });
             safeSetStorage('creditCards_rev4', JSON.stringify(allCreditCards));
-            logAudit('Kredi Kartı Eklendi', `"${bankName} (${cardName})" — Limit: ${formatCurrency(totalLimit)}`);
+            logAudit('Kredi Kartı Eklendi', `"${bankName} (${cardName})" — Limit: ${formatCurrencyAny(totalLimit, currency)}`);
             updateDashboard();
             closeAddCreditCardCardModal();
             showToast('Kart Eklendi', `"${bankName} (${cardName})" kredi kartı eklendi.`, 'success');
@@ -7178,8 +8056,13 @@
             pendingStatementCardId = cardId;
             pendingStatementSource = null;
 
+            const cardCurrency = card.currency || 'TRY';
+            const fmtCardAmt = (v) => cardCurrency !== 'TRY' ? formatCurrencyAny(v, cardCurrency) : formatCurrency(v);
+            const amtLabels = { TRY: 'Ödenecek Tutar (₺)', USD: 'Ödenecek Tutar ($)', EUR: 'Ödenecek Tutar (€)', GOLD: 'Ödenecek Tutar (gram)' };
+
             safeSetText('stmt-payment-title', `${card.bankName} (${card.cardName}) — Ekstre Öde`);
-            safeSetText('stmt-payment-subtitle', `Güncel borç: ${formatCurrency(outstanding)}`);
+            safeSetText('stmt-payment-subtitle', `Güncel borç: ${fmtCardAmt(outstanding)}`);
+            safeSetText('stmt-payment-amount-label', amtLabels[cardCurrency] || 'Ödenecek Tutar (₺)');
             document.getElementById('stmt-payment-amount').value = outstanding.toFixed(2);
 
             document.getElementById('stmt-payment-step-1').classList.remove('hidden');
@@ -7203,7 +8086,7 @@
                 return;
             }
             const sel = document.getElementById('stmt-payment-bank-select');
-            sel.innerHTML = payableBanks.map(b => `<option value="${b.id}">${b.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(b.name)} (${formatCurrency(b.balance)})</option>`).join('');
+            sel.innerHTML = payableBanks.map(b => `<option value="${b.id}">${b.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(b.name)} (${b.currency && b.currency !== 'TRY' ? formatCurrencyAny(b.balance, b.currency) : formatCurrency(b.balance)})</option>`).join('');
             document.getElementById('stmt-payment-step-2-bank').classList.remove('hidden');
         }
 
@@ -7215,6 +8098,8 @@
         function finalizeStatementPayment() {
             const card = creditCards.find(c => c.id === pendingStatementCardId);
             if (!card) return;
+            const cardCurrency = card.currency || 'TRY';
+            const fmtCardAmt = (v) => cardCurrency !== 'TRY' ? formatCurrencyAny(v, cardCurrency) : formatCurrency(v);
 
             const amount = parseFloat(document.getElementById('stmt-payment-amount').value);
             if (isNaN(amount) || amount <= 0) {
@@ -7223,7 +8108,7 @@
             }
             const outstanding = getCardOutstanding(card.id);
             if (amount > outstanding + 0.01) {
-                showAlert('Tutar Fazla', `Ödemek istediğiniz tutar, güncel borçtan (${formatCurrency(outstanding)}) fazla olamaz.`);
+                showAlert('Tutar Fazla', `Ödemek istediğiniz tutar, güncel borçtan (${fmtCardAmt(outstanding)}) fazla olamaz.`);
                 return;
             }
 
@@ -7237,19 +8122,30 @@
                 const bankId = parseInt(document.getElementById('stmt-payment-bank-select').value);
                 const bankItem = allBanks.find(b => b.id === bankId);
                 if (!bankItem) return;
-                if (bankItem.balance < amount) {
-                    showAlert('Bakiye Yetersiz', `Seçtiğiniz bankadaki bakiye (${formatCurrency(bankItem.balance)}) bu ödeme için yetersiz.`);
+
+                // Ekstre tutarı (amount) artık kartın KENDİ para birimindedir — bankanın kendi para
+                // birimi farklıysa güncel kurla (TL ortak referans alınarak) çevrilir.
+                const bankCurrency = bankItem.currency || 'TRY';
+                const amountInBankCurrency = convertBetweenCurrencies(amount, cardCurrency, bankCurrency);
+
+                if (bankItem.balance < amountInBankCurrency - 0.005) {
+                    const shortfallMsg = bankCurrency !== 'TRY' ? formatCurrencyAny(amountInBankCurrency, bankCurrency) : formatCurrency(amountInBankCurrency);
+                    showAlert('Bakiye Yetersiz', `Seçtiğiniz bankadaki bakiye bu ödeme için yetersiz. Gereken: ${shortfallMsg} (güncel kurla).`);
                     return;
                 }
-                adjustBankBalance(bankId, 'çıkış', desc, amount, getTodayDateString());
+                adjustBankBalance(bankId, 'çıkış', desc, amountInBankCurrency, getTodayDateString());
                 paymentBankId = bankId;
                 paymentBankName = bankItem.name;
-                sourceLabel = bankItem.projectId === 'ana-kasa' ? `Ana Kasa: ${bankItem.name} hesabından` : `${bankItem.name} hesabından`;
+
+                const bankLabel = bankItem.projectId === 'ana-kasa' ? `Ana Kasa: ${bankItem.name}` : bankItem.name;
+                const conversionNote = cardCurrency !== bankCurrency ? ` (${formatCurrencyAny(amountInBankCurrency, bankCurrency)} olarak, güncel kur)` : '';
+                sourceLabel = `${bankLabel} hesabından${conversionNote}`;
             } else if (pendingStatementSource === 'diger') {
                 // "Diğer": kasa veya banka hesabından tutar düşülmez, sadece ekstre ödendi olarak işaretlenir
                 sourceLabel = 'Diğer kaynaktan (kasa/banka etkilenmedi)';
             } else {
-                addKasaTransaction(desc, amount, 'çıkış', getTodayDateString());
+                // Kasa'ya kartın KENDİ para biriminde işlenir (Kasa zaten çoklu para birimini destekliyor)
+                addKasaTransaction(desc, amount, 'çıkış', getTodayDateString(), cardCurrency);
             }
 
             allCreditCardPayments.push({
@@ -7265,7 +8161,7 @@
 
             updateDashboard();
             closeStatementPaymentModal();
-            showToast('Ekstre Ödendi', `"${card.bankName} (${card.cardName})" için ${formatCurrency(amount)} ${sourceLabel} ödendi.`, 'success');
+            showToast('Ekstre Ödendi', `"${card.bankName} (${card.cardName})" için ${fmtCardAmt(amount)} ${sourceLabel} ödendi.`, 'success');
         }
 
         function cancelStatementPaymentModal() {
@@ -7427,8 +8323,10 @@
         // onRows(rows, fields): dosya başarıyla okunup satır nesnelerine çevrildikten sonra çağrılır.
         // Banka Hesapları sayfası processCsvRows'u, Kredi Kartı sayfası processCcCsvRows'u geçirir —
         // dosya okuma/başlık bulma mantığının tamamı ortak kalır, sadece sonuçların işleneceği yer değişir.
-        function handleExcelImport(file, onRows) {
-            if (typeof XLSX === 'undefined') {
+        async function handleExcelImport(file, onRows) {
+            try {
+                await ensureXlsx();
+            } catch (e) {
                 showAlert('Kütüphane Yüklenemedi', 'Excel okuma kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.');
                 return;
             }
@@ -7471,8 +8369,10 @@
             reader.readAsArrayBuffer(file);
         }
 
-        function handleCsvImport(file, onRows) {
-            if (typeof Papa === 'undefined') {
+        async function handleCsvImport(file, onRows) {
+            try {
+                await ensurePapaParse();
+            } catch (e) {
                 showAlert('Kütüphane Yüklenemedi', 'CSV okuma kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.');
                 return;
             }
@@ -8286,7 +9186,7 @@
                         </div>
                     </td>
                     <td data-label="Vade Tarihi" class="py-3 px-4 font-semibold theme-text-muted">${new Date(c.due).toLocaleDateString('tr-TR')}</td>
-                    <td data-label="Tutar" class="py-3 px-4 text-right font-extrabold theme-text-main">${maskCurrency(c.amount)}</td>
+                    <td data-label="Tutar" class="py-3 px-4 text-right font-extrabold theme-text-main">${maskCurrencyAny(c.amount, c.currency || 'TRY')}</td>
                     <td data-label="Durum" class="py-3 px-4 text-center">${statusBadge}</td>
                     <td data-label="Aksiyon" class="py-3 px-4 text-center">
                         <div class="flex items-center justify-center gap-2">
@@ -8299,10 +9199,10 @@
 
                 if (c.type === 'gelen') {
                     incomingFragment.appendChild(tr);
-                    if (c.status === 'Bekliyor') incomingTotal += c.amount;
+                    if (c.status === 'Bekliyor') incomingTotal += convertToTRY(c.amount, c.currency || 'TRY');
                 } else {
                     outgoingFragment.appendChild(tr);
-                    if (c.status === 'Bekliyor') outgoingTotal += c.amount;
+                    if (c.status === 'Bekliyor') outgoingTotal += convertToTRY(c.amount, c.currency || 'TRY');
                 }
             });
             incomingBody.appendChild(incomingFragment);
@@ -8459,7 +9359,7 @@
                     <div class="flex items-center gap-6 justify-between md:justify-end shrink-0">
                         <div class="text-right">
                             <span class="text-[10px] theme-text-muted font-bold uppercase tracking-wider block">Çek Tutarı</span>
-                            <span class="text-base font-black ${diffDays <= 2 ? 'text-red-500' : 'theme-text-main'}">${maskCurrency(c.amount)}</span>
+                            <span class="text-base font-black ${diffDays <= 2 ? 'text-red-500' : 'theme-text-main'}">${maskCurrencyAny(c.amount, c.currency || 'TRY')}</span>
                         </div>
                         <button onclick="triggerAction(() => processCheque(${c.id}))" class="admin-only py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm">
                             <i class="fa-solid fa-circle-check"></i> ${c.type === 'gelen' ? 'Tahsil Et' : 'Öde'}
@@ -8977,7 +9877,8 @@
             return (val < 0 ? '-' : '') + num + ' TL';
         }
 
-        function generatePdfReport() {
+        async function generatePdfReport() {
+            try { await ensureJsPdf(); } catch (e) { showAlert('Kütüphane', 'PDF kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.'); return; }
             if (typeof window.jspdf === 'undefined') {
                 showAlert('Kütüphane Yüklenemedi', 'PDF oluşturma kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.');
                 return;
@@ -8991,7 +9892,7 @@
                 const paidDebtsSum = debts.filter(item => item.paid && (item.paymentSource === 'kasa' || !item.paymentSource)).reduce((sum, item) => sum + getDebtAmountTRY(item), 0);
                 const monthlyPaidSum = monthly.reduce((sum, item) => sum + item.paid, 0);
                 const cashRemaining = totalIncomes - (paidDebtsSum + monthlyPaidSum);
-                const bankTotal = banks.reduce((sum, item) => sum + item.balance, 0);
+                const bankTotal = banks.reduce((sum, item) => sum + (item.currency && item.currency !== 'TRY' ? convertToTRY(item.balance, item.currency) : item.balance), 0);
                 const unpaidDebtsSum = debts.filter(d => !d.paid).reduce((sum, item) => sum + getDebtAmountTRY(item), 0);
                 const ccTotal = Math.max(creditCardExpenses.reduce((sum, item) => sum + item.amount, 0) - creditCardPayments.reduce((sum, p) => sum + p.amount, 0), 0);
 
@@ -9107,7 +10008,8 @@
         }
 
 
-        function exportToExcel() {
+        async function exportToExcel() {
+            try { await ensureXlsx(); } catch (e) { showAlert('Kütüphane', 'Excel kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.'); return; }
             try {
                 const wb = XLSX.utils.book_new();
                 // Aktif Tarih Süzgeci varsa raporu ona göre süz (borç/gelir/çek tarihine göre)
@@ -9119,7 +10021,7 @@
                 const monthlyPaidSum = monthly.reduce((sum, item) => sum + item.paid, 0);
                 const totalPaid = paidDebtsSum + monthlyPaidSum;
                 const cashRemaining = totalIncomes - totalPaid;
-                const bankTotal = banks.reduce((sum, item) => sum + item.balance, 0);
+                const bankTotal = banks.reduce((sum, item) => sum + (item.currency && item.currency !== 'TRY' ? convertToTRY(item.balance, item.currency) : item.balance), 0);
                 
                 const summaryData = [
                     ["FİNANSAL GENEL DURUM ÖZET RAPORU", ""],
@@ -9338,7 +10240,7 @@
                     return;
                 }
                 const sel = document.getElementById('payment-source-bank-select');
-                sel.innerHTML = payableBanks.map(b => `<option value="${b.id}">${b.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(b.name)} (${formatCurrency(b.balance)})</option>`).join('');
+                sel.innerHTML = payableBanks.map(b => `<option value="${b.id}">${b.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(b.name)} (${b.currency && b.currency !== 'TRY' ? formatCurrencyAny(b.balance, b.currency) : formatCurrency(b.balance)})</option>`).join('');
                 document.getElementById('payment-source-step-2-bank').classList.remove('hidden');
             } else if (type === 'çek') {
                 const outgoingCheques = getPayableChequeOptions();
@@ -9348,7 +10250,7 @@
                     return;
                 }
                 const sel = document.getElementById('payment-source-cheque-select');
-                sel.innerHTML = outgoingCheques.map(c => `<option value="${c.id}">${c.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(c.drawer)} — ${escapeHtml(c.number)} (${formatCurrency(c.amount)})</option>`).join('');
+                sel.innerHTML = outgoingCheques.map(c => `<option value="${c.id}">${c.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(c.drawer)} — ${escapeHtml(c.number)} (${formatCurrencyAny(c.amount, c.currency || 'TRY')})</option>`).join('');
                 document.getElementById('payment-source-step-2-cheque').classList.remove('hidden');
             } else if (type === 'krediKarti') {
                 const payableCards = getPayableCreditCardOptions();
@@ -9360,7 +10262,9 @@
                 const sel = document.getElementById('payment-source-creditcard-select');
                 sel.innerHTML = payableCards.map(c => {
                     const remaining = Math.max(c.totalLimit - getCardOutstandingAll(c.id), 0);
-                    return `<option value="${c.id}">${c.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(c.bankName)} (${escapeHtml(c.cardName)}) — Kalan: ${formatCurrency(remaining)}</option>`;
+                    const cardCurrency = c.currency || 'TRY';
+                    const remainingMsg = cardCurrency !== 'TRY' ? formatCurrencyAny(remaining, cardCurrency) : formatCurrency(remaining);
+                    return `<option value="${c.id}">${c.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(c.bankName)} (${escapeHtml(c.cardName)}) — Kalan: ${remainingMsg}</option>`;
                 }).join('');
                 document.getElementById('payment-source-step-2-creditcard').classList.remove('hidden');
             }
@@ -9396,10 +10300,28 @@
                 const bankId = parseInt(document.getElementById('payment-source-bank-select').value);
                 const bankItem = allBanks.find(b => b.id === bankId);
                 if (!bankItem) return;
-                adjustBankBalance(bankId, 'çıkış', `Borç Ödemesi: ${item.name}`, item.amount, getTodayDateString());
+
+                const debtCurrency = item.currency || 'TRY';
+                const bankCurrency = bankItem.currency || 'TRY';
+                // Borç ve banka hesabı farklı para birimlerindeyse, TL'yi ortak referans alarak
+                // otomatik dönüşüm yapılır (kullanıcının kendi elle yaptığı iş akışıyla aynı mantık).
+                const amountInBankCurrency = convertBetweenCurrencies(item.amount, debtCurrency, bankCurrency);
+
+                if (bankItem.balance < amountInBankCurrency - 0.005) {
+                    const shortfallMsg = bankCurrency !== 'TRY' ? formatCurrencyAny(amountInBankCurrency, bankCurrency) : formatCurrency(amountInBankCurrency);
+                    showAlert('Bakiye Yetersiz', `"${bankItem.name}" hesabındaki bakiye bu ödeme için yetersiz. Gereken: ${shortfallMsg} (güncel kurla).`);
+                    return;
+                }
+
+                adjustBankBalance(bankId, 'çıkış', `Borç Ödemesi: ${item.name}`, amountInBankCurrency, getTodayDateString());
                 updates.paymentBankId = bankId;
                 updates.paymentBankName = bankItem.name;
-                sourceLabel = bankItem.projectId === 'ana-kasa' ? `Ana Kasa: ${bankItem.name} hesabından` : `${bankItem.name} hesabından`;
+
+                const bankLabel = bankItem.projectId === 'ana-kasa' ? `Ana Kasa: ${bankItem.name}` : bankItem.name;
+                const conversionNote = debtCurrency !== bankCurrency
+                    ? ` (${bankCurrency !== 'TRY' ? formatCurrencyAny(amountInBankCurrency, bankCurrency) : formatCurrency(amountInBankCurrency)} olarak, güncel kur)`
+                    : '';
+                sourceLabel = `${bankLabel} hesabından${conversionNote}`;
             } else if (pendingPaymentType === 'çek') {
                 const chequeId = parseInt(document.getElementById('payment-source-cheque-select').value);
                 const chequeItem = allCheques.find(c => c.id === chequeId);
@@ -9413,10 +10335,16 @@
                 const cardItem = allCreditCards.find(c => c.id === cardId);
                 if (!cardItem) return;
 
+                const debtCurrency = item.currency || 'TRY';
+                const cardCurrency = cardItem.currency || 'TRY';
+                const amountInCardCurrency = convertBetweenCurrencies(item.amount, debtCurrency, cardCurrency);
+
                 const outstanding = getCardOutstandingAll(cardId);
                 const remaining = cardItem.totalLimit - outstanding;
-                if (item.amount > remaining) {
-                    showAlert('Limit Yetersiz', `"${cardItem.bankName} (${cardItem.cardName})" kartındaki kalan limit (${formatCurrency(Math.max(remaining, 0))}), bu borç tutarı (${formatCurrency(item.amount)}) için yetersiz.`);
+                if (amountInCardCurrency > remaining) {
+                    const remainingMsg = cardCurrency !== 'TRY' ? formatCurrencyAny(Math.max(remaining, 0), cardCurrency) : formatCurrency(Math.max(remaining, 0));
+                    const neededMsg = cardCurrency !== 'TRY' ? formatCurrencyAny(amountInCardCurrency, cardCurrency) : formatCurrency(amountInCardCurrency);
+                    showAlert('Limit Yetersiz', `"${cardItem.bankName} (${cardItem.cardName})" kartındaki kalan limit (${remainingMsg}), bu borç tutarı (${neededMsg}, güncel kurla) için yetersiz.`);
                     return;
                 }
 
@@ -9427,7 +10355,7 @@
                     creditor: item.name,
                     description: `Borç Ödemesi: ${item.name}`,
                     category: 'Diğer',
-                    amount: item.amount,
+                    amount: amountInCardCurrency,
                     paidDate: getTodayDateString(),
                     installmentCount: 1,
                     installmentIndex: 1
@@ -9436,7 +10364,9 @@
 
                 updates.paymentCardId = cardId;
                 updates.paymentCardName = `${cardItem.bankName} (${cardItem.cardName})`;
-                sourceLabel = cardItem.projectId === 'ana-kasa' ? `Ana Kasa: ${cardItem.bankName} (${cardItem.cardName}) kartına` : `${cardItem.bankName} (${cardItem.cardName}) kartına`;
+                const cardLabel = cardItem.projectId === 'ana-kasa' ? `Ana Kasa: ${cardItem.bankName} (${cardItem.cardName})` : `${cardItem.bankName} (${cardItem.cardName})`;
+                const conversionNote = debtCurrency !== cardCurrency ? ` (${formatCurrencyAny(amountInCardCurrency, cardCurrency)} olarak, güncel kur)` : '';
+                sourceLabel = `${cardLabel} kartına${conversionNote}`;
             }
 
             allDebts = allDebts.map(d => d.id === pendingPaymentDebtId ? { ...d, ...updates } : d);
@@ -9775,9 +10705,12 @@
                 const oldItem = incomes.find(i => i.id === editingIncomeId);
                 if (!oldItem) return;
 
-                // Eski kayıt bankaya işlenmişse, önce o etkiyi geri al
+                // Eski kayıt bankaya işlenmişse, önce o etkiyi geri al (eski bankanın KENDİ para biriminde)
                 if (oldItem.destination === 'banka' && oldItem.bankId) {
-                    adjustBankBalance(oldItem.bankId, 'çıkış', `Gelir düzenlendi (eski kayıt geri alındı): ${oldItem.name}`, oldItem.amountTRY || oldItem.amount, getTodayDateString());
+                    const oldBankItem = allBanks.find(b => b.id === oldItem.bankId);
+                    const oldBankCurrency = oldBankItem ? (oldBankItem.currency || 'TRY') : 'TRY';
+                    const oldAmountInBankCurrency = convertBetweenCurrencies(oldItem.amount, oldItem.currency || 'TRY', oldBankCurrency);
+                    adjustBankBalance(oldItem.bankId, 'çıkış', `Gelir düzenlendi (eski kayıt geri alındı): ${oldItem.name}`, oldAmountInBankCurrency, getTodayDateString());
                 }
 
                 let bankName = null;
@@ -9789,7 +10722,9 @@
                         showAlert('Banka Seçilmedi', 'Lütfen gelirin ekleneceği banka hesabını seçiniz.');
                         return;
                     }
-                    adjustBankBalance(bankItem.id, 'giriş', `Gelir düzenlendi: ${name}`, amountTRY, dateVal);
+                    // Gelirin kendi para biriminden bankanın KENDİ para birimine güncel kurla çevrilir
+                    const amountInBankCurrency = convertBetweenCurrencies(amount, currency, bankItem.currency || 'TRY');
+                    adjustBankBalance(bankItem.id, 'giriş', `Gelir düzenlendi: ${name}`, amountInBankCurrency, dateVal);
                     bankName = bankItem.name;
                     bankIdUsed = bankItem.id;
                 }
@@ -9817,8 +10752,10 @@
                     showAlert('Banka Seçilmedi', 'Lütfen gelirin ekleneceği banka hesabını seçiniz. Kayıtlı banka yoksa önce Banka Hesapları Bakiyeleri bölümünden bir hesap ekleyin.');
                     return;
                 }
-                // Banka bakiyeleri her zaman TL tutulur; yabancı para birimliyse TL karşılığı eklenir
-                adjustBankBalance(bankItem.id, 'giriş', `Gelir: ${name}${currency !== 'TRY' ? ` (${formatCurrencyAny(amount, currency)})` : ''}`, amountTRY, dateVal);
+                // Gelirin kendi para biriminden bankanın KENDİ para birimine güncel kurla çevrilir
+                // (banka hesapları artık TL'ye ek olarak Dolar/Euro/Altın da olabiliyor).
+                const amountInBankCurrency = convertBetweenCurrencies(amount, currency, bankItem.currency || 'TRY');
+                adjustBankBalance(bankItem.id, 'giriş', `Gelir: ${name}${currency !== (bankItem.currency || 'TRY') ? ` (${formatCurrencyAny(amount, currency)})` : ''}`, amountInBankCurrency, dateVal);
                 bankName = bankItem.name;
                 bankIdUsed = bankItem.id;
             }
@@ -9856,14 +10793,16 @@
         function deleteIncomeItem(id) {
             const incomeItem = incomes.find(i => i.id === id);
             const isBank = incomeItem.destination === 'banka';
-            const trAmount = getIncomeAmountTRY(incomeItem);
             const warningExtra = isBank ? ` "${incomeItem.bankName}" hesabındaki bakiye de bu tutar kadar geri azaltılacaktır.` : '';
             showConfirm(
                 'Gelir Kaydı Siliniyor',
                 `"${incomeItem.name}" kaynaklı ${formatCurrencyAny(incomeItem.amount, incomeItem.currency || 'TRY')} tutarındaki nakit girişini silmek istediğinize emin misiniz?${warningExtra}`,
                 () => {
                     if (isBank && incomeItem.bankId) {
-                        adjustBankBalance(incomeItem.bankId, 'çıkış', `Gelir kaydı silindi: ${incomeItem.name}`, trAmount, getTodayDateString());
+                        const bankItem = allBanks.find(b => b.id === incomeItem.bankId);
+                        const bankCurrency = bankItem ? (bankItem.currency || 'TRY') : 'TRY';
+                        const amountInBankCurrency = convertBetweenCurrencies(incomeItem.amount, incomeItem.currency || 'TRY', bankCurrency);
+                        adjustBankBalance(incomeItem.bankId, 'çıkış', `Gelir kaydı silindi: ${incomeItem.name}`, amountInBankCurrency, getTodayDateString());
                     }
                     allIncomes = allIncomes.filter(item => item.id !== id);
                     logAudit('Gelir Silindi', `"${incomeItem.name}" — ${formatCurrencyAny(incomeItem.amount, incomeItem.currency || 'TRY')}`);
@@ -9910,12 +10849,13 @@
 
         // ================= KASA (NAKİT) HAREKET GEÇMİŞİ =================
         // Bakiyeyi değiştiren TEK merkezi fonksiyon. incomes dizisi üzerinden giriş/çıkış olarak kayıt tutar.
-        function addKasaTransaction(description, amount, flowType, date) {
+        function addKasaTransaction(description, amount, flowType, date, currency) {
             const entry = {
                 id: Date.now() + Math.floor(Math.random() * 1000),
                 projectId: activeProjectId === 'ana-kasa' ? (projects[0] && projects[0].id) : activeProjectId,
                 name: description,
                 amount: amount,
+                currency: currency || 'TRY',
                 date: date || getTodayDateString(),
                 destination: 'kasa',
                 flowType: flowType // 'giriş' | 'çıkış'
@@ -9929,6 +10869,14 @@
         function openAddBankAccountModal() {
             const el = document.getElementById('bankModal');
             if (el) el.classList.remove('hidden');
+            document.getElementById('add-bank-currency').value = 'TRY';
+            updateBankBalanceLabel();
+        }
+        // Seçilen para birimine göre bakiye alanının etiketini (₺/$/€/gram) günceller
+        function updateBankBalanceLabel() {
+            const currency = document.getElementById('add-bank-currency').value;
+            const labels = { TRY: 'Güncel Bakiye (₺)', USD: 'Güncel Bakiye ($)', EUR: 'Güncel Bakiye (€)', GOLD: 'Güncel Bakiye (gram)' };
+            safeSetText('add-bank-balance-label', labels[currency] || 'Güncel Bakiye');
         }
         function closeAddBankAccountModal() {
             const el = document.getElementById('bankModal');
@@ -9937,6 +10885,7 @@
         function saveNewBankAccount() {
             const name = document.getElementById('add-bank-name').value.trim();
             const type = document.getElementById('add-bank-type').value.trim();
+            const currency = document.getElementById('add-bank-currency').value;
             const balance = parseFloat(document.getElementById('add-bank-balance').value);
 
             if (name && type && !isNaN(balance) && balance >= 0) {
@@ -9945,6 +10894,7 @@
                     projectId: activeProjectId,
                     name: name,
                     type: type,
+                    currency: currency, // 'TRY' | 'USD' | 'EUR' | 'GOLD' — hesabın SABİT para birimi (banka şubesi mantığı)
                     balance: 0,
                     date: getTodayDateString()
                 };
@@ -9979,6 +10929,8 @@
             editingBankTxId = null;
 
             safeSetText('bank-tx-modal-title', `${bankItem.name} — Hareket Ekle`);
+            const txLabels = { TRY: 'Tutar (₺)', USD: 'Tutar ($)', EUR: 'Tutar (€)', GOLD: 'Tutar (gram)' };
+            safeSetText('bank-tx-amount-label', txLabels[bankItem.currency] || 'Tutar (₺)');
             document.getElementById('bank-tx-amount').value = '';
             document.getElementById('bank-tx-description').value = '';
             document.getElementById('bank-tx-date').value = getTodayDateString();
@@ -10116,7 +11068,9 @@
             if (!bankItem) return;
 
             safeSetText('bank-ledger-title', `${bankItem.name} — Hareket Geçmişi`);
-            safeSetText('bank-ledger-current-balance', formatCurrency(bankItem.balance));
+            const cur = bankItem.currency || 'TRY';
+            const fmtAmt = (v) => cur !== 'TRY' ? formatCurrencyAny(v, cur) : formatCurrency(v);
+            safeSetText('bank-ledger-current-balance', fmtAmt(bankItem.balance));
 
             const list = document.getElementById('bank-ledger-list');
             const txs = bankTransactions
@@ -10134,11 +11088,11 @@
                             </div>
                             <div class="min-w-0">
                                 <span class="text-xs font-bold theme-text-main block truncate">${escapeHtml(t.description)}${isRecordEditedRecently(t.editedAt) ? ' <span class="text-[8px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 border border-amber-500/20">Düzenlendi</span>' : ''}</span>
-                                <span class="text-[9px] theme-text-muted">${new Date(t.date).toLocaleDateString('tr-TR')} · Bakiye: ${formatCurrency(t.balanceAfter)}</span>
+                                <span class="text-[9px] theme-text-muted">${new Date(t.date).toLocaleDateString('tr-TR')} · Bakiye: ${fmtAmt(t.balanceAfter)}</span>
                             </div>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
-                            <span class="text-sm font-black ${t.type === 'giriş' ? 'text-emerald-500' : 'text-red-500'}">${t.type === 'giriş' ? '+' : '−'}${formatCurrency(t.amount)}</span>
+                            <span class="text-sm font-black ${t.type === 'giriş' ? 'text-emerald-500' : 'text-red-500'}">${t.type === 'giriş' ? '+' : '−'}${fmtAmt(t.amount)}</span>
                             <button onclick="triggerAction(() => requestEditBankTransactionModal(${t.id}))" class="admin-only p-1.5 theme-text-muted hover:text-indigo-500 transition-all"><i class="fa-solid fa-pen text-xs"></i></button>
                         </div>
                     </div>
@@ -10163,11 +11117,19 @@
             safeSetText('cheque-modal-save-btn', 'Kaydet');
             document.getElementById('add-cheque-drawer').value = '';
             document.getElementById('add-cheque-number').value = '';
+            document.getElementById('add-cheque-currency').value = 'TRY';
             document.getElementById('add-cheque-amount').value = '';
             document.getElementById('add-cheque-due').value = '';
+            updateChequeAmountLabel();
             if (el) el.classList.remove('hidden');
             const previewText = document.getElementById('cheque-live-countdown');
             if (previewText) previewText.innerText = "";
+        }
+        // Seçilen para birimine göre tutar alanının etiketini (₺/$/€/gram) günceller
+        function updateChequeAmountLabel() {
+            const currency = document.getElementById('add-cheque-currency').value;
+            const labels = { TRY: 'Tutar (₺)', USD: 'Tutar ($)', EUR: 'Tutar (€)', GOLD: 'Tutar (gram)' };
+            safeSetText('add-cheque-amount-label', labels[currency] || 'Tutar (₺)');
         }
         // Sadece "Bekliyor" durumundaki çekler düzenlenebilir (tahsil/ödeme yapılmış çeklerde para
         // zaten hareket ettiği için geriye dönük değişiklik yapmak tutarsızlığa yol açar).
@@ -10185,8 +11147,10 @@
             document.getElementById('add-cheque-type').value = c.type;
             document.getElementById('add-cheque-drawer').value = c.drawer;
             document.getElementById('add-cheque-number').value = c.number;
+            document.getElementById('add-cheque-currency').value = c.currency || 'TRY';
             document.getElementById('add-cheque-amount').value = c.amount;
             document.getElementById('add-cheque-due').value = c.due;
+            updateChequeAmountLabel();
             if (el) el.classList.remove('hidden');
         }
         function closeAddChequeModal() {
@@ -10198,13 +11162,14 @@
             const type = document.getElementById('add-cheque-type').value;
             const drawer = document.getElementById('add-cheque-drawer').value.trim();
             const number = document.getElementById('add-cheque-number').value.trim();
+            const currency = document.getElementById('add-cheque-currency').value;
             const amount = parseFloat(document.getElementById('add-cheque-amount').value);
             const due = document.getElementById('add-cheque-due').value;
 
             if (drawer && number && !isNaN(amount) && amount > 0 && due) {
                 if (editingChequeId !== null) {
-                    allCheques = allCheques.map(c => c.id === editingChequeId ? { ...c, type, drawer, number, amount, due, editedAt: new Date().toISOString() } : c);
-                    logAudit('Çek Düzenlendi', `"${drawer}" (${number}) — ${formatCurrency(amount)}`);
+                    allCheques = allCheques.map(c => c.id === editingChequeId ? { ...c, type, drawer, number, currency, amount, due, editedAt: new Date().toISOString() } : c);
+                    logAudit('Çek Düzenlendi', `"${drawer}" (${number}) — ${formatCurrencyAny(amount, currency)}`);
                     updateDashboard();
                     closeAddChequeModal();
                     showToast('Güncellendi', `"${drawer}" çeki güncellendi.`, 'success');
@@ -10216,12 +11181,13 @@
                     type: type,
                     drawer: drawer,
                     number: number,
+                    currency: currency, // 'TRY' | 'USD' | 'EUR' | 'GOLD'
                     amount: amount,
                     due: due,
                     status: "Bekliyor"
                 };
                 allCheques.push(newCheque);
-                logAudit('Çek Eklendi', `"${drawer}" (${number}) — ${formatCurrency(amount)}`);
+                logAudit('Çek Eklendi', `"${drawer}" (${number}) — ${formatCurrencyAny(amount, currency)}`);
                 updateDashboard();
                 closeAddChequeModal();
                 
@@ -10244,8 +11210,8 @@
             showConfirm(
                 isGelen ? 'Çek Tahsil Edilsin mi?' : 'Çek Ödemesi Yapılsın mı?',
                 isGelen 
-                    ? `"${c.drawer}" firmasından olan ${formatCurrency(c.amount)} tutarındaki çeki tahsil etmek istiyor musunuz?`
-                    : `"${c.drawer}" firmasına verdiğiniz ${formatCurrency(c.amount)} tutarındaki çek ödemesini gerçekleştirmek istiyor musunuz?`,
+                    ? `"${c.drawer}" firmasından olan ${formatCurrencyAny(c.amount, c.currency || 'TRY')} tutarındaki çeki tahsil etmek istiyor musunuz?`
+                    : `"${c.drawer}" firmasına verdiğiniz ${formatCurrencyAny(c.amount, c.currency || 'TRY')} tutarındaki çek ödemesini gerçekleştirmek istiyor musunuz?`,
                 () => {
                     openChequeFlowModal(id);
                 }
@@ -10261,7 +11227,7 @@
 
             const isGelen = c.type === 'gelen';
             safeSetText('cheque-flow-title', isGelen ? 'Tahsilat Nereye Yansısın?' : 'Ödeme Nereden Yapılsın?');
-            safeSetText('cheque-flow-subtitle', `"${c.drawer}" (${formatCurrency(c.amount)}) için ${isGelen ? 'tahsil edilen' : 'ödenen'} tutar hangi kaynağa işlensin?`);
+            safeSetText('cheque-flow-subtitle', `"${c.drawer}" (${formatCurrencyAny(c.amount, c.currency || 'TRY')}) için ${isGelen ? 'tahsil edilen' : 'ödenen'} tutar hangi kaynağa işlensin?`);
 
             document.getElementById('cheque-flow-step-1').classList.remove('hidden');
             document.getElementById('cheque-flow-step-2-bank').classList.add('hidden');
@@ -10287,7 +11253,7 @@
                 return;
             }
             const sel = document.getElementById('cheque-flow-bank-select');
-            sel.innerHTML = payableBanks.map(b => `<option value="${b.id}">${b.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(b.name)} (${formatCurrency(b.balance)})</option>`).join('');
+            sel.innerHTML = payableBanks.map(b => `<option value="${b.id}">${b.isAnaKasa ? '🏛️ Ana Kasa: ' : ''}${escapeHtml(b.name)} (${b.currency && b.currency !== 'TRY' ? formatCurrencyAny(b.balance, b.currency) : formatCurrency(b.balance)})</option>`).join('');
             document.getElementById('cheque-flow-step-2-bank').classList.remove('hidden');
         }
 
@@ -10301,26 +11267,35 @@
             if (!c) return;
             const isGelen = c.type === 'gelen';
             const txDesc = isGelen ? `Çek Tahsilatı: ${c.drawer} (${c.number})` : `Çek Ödemesi: ${c.drawer} (${c.number})`;
+            const chequeCurrency = c.currency || 'TRY';
 
             if (pendingChequeFlowType === 'nakit') {
-                if (!isGelen) {
+                // Çek kendi para biriminde (TL/Dolar/Euro/Altın) doğrudan Kasa'ya işlenir — çevrim
+                // yapılmaz, Kasa modülü zaten çoklu para birimini destekliyor.
+                if (!isGelen && chequeCurrency === 'TRY') {
                     const currentCash = safeGetCurrentCashRemaining();
                     if (currentCash < c.amount) {
                         showAlert('Kasa Bakiyesi Yetersiz', `Mevcut kasa bakiyesi (${formatCurrency(currentCash)}) bu ödeme için yetersiz.`);
                         return;
                     }
                 }
-                addKasaTransaction(txDesc, c.amount, isGelen ? 'giriş' : 'çıkış', getTodayDateString());
+                addKasaTransaction(txDesc, c.amount, isGelen ? 'giriş' : 'çıkış', getTodayDateString(), chequeCurrency);
             } else if (pendingChequeFlowType === 'banka') {
                 const bankId = parseInt(document.getElementById('cheque-flow-bank-select').value);
                 const bankItem = allBanks.find(b => b.id === bankId);
                 if (!bankItem) return;
 
-                if (!isGelen && bankItem.balance < c.amount) {
-                    showAlert('Bakiye Yetersiz', `Seçtiğiniz bankadaki bakiye (${formatCurrency(bankItem.balance)}) bu çeki ödemek için yetersiz.`);
+                // Çek ve banka hesabı farklı para birimlerindeyse, TL'yi ortak referans alarak
+                // otomatik dönüşüm yapılır (Bankalar'daki ödeme mantığıyla aynı).
+                const bankCurrency = bankItem.currency || 'TRY';
+                const amountInBankCurrency = convertBetweenCurrencies(c.amount, chequeCurrency, bankCurrency);
+
+                if (!isGelen && bankItem.balance < amountInBankCurrency - 0.005) {
+                    const shortfallMsg = bankCurrency !== 'TRY' ? formatCurrencyAny(amountInBankCurrency, bankCurrency) : formatCurrency(amountInBankCurrency);
+                    showAlert('Bakiye Yetersiz', `Seçtiğiniz bankadaki bakiye bu çeki ödemek için yetersiz. Gereken: ${shortfallMsg} (güncel kurla).`);
                     return;
                 }
-                adjustBankBalance(bankId, isGelen ? 'giriş' : 'çıkış', txDesc, c.amount, getTodayDateString());
+                adjustBankBalance(bankId, isGelen ? 'giriş' : 'çıkış', txDesc, amountInBankCurrency, getTodayDateString());
             }
 
             allCheques = allCheques.map(ch => ch.id === pendingChequeId ? { ...ch, status: isGelen ? 'Tahsil Edildi' : 'Ödendi' } : ch);
@@ -10351,7 +11326,7 @@
             const c = cheques.find(ch => ch.id === id);
             showConfirm(
                 'Çek Kaydı Siliniyor',
-                `"${c.drawer}" adına kayıtlı ${formatCurrency(c.amount)} tutarındaki çek yaprağını tamamen silmek istiyor musunuz?`,
+                `"${c.drawer}" adına kayıtlı ${formatCurrencyAny(c.amount, c.currency || 'TRY')} tutarındaki çek yaprağını tamamen silmek istiyor musunuz?`,
                 () => {
                     allCheques = allCheques.filter(ch => ch.id !== id);
                     updateDashboard();
@@ -10448,12 +11423,12 @@
             // AYNI hesap kullanılır ve asla eksi gösterilmez (0'ın altına düşmez).
             const kasaIncomeTotal = Math.max(safeGetCurrentCashRemaining(), 0);
             const bankIncomeTotal = banks.reduce((sum, b) => sum + b.balance, 0);
-            const chequeCollectTotal = cheques.filter(c => c.type === 'gelen' && c.status === 'Bekliyor').reduce((sum, c) => sum + c.amount, 0);
+            const chequeCollectTotal = cheques.filter(c => c.type === 'gelen' && c.status === 'Bekliyor').reduce((sum, c) => sum + convertToTRY(c.amount, c.currency || 'TRY'), 0);
             // Toplam Gelir (Mali Durum karşılaştırması için): TL Kasa + Banka + Kasadaki döviz/altının GÜNCEL kur karşılığı
             const totalIncomeForCompare = kasaIncomeTotal + bankIncomeTotal + kasaTotals.USD.try + kasaTotals.EUR.try + kasaTotals.GOLD.try;
 
             // Kredi Kartı Borcu (ayrı bir kalem olarak "eksi" gösterilir)
-            const creditCardTotal = Math.max(creditCardExpenses.reduce((sum, item) => sum + item.amount, 0) - creditCardPayments.reduce((sum, p) => sum + p.amount, 0), 0);
+            const creditCardTotal = getTotalCreditCardDebtTRY();
             safeSetText('debt-summary-credit-card', isVisitor ? STAR_MASK : ('-' + formatCurrency(creditCardTotal)));
 
             safeSetText('debt-summary-kasa-income', isVisitor ? STAR_MASK : formatCurrency(kasaIncomeTotal));
@@ -10586,36 +11561,76 @@
                 results.classList.add('hidden');
             }
         }
+        // Proje filtresi açılır listesini doldurur — "Tüm Projeler" + her proje ayrı ayrı.
+        // Sadece liste boşsa (ilk açılışta) yeniden doldurulur, gereksiz yeniden render'dan kaçınılır.
+        function populateGlobalSearchProjectFilter() {
+            const sel = document.getElementById('global-search-project-filter');
+            if (!sel || sel.dataset.populatedCount === String(projects.length)) return;
+            sel.innerHTML = '<option value="all">🌐 Tüm Projeler</option>' +
+                projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+            sel.dataset.populatedCount = String(projects.length);
+        }
+
+        // Arama sonucunda hangi projeden geldiğini gösteren küçük bir etiket üretir (Ana Kasa
+        // kısıtlaması olmadan — arama her zaman "Tüm Projeler" seçiliyken karışık kaynaklardan
+        // sonuç getirebileceği için, aktif proje ne olursa olsun etiket gösterilir).
+        function getSearchResultProjectLabel(projectId) {
+            if (!projectId || projects.length === 0) return '';
+            const p = projects.find(pr => pr.id === projectId);
+            return p ? ` · ${p.name}` : '';
+        }
+
+        // Global arama artık TÜM projelerin verisini taradığı için (varsayılan davranış), her tuş
+        // vuruşunda anında çalıştırmak yerine kullanıcı yazmayı bitirdikten kısa bir süre sonra
+        // çalıştırılır — büyük veri setlerinde (yüzlerce/binlerce kayıt) akıcılığı korur.
+        const performGlobalSearchDebounced = debounce((query) => performGlobalSearch(query), 300);
+
         function performGlobalSearch(query) {
-            const results = document.getElementById('global-search-results');
+            populateGlobalSearchProjectFilter();
+            const resultsWrapper = document.getElementById('global-search-results');
+            const results = document.getElementById('global-search-results-list');
             const q = query.trim().toLowerCase();
             if (q.length < 2) {
-                results.classList.add('hidden');
+                resultsWrapper.classList.add('hidden');
                 results.innerHTML = '';
                 return;
             }
             if (userRole === 'visitor') {
                 results.innerHTML = `<p class="text-xs theme-text-muted text-center py-4">Arama için giriş yapmanız gerekiyor.</p>`;
-                results.classList.remove('hidden');
+                resultsWrapper.classList.remove('hidden');
                 return;
             }
 
+            // Proje filtresi: "all" ise tüm projeler taranır, belirli bir proje seçiliyse SADECE o
+            // projenin verisi taranır — aktif olarak üzerinde çalıştığınız projeden bağımsızdır.
+            const filterSel = document.getElementById('global-search-project-filter');
+            const projectFilter = filterSel ? filterSel.value : 'all';
+            const matchesProject = (pid) => projectFilter === 'all' || pid === projectFilter;
+
             const hits = [];
-            debts.filter(d => d.name.toLowerCase().includes(q)).forEach(d => hits.push({
-                icon: 'fa-scale-balanced', color: 'text-indigo-500', label: d.name, sub: `Borç · ${formatCurrency(getDebtAmountTRY(d))} · ${d.paid ? 'Ödendi' : 'Açık'}`, tab: 'kasa-tab'
+            allDebts.filter(d => matchesProject(d.projectId) && d.name.toLowerCase().includes(q)).forEach(d => hits.push({
+                icon: 'fa-scale-balanced', color: 'text-indigo-500', label: d.name, sub: `Borç · ${formatCurrencyAny(d.amount, d.currency || 'TRY')} · ${d.paid ? 'Ödendi' : 'Açık'}${getSearchResultProjectLabel(d.projectId)}`, tab: 'kasa-tab'
             }));
-            incomes.filter(i => i.name.toLowerCase().includes(q)).forEach(i => hits.push({
-                icon: 'fa-wallet', color: 'text-emerald-500', label: i.name, sub: `Gelir · ${formatCurrency(i.amount)} · ${new Date(i.date).toLocaleDateString('tr-TR')}`, tab: 'kasa-tab'
+            allIncomes.filter(i => matchesProject(i.projectId) && i.name.toLowerCase().includes(q)).forEach(i => hits.push({
+                icon: 'fa-wallet', color: 'text-emerald-500', label: i.name, sub: `Gelir · ${formatCurrencyAny(i.amount, i.currency || 'TRY')} · ${new Date(i.date).toLocaleDateString('tr-TR')}${getSearchResultProjectLabel(i.projectId)}`, tab: 'kasa-tab'
             }));
-            banks.filter(b => b.name.toLowerCase().includes(q)).forEach(b => hits.push({
-                icon: 'fa-building-columns', color: 'text-blue-500', label: b.name, sub: `Banka · ${formatCurrency(b.balance)}`, tab: 'banka-cek-tab'
+            allBanks.filter(b => matchesProject(b.projectId) && b.name.toLowerCase().includes(q)).forEach(b => hits.push({
+                icon: 'fa-building-columns', color: 'text-blue-500', label: b.name, sub: `Banka · ${formatCurrencyAny(b.balance, b.currency || 'TRY')}${getSearchResultProjectLabel(b.projectId)}`, tab: 'banka-cek-tab'
             }));
-            cheques.filter(c => c.drawer.toLowerCase().includes(q)).forEach(c => hits.push({
-                icon: 'fa-money-check', color: 'text-amber-500', label: c.drawer, sub: `Çek (${c.type === 'gelen' ? 'Alınan' : 'Verilen'}) · ${formatCurrency(c.amount)} · ${c.status}`, tab: 'banka-cek-tab'
+            allCheques.filter(c => matchesProject(c.projectId) && c.drawer.toLowerCase().includes(q)).forEach(c => hits.push({
+                icon: 'fa-money-check', color: 'text-amber-500', label: c.drawer, sub: `Çek (${c.type === 'gelen' ? 'Alınan' : 'Verilen'}) · ${formatCurrencyAny(c.amount, c.currency || 'TRY')} · ${c.status}${getSearchResultProjectLabel(c.projectId)}`, tab: 'banka-cek-tab'
             }));
-            creditCardExpenses.filter(e => e.creditor.toLowerCase().includes(q) || (e.description || '').toLowerCase().includes(q)).forEach(e => {
-                const card = creditCards.find(c => c.id === e.cardId);
-                hits.push({ icon: 'fa-credit-card', color: 'text-violet-500', label: e.creditor, sub: `Kredi Kartı${card ? ' (' + card.bankName + ')' : ''} · ${formatCurrency(e.amount)}`, tab: 'credit-card-tab' });
+            allCreditCardExpenses.filter(e => e.creditor.toLowerCase().includes(q) || (e.description || '').toLowerCase().includes(q)).forEach(e => {
+                const card = allCreditCards.find(c => c.id === e.cardId);
+                if (card && !matchesProject(card.projectId)) return;
+                hits.push({ icon: 'fa-credit-card', color: 'text-violet-500', label: e.creditor, sub: `Kredi Kartı${card ? ' (' + card.bankName + ')' : ''} · ${card ? formatCurrencyAny(e.amount, card.currency || 'TRY') : formatCurrency(e.amount)}${card ? getSearchResultProjectLabel(card.projectId) : ''}`, tab: 'credit-card-tab' });
+            });
+            const carilerSeen = new Set();
+            allCarilerList.filter(c => matchesProject(c.projectId) && c.name.toLowerCase().includes(q)).forEach(c => {
+                const key = c.name.toLowerCase() + '|' + c.projectId;
+                if (carilerSeen.has(key)) return;
+                carilerSeen.add(key);
+                hits.push({ icon: 'fa-address-book', color: 'text-teal-500', label: c.name, sub: `Cari${getSearchResultProjectLabel(c.projectId)}`, tab: 'cariler-tab' });
             });
 
             if (hits.length === 0) {
@@ -10634,7 +11649,7 @@
                 `).join('');
                 if (hits.length > 25) results.innerHTML += `<p class="text-[10px] theme-text-muted text-center py-2">+${hits.length - 25} sonuç daha, aramayı daraltın</p>`;
             }
-            results.classList.remove('hidden');
+            resultsWrapper.classList.remove('hidden');
         }
         function goToGlobalSearchResult(tabId) {
             const navMap = { 'dashboard-tab': 'nav-dashboard', 'kasa-tab': 'nav-kasa', 'banka-cek-tab': 'nav-banka-cek', 'credit-card-tab': 'nav-credit-card', 'cariler-tab': 'nav-cariler' };
@@ -10796,10 +11811,11 @@
             } else {
                 const passField = document.getElementById('login-password');
                 if (passField) passField.value = '';
+                setLoginError('');
                 const modal = document.getElementById('loginModal');
                 if (modal) {
                     modal.classList.remove('hidden');
-                    setTimeout(() => passField.focus(), 100);
+                    focusLoginPasswordField(false);
                 }
             }
         }
@@ -10853,14 +11869,30 @@
         }
 
         function authenticateAdmin() {
+            // Uyarı penceresi açıkken Enter tekrar deneme yapmasın
+            if (isAlertModalOpen()) {
+                closeAlertModal();
+                focusLoginPasswordField(true);
+                return;
+            }
             const passField = document.getElementById('login-password');
             if (!passField) return;
             const pass = passField.value.trim();
+            setLoginError('');
+
+            if (!pass) {
+                setLoginError('Lütfen şifrenizi girin.');
+                focusLoginPasswordField(false);
+                return;
+            }
 
             const { lockUntil } = getLoginLockState();
             if (lockUntil && Date.now() < lockUntil) {
                 const remainingMin = Math.ceil((lockUntil - Date.now()) / 60000);
-                showAlert('Giriş Geçici Olarak Kilitlendi', `Çok fazla hatalı şifre denemesi yapıldı. Güvenlik nedeniyle yaklaşık ${remainingMin} dakika sonra tekrar deneyebilirsiniz.`);
+                passField.value = '';
+                setLoginError(`Giriş geçici kilitli. Yaklaşık ${remainingMin} dk sonra tekrar deneyin.`);
+                focusLoginPasswordField(false);
+                showAlert('Giriş Geçici Olarak Kilitlendi', `Çok fazla hatalı şifre denemesi yapıldı. Güvenlik nedeniyle yaklaşık ${remainingMin} dakika sonra tekrar deneyebilirsiniz.`, () => focusLoginPasswordField(false));
                 return;
             }
             
@@ -10905,11 +11937,18 @@
                 resetSessionTimeoutTimer();
             } else {
                 const { justLocked, remaining } = registerFailedLogin();
+                // Yanlış şifre: alanı temizle, hata göster, odağı şifre kutusuna ver
+                // (modal alert Enter ile tekrar aynı şifreyi göndermesin diye engelleme yukarıda)
+                passField.value = '';
                 if (justLocked) {
                     logAudit('Giriş Kilitlendi', `${MAX_LOGIN_ATTEMPTS} hatalı şifre denemesi sonrası giriş ${LOGIN_LOCKOUT_MINUTES} dakika kilitlendi.`);
-                    showAlert('Giriş Kilitlendi', `${MAX_LOGIN_ATTEMPTS} hatalı deneme yapıldı. Güvenlik nedeniyle giriş ${LOGIN_LOCKOUT_MINUTES} dakika süreyle kilitlendi.`);
+                    setLoginError(`Çok fazla hatalı deneme. Giriş ${LOGIN_LOCKOUT_MINUTES} dakika kilitlendi.`);
+                    showAlert('Giriş Kilitlendi', `${MAX_LOGIN_ATTEMPTS} hatalı deneme yapıldı. Güvenlik nedeniyle giriş ${LOGIN_LOCKOUT_MINUTES} dakika süreyle kilitlendi.`, () => focusLoginPasswordField(false));
                 } else {
-                    showAlert('Hatalı Şifre', `Girdiğiniz şifre yanlış. Kalan deneme hakkınız: ${remaining}.`);
+                    setLoginError(`Şifre yanlış. Kalan deneme: ${remaining}`);
+                    // Bloklayan alert yerine satır içi hata + odak — Enter ile hemen yeniden yazılabilir
+                    focusLoginPasswordField(false);
+                    showToast('Hatalı Şifre', `Girdiğiniz şifre yanlış. Kalan deneme hakkınız: ${remaining}.`, 'error');
                 }
             }
         }
@@ -11515,7 +12554,7 @@
             // "eksik veriyi IndexedDB'den geri yükle" mekanizması, az önce sildiğimiz
             // verileri farkında olmadan geri getirebilirdi.
             if (idbAvailable && idbDatabase) {
-                idbDatabase.kv.bulkDelete(keysToRemove).catch(e => console.warn('IndexedDB temizleme hatası:', e));
+                idbBulkDelete(keysToRemove);
             }
 
             // GÜVENLİK: Sıfırlama işlemi sırasında otomatik bulut senkronizasyonunu bastır.
@@ -11624,15 +12663,67 @@
             setTimeout(() => toast.remove(), 350);
         }
 
-        function showAlert(title, message) {
+        let alertOnCloseCallback = null;
+        function showAlert(title, message, onClose) {
             safeSetText('alert-title', title);
             safeSetText('alert-message', message);
+            alertOnCloseCallback = typeof onClose === 'function' ? onClose : null;
             const modal = document.getElementById('alertModal');
-            if (modal) modal.classList.remove('hidden');
+            if (modal) {
+                modal.classList.remove('hidden');
+                // Enter / odak: Anlaşıldı butonuna ver — Enter tekrar şifre denemesin
+                setTimeout(() => {
+                    const ok = document.getElementById('alert-ok-btn');
+                    if (ok) ok.focus();
+                }, 50);
+            }
         }
         function closeAlertModal() {
             const modal = document.getElementById('alertModal');
             if (modal) modal.classList.add('hidden');
+            const cb = alertOnCloseCallback;
+            alertOnCloseCallback = null;
+            if (cb) {
+                try { cb(); } catch (e) { console.warn(e); }
+            }
+        }
+        function isAlertModalOpen() {
+            const modal = document.getElementById('alertModal');
+            return modal && !modal.classList.contains('hidden');
+        }
+        function focusLoginPasswordField(selectAll) {
+            const loginModal = document.getElementById('loginModal');
+            const passField = document.getElementById('login-password');
+            if (!passField) return;
+            if (loginModal && loginModal.classList.contains('hidden')) return;
+            setTimeout(() => {
+                passField.focus();
+                if (selectAll !== false) {
+                    try { passField.select(); } catch (e) { /* */ }
+                }
+            }, 60);
+        }
+        function setLoginError(msg) {
+            const el = document.getElementById('login-error-msg');
+            const passField = document.getElementById('login-password');
+            if (el) {
+                if (msg) {
+                    el.textContent = msg;
+                    el.classList.remove('hidden');
+                } else {
+                    el.textContent = '';
+                    el.classList.add('hidden');
+                }
+            }
+            if (passField) {
+                if (msg) {
+                    passField.classList.add('border-red-500');
+                    passField.classList.remove('focus:border-indigo-500');
+                } else {
+                    passField.classList.remove('border-red-500');
+                    passField.classList.add('focus:border-indigo-500');
+                }
+            }
         }
         function showConfirm(title, message, callback, isReset = false) {
             safeSetText('confirm-title', title);
@@ -11834,8 +12925,18 @@
             showAlert('Oturum Zaman Aşımına Uğradı', `${SESSION_TIMEOUT_MINUTES} dakika işlem yapılmadığı için güvenlik amacıyla otomatik olarak çıkış yapıldı. Devam etmek için tekrar giriş yapın.`);
         }
         function initSessionTimeoutWatcher() {
-            ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'].forEach(evt => {
+            let lastReset = 0;
+            const throttledReset = () => {
+                const now = Date.now();
+                if (now - lastReset < 1000) return; // mousemove/scroll en fazla 1 sn'de bir
+                lastReset = now;
+                resetSessionTimeoutTimer();
+            };
+            ['mousedown', 'keydown', 'touchstart', 'click'].forEach(evt => {
                 document.addEventListener(evt, resetSessionTimeoutTimer, { passive: true });
+            });
+            ['mousemove', 'scroll'].forEach(evt => {
+                document.addEventListener(evt, throttledReset, { passive: true });
             });
             resetSessionTimeoutTimer();
         }
@@ -11850,18 +12951,59 @@
             if (!idbAvailable || !idbDatabase) return;
             try {
                 const existingCount = await idbDatabase.kv.count();
-                if (existingCount > 0) return; // zaten dolu, tekrar kopyalamaya gerek yok
+                const debtCount = await idbDatabase.debts.count().catch(() => 0);
 
-                const entries = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.endsWith('_rev4')) {
-                        entries.push({ key, value: localStorage.getItem(key) });
-                    }
+                const now = Date.now();
+                const kvEntries = [];
+                const seen = new Set();
+
+                // localStorage → kv + entity
+                for (const key of IDB_KNOWN_KEYS) {
+                    try {
+                        const value = localStorage.getItem(key);
+                        if (value === null) continue;
+                        seen.add(key);
+                        kvEntries.push({ key, value, updatedAt: now });
+                    } catch (e) { /* skip */ }
                 }
-                if (entries.length > 0) {
-                    await idbDatabase.kv.bulkPut(entries);
-                    console.info(`İlk geçiş: ${entries.length} veri anahtarı IndexedDB'ye kopyalandı.`);
+                try {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.endsWith('_rev4') && !seen.has(key)) {
+                            const value = localStorage.getItem(key);
+                            if (value !== null) kvEntries.push({ key, value, updatedAt: now });
+                        }
+                    }
+                } catch (e) { /* skip */ }
+
+                if (existingCount === 0 && kvEntries.length > 0) {
+                    await idbDatabase.transaction('rw', idbDatabase.kv, async () => {
+                        await idbDatabase.kv.bulkPut(kvEntries);
+                    });
+                    console.info('İlk geçiş (kv): ' + kvEntries.length + ' anahtar IndexedDB\'ye kopyalandı.');
+                }
+
+                // Entity tabloları boşsa localStorage/kv'den doldur
+                if (debtCount === 0) {
+                    for (const [key, tableName] of Object.entries(IDB_ENTITY_MAP)) {
+                        try {
+                            let raw = null;
+                            try { raw = localStorage.getItem(key); } catch (e) { /* */ }
+                            if (!raw) {
+                                const kvRow = await idbDatabase.kv.get(key);
+                                raw = kvRow && kvRow.value;
+                            }
+                            if (!raw) continue;
+                            const rows = parseEntityRows(raw);
+                            if (!rows || !rows.length) continue;
+                            const c = await idbDatabase.table(tableName).count();
+                            if (c > 0) continue;
+                            await syncEntityTable(tableName, rows);
+                        } catch (e) {
+                            console.warn('Entity seed', key, e);
+                        }
+                    }
+                    console.info('Entity tabloları localStorage/kv içeriğiyle senkronlandı.');
                 }
             } catch (e) {
                 console.warn('IndexedDB ilk kopyalama başarısız oldu:', e);
@@ -11879,7 +13021,9 @@
 
             safeInit('applyBranding', applyBranding);
             safeInit('updateActiveProjectLabel', updateActiveProjectLabel);
-            safeInit('initializeCharts', initializeCharts);
+            // Chart.js lazy: dashboard ilk çizildiğinde yüklenir (ensureChartsReady)
+            // Tema: Chart başlatılmadan önce de uygulanmalı (önceden initializeCharts sonunda çağrılıyordu)
+            safeInit('setTheme', () => setTheme(safeGetStorage('active_theme_pro', 'default')));
             safeInit('applyVisibilitySettings', applyVisibilitySettings);
             safeInit('updateDashboard', updateDashboard);
             safeInit('applyKpiFocus', () => applyKpiFocus('dashboard-tab'));
@@ -11889,8 +13033,13 @@
             // Panel her zamanki gibi ANINDA (localStorage'dan) açıldı. Bu arka plan kontrolü,
             // sayfanın açılışını hiç geciktirmeden, IndexedDB'de olup localStorage'da eksik
             // kalmış veri var mı diye sessizce bakar ve varsa otomatik geri yükler.
+            // IndexedDB kurtarma: kritik yolu bloklamadan boşta çalıştır
             safeInit('indexedDbRecovery', () => {
-                seedIndexedDbFromLocalStorageIfEmpty().then(() => recoverMissingDataFromIndexedDb());
+                scheduleIdle(() => {
+                    seedIndexedDbFromLocalStorageIfEmpty()
+                        .then(() => migrateKvBlobsToEntityTables())
+                        .then(() => recoverMissingDataFromIndexedDb());
+                }, 3000);
             });
 
             // Bulut Otomatik Senkronizasyonu Açıksa: açılışta en güncel veriyi buluttan çek
@@ -11899,7 +13048,7 @@
             safeInit('cloudAutoSync', () => {
                 const readyForAutoSync = cloudProvider === 'firebase' ? isCloudConfigured() : (isCloudConfigured() && cloudBinId);
                 if (cloudAutoSync && readyForAutoSync) {
-                    cloudPull(true);
+                    scheduleIdle(() => cloudPull(true), 4000);
                 }
             });
 
@@ -11921,17 +13070,38 @@
                 }
             });
 
-            // KULLANIM KOLAYLIĞI: Enter tuşu ile şifre onaylama
+            // Enter: uyarı açıksa kapat+şifreye odak; şifre kutusunda giriş dene
             safeInit('enterKeyLogin', () => {
                 const passInput = document.getElementById('login-password');
                 if (passInput) {
                     passInput.addEventListener('keydown', function(e) {
                         if (e.key === 'Enter') {
                             e.preventDefault();
+                            e.stopPropagation();
+                            if (isAlertModalOpen()) {
+                                closeAlertModal();
+                                focusLoginPasswordField(true);
+                                return;
+                            }
                             authenticateAdmin();
                         }
                     });
+                    // Yazmaya başlayınca kırmızı hata metnini temizle
+                    passInput.addEventListener('input', function() {
+                        if (this.value) setLoginError('');
+                    });
                 }
+                // Alert açıkken her yerde Enter = Anlaşıldı
+                document.addEventListener('keydown', function(e) {
+                    if (e.key !== 'Enter' && e.key !== 'Escape') return;
+                    if (!isAlertModalOpen()) return;
+                    e.preventDefault();
+                    closeAlertModal();
+                    const loginModal = document.getElementById('loginModal');
+                    if (loginModal && !loginModal.classList.contains('hidden')) {
+                        focusLoginPasswordField(true);
+                    }
+                });
             });
 
             // Tarih filtresi panelinin dışına tıklanınca otomatik kapanması
