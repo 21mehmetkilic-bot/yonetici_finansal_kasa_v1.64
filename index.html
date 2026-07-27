@@ -1726,6 +1726,34 @@
 
     <!-- ================= MODALLER ================= -->
     
+    <!-- 0. İLK KURULUM MODALI: sadece daha önce hiç yönetici şifresi belirlenmemişse (temiz/ilk
+         açılış) görünür — rastgele üretilen bilinmeyen bir şifreyle sıkışıp kalmamak için kullanıcı
+         kendi şifresini burada belirler. -->
+    <div id="firstTimeSetupModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[70] hidden flex items-center justify-center p-4">
+        <div class="glass-card rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border theme-border">
+            <div class="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-full flex items-center justify-center text-indigo-500 mx-auto mb-4">
+                <i class="fa-solid fa-key text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-extrabold theme-text-main mb-2">Panele Hoş Geldiniz — İlk Kurulum</h3>
+            <p class="text-xs theme-text-muted mb-6 leading-relaxed">Bu panelde henüz bir yönetici şifresi belirlenmemiş. Devam etmeden önce kendi şifrenizi oluşturun — bu şifreyi <b>sadece siz</b> bileceksiniz.</p>
+
+            <div class="text-left space-y-3 mb-4">
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Yeni Yönetici Şifresi (en az 4 karakter)</label>
+                    <input id="fts-admin-pass" type="password" autocomplete="new-password" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-sm font-bold text-center tracking-wider" placeholder="••••">
+                </div>
+                <div>
+                    <label class="text-xs font-bold theme-text-muted block mb-1">Şifreyi Tekrar Girin</label>
+                    <input id="fts-admin-pass-confirm" type="password" autocomplete="new-password" class="w-full py-2.5 px-3 theme-input border theme-border focus:outline-none focus:border-indigo-500 rounded-xl text-sm font-bold text-center tracking-wider" placeholder="••••">
+                </div>
+            </div>
+            <p id="fts-error-msg" class="hidden text-[11px] font-bold text-red-500 mb-3" role="alert"></p>
+
+            <button onclick="completeFirstTimeSetup()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 transition-all rounded-xl text-xs font-bold text-white shadow">Şifreyi Belirle ve Giriş Yap</button>
+            <p class="text-[10px] theme-text-muted mt-4 leading-relaxed">💡 İzleyici (salt okunur) şifresi, tutar/isim göstermeden panele göz atılabilmesi için ayrıca otomatik oluşturuldu — istersen Yönetici Paneli'nden dilediğin zaman değiştirebilirsin.</p>
+        </div>
+    </div>
+
     <!-- 1. GİRİŞ MODALI -->
     <div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border theme-border">
@@ -3801,62 +3829,15 @@
         }
 
         // Varsayılan Başlangıç Verileri
-        const DEFAULT_DEBTS = [
-            { id: 1, name: "emirhan", amount: 7000.00, paid: true, category: "Normal", date: "2026-07-06", paidDate: "2026-07-06" },
-            { id: 2, name: "ibrahim", amount: 6000.00, paid: true, category: "Normal", date: "2026-07-06", paidDate: "2026-07-06" },
-            { id: 3, name: "mete", amount: 3000.00, paid: true, category: "Normal", date: "2026-07-06", paidDate: "2026-07-06" },
-            { id: 4, name: "mesut", amount: 5000.00, paid: true, category: "Normal", date: "2026-07-06", paidDate: "2026-07-06" },
-            { id: 5, name: "gözüm", amount: 3000.00, paid: true, category: "Normal", date: "2026-07-06", paidDate: "2026-07-06" },
-            { id: 6, name: "nesip abi", amount: 1000.00, paid: false, category: "Acil Ödemeler", date: "2026-07-06", paidDate: null },
-            { id: 7, name: "menaf", amount: 1000.00, paid: false, category: "Acil Ödemeler", date: "2026-07-06", paidDate: null },
-            { id: 8, name: "abla", amount: 1500.00, paid: true, category: "Normal", date: "2026-07-06", paidDate: "2026-07-06" },
-            { id: 9, name: "seyit", amount: 3000.00, paid: false, category: "Acil Ödemeler", date: "2026-07-06", paidDate: null },
-            { id: 10, name: "ali giray(enişte)", amount: 3000.00, paid: true, category: "Normal", date: "2026-07-06", paidDate: "2026-07-06" },
-            { id: 11, name: "ali gülaç", amount: 10000.00, paid: false, category: "Acil Ödemeler", date: "2026-07-06", paidDate: null },
-            { id: 12, name: "emrah", amount: 21000.00, paid: false, category: "Çok Acil Değil", date: "2026-07-06", paidDate: null },
-            { id: 13, name: "serhat", amount: 3000.00, paid: false, category: "Çok Acil Değil", date: "2026-07-06", paidDate: null },
-            { id: 14, name: "bursa", amount: 935200.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 15, name: "abla songül", amount: 796785.78, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 16, name: "kütahya", amount: 140000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 17, name: "gelinlik", amount: 60000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 18, name: "düğün salonu", amount: 130000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 19, name: "teras", amount: 24000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 20, name: "mobilya", amount: 60000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 21, name: "ev ihtiyacı kap kacak", amount: 60000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 22, name: "buzdolabı", amount: 60000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 23, name: "çamaşır makinası", amount: 35000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 24, name: "bulaşık makinası", amount: 20000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 25, name: "perde", amount: 20000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 26, name: "elbiseler", amount: 30000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 27, name: "altın", amount: 515970.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 28, name: "tatil", amount: 8000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 29, name: "çocuklara hediye", amount: 10000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 30, name: "ayşenura hediye", amount: 50000.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null },
-            { id: 31, name: "bingöl isa borç", amount: 230920.00, paid: false, category: "Genel", date: "2026-07-06", paidDate: null }
-        ];
+        const DEFAULT_DEBTS = [];
 
-        const DEFAULT_MONTHLY = [
-            { id: 1, name: "kızıma", debt: 15000.00, paid: 10000.00 },
-            { id: 2, name: "faturalar", debt: 5925.00, paid: 0.00 },
-            { id: 3, name: "aidat", debt: 22000.00, paid: 0.00 }
-        ];
+        const DEFAULT_MONTHLY = [];
 
-        const DEFAULT_INCOMES = [
-            { id: 1, name: "Başlangıç Kasa Geliri", amount: 66146.00, date: "2026-07-06", destination: "kasa" }
-        ];
+        const DEFAULT_INCOMES = [];
 
-        const DEFAULT_BANKS = [
-            { id: 1, name: "Garanti BBVA", type: "Ticari Cari Hesap", balance: 120000.00, date: "2026-07-06" },
-            { id: 2, name: "Akbank", type: "Kasa Dağıtım Hesabı", balance: 45000.00, date: "2026-07-06" },
-            { id: 3, name: "Ziraat Bankası", type: "Yatırım Hesabı", balance: 250000.00, date: "2026-07-06" }
-        ];
+        const DEFAULT_BANKS = [];
 
-        const DEFAULT_CHEQUES = [
-            { id: 1, type: "giden", drawer: "Kerem Kereste A.Ş.", number: "CK-1002", amount: 150000.00, due: "2026-07-08", status: "Bekliyor" }, // Son 2 gün
-            { id: 2, type: "gelen", drawer: "Yılmaz İnşaat Ltd.", number: "CK-9011", amount: 85000.00, due: "2026-07-06", status: "Bekliyor" }, // Bugün
-            { id: 3, type: "giden", drawer: "Oksijen Lojistik", number: "CK-1005", amount: 60000.00, due: "2026-08-05", status: "Bekliyor" },
-            { id: 4, type: "gelen", drawer: "Demir Çelik Sanayi", number: "CK-5502", amount: 200000.00, due: "2026-06-30", status: "Tahsil Edildi" }
-        ];
+        const DEFAULT_CHEQUES = [];
 
         const DEFAULT_CREDIT_CARD = [];
         const DEFAULT_CREDIT_CARDS = []; // { id, bankName, cardName, totalLimit }
@@ -5302,9 +5283,21 @@
         // rastgele üretilmiş güçlü değerlerdir. Bu değerler UYGULAMA ARAYÜZÜNÜN HİÇBİR YERİNDE
         // metin olarak gösterilmez — yalnızca ilk kurulumu yapan yöneticiye ayrıca iletilir.
         // İlk girişten hemen sonra Yönetici Paneli'nden kendi şifrenizi belirlemeniz önerilir.
-        let adminPassword = safeGetStorage('adminPass_rev4', '2505');
-        let viewerPassword = safeGetStorage('viewerPass_rev4', 'gNUbW6h99O');
-        let adminEmail = safeGetStorage('adminEmail_rev4', '21mehmetkilic@gmail.com');
+        // GÜVENLİK: Sabit/bilinen bir varsayılan şifre yerine, ilk açılışta rastgele ve
+        // kriptografik olarak güvenli bir şifre üretilip KALICI olarak kaydedilir — bu sayede
+        // her sayfa yenilemesinde aynı şifre kalır (değişmez), ama dosyanın kaynak kodunda
+        // hiçbir zaman bilinen/sabit bir şifre görünmez.
+        let adminPassword = safeGetStorage('adminPass_rev4', null);
+        if (adminPassword === null) {
+            adminPassword = generateSecurePassword(12);
+            safeSetStorage('adminPass_rev4', adminPassword);
+        }
+        let viewerPassword = safeGetStorage('viewerPass_rev4', null);
+        if (viewerPassword === null) {
+            viewerPassword = generateSecurePassword(10);
+            safeSetStorage('viewerPass_rev4', viewerPassword);
+        }
+        let adminEmail = safeGetStorage('adminEmail_rev4', '');
 
         // ANA EKRAN GÖRÜNÜRLÜK AYARLARI: Yönetici, ana ekranda hangi bölümlerin görüneceğini kontrol edebilir
         const VIS_SECTIONS = [
@@ -5451,8 +5444,47 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.81.0";
+        const APP_VERSION = "1.85.0";
         const CHANGELOG = [
+            {
+                version: "1.85.0",
+                date: "26.07.2026",
+                changes: [
+                    "⌨️ Klavye kısayolları eklendi: Ctrl+S (Cmd+S Mac'te) → Buluta Kaydet; Ctrl+Shift+S → Verileri Kaydet (veriler.json indir)",
+                    "Her iki kısayol da tarayıcının kendi 'Sayfayı Kaydet' penceresini açmadan doğrudan çalışır, ve mevcut butonlarla aynı yetki kontrolünden geçer (giriş yapılmamışsa giriş ekranı açılır)"
+                ]
+            },
+            {
+                version: "1.84.0",
+                date: "26.07.2026",
+                changes: [
+                    "🔑 YENİ: İlk Kurulum Ekranı — daha önce hiç şifre belirlenmemişse (temiz/ilk açılış), rastgele/bilinmeyen bir şifreyle sıkışmak yerine, 'Giriş Yap' butonuna basınca kullanıcıdan KENDİ şifresini belirlemesi isteniyor",
+                    "'Ayarlar' kategorisi sıfırlandığında da (yeni rastgele şifreler üretildiğinde) bu kurulum ekranı otomatik tekrar devreye giriyor — kullanıcı yeni şifresini yine kendisi seçebiliyor",
+                    "🐞 Düzeltme: Kurulumu tamamladıktan hemen sonra çıkış yapıp tekrar giriş denendiğinde, gecikmeli (debounced) kayıt yüzünden kurulum ekranı yanlışlıkla tekrar çıkıyordu — artık anlık olarak doğru davranıyor"
+                ]
+            },
+            {
+                version: "1.83.0",
+                date: "26.07.2026",
+                changes: [
+                    "🔒 GÜVENLİK TEMİZLİĞİ (TEMİZ/PAYLAŞILABİLİR SÜRÜM): Kaynak kodunun içine gömülü tüm gerçek veriler temizlendi — borç/gelir/banka/çek başlangıç listeleri, yönetici ve izleyici şifreleri, kayıtlı e-posta adresi, güvenlik sorusu/cevabı artık dosyada AÇIKTA durmuyor",
+                    "Yönetici/izleyici şifreleri artık ilk açılışta rastgele ve kriptografik olarak güvenli üretilip kalıcı olarak kaydediliyor — dosyanın kaynağında hiçbir zaman sabit/bilinen bir şifre görünmüyor",
+                    "🐞 Düzeltme: 'Tehlikeli Bölge > Ayarlar' sıfırlaması, eski gerçek e-posta ve güvenlik sorusunu SESSİZCE geri yüklüyordu — artık sıfırlama gerçekten boş bir sayfaya dönüyor",
+                    "NOT: Bu, dosyanın herkese açık/paylaşılabilir kopyasıdır — gerçek veri Bulut Senkronizasyonu (Firebase) üzerinden ayrı, korumalı bir dağıtıma bağlanmalıdır"
+                ]
+            },
+            {
+                version: "1.82.0",
+                date: "26.07.2026",
+                changes: [
+                    "🔍 Kullanıcı tarafından eklenen 'Excel Bul' benzeri arama-vurgulama özelliği incelendi ve doğrulandı — arama sonucuna tıklayınca artık gerçekten doğru sayfaya (sayfalama dahil) gidip tam o satırı ortalayıp vurguluyor; Cariler için de doğru cari otomatik seçiliyor",
+                    "🐞 Düzeltme: Cari arama sonucuna tıklayınca çağrılan fonksiyon adı yanlıştı (var olmayan bir fonksiyon), bu yüzden cari seçici butonundaki etiket güncellenmiyordu — doğru fonksiyon adına düzeltildi",
+                    "🛡️ Vurgulama/kaydırma mantığı biraz daha dayanıklı hale getirildi: satır bulunduktan sonra kalan gereksiz tekrar denemeleri artık iptal ediliyor",
+                    "📱 Mobil kenar kaydırma jesti daha da inceltildi — tarayıcının kendi 'geri' hareketiyle çakışmaması için ilk 8px bilinçli olarak atlanıyor, 8-36px bandından menü açılıyor, açık menüde sola kaydırınca kapanıyor",
+                    "🔎 Diğer Planlı Ödemeler, Alacaklarım ve Çekler sayfalarına kendi bölüm başlıklarında ayrı arama kutuları eklendi",
+                    "'Son Eklenenler' widget'ı artık son 20 kaydı (5'i görünür, kaydırarak devamı görülür) listeliyor"
+                ]
+            },
             {
                 version: "1.81.0",
                 date: "25.07.2026",
@@ -7169,8 +7201,8 @@
             if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
             cloudSyncTimer = setTimeout(() => cloudPush(true), 2500);
         }
-        let securityQuestion = safeGetStorage('securityQuestion_rev4', 'En sevdiğiniz renk?');
-        let securityAnswer = safeGetStorage('securityAnswer_rev4', 'mavi');
+        let securityQuestion = safeGetStorage('securityQuestion_rev4', '');
+        let securityAnswer = safeGetStorage('securityAnswer_rev4', '');
 
         let ratioChart, categoryChart, ccCategoryChartInstance, trendChartInstance;
         let confirmCallback = null;
@@ -7611,6 +7643,27 @@
             if (!sidebar) return;
             sidebar.classList.toggle('hidden');
             if (backdrop) backdrop.classList.toggle('hidden');
+        }
+
+        // Hızlı kaydetme kısayolları:
+        //   Ctrl/Cmd + S         → Buluta Kaydet
+        //   Ctrl/Cmd + Shift + S → Verileri Kaydet (veriler.json indir)
+        // Tarayıcının kendi "Sayfayı Kaydet" davranışını engellemek için preventDefault kullanılır.
+        // Her iki kısayol da mevcut butonlarla AYNI triggerAction() yetki kontrolünden geçer —
+        // giriş yapılmamışsa giriş penceresi açılır, izleyici ise yetkisiz uyarısı gösterilir.
+        function initQuickSaveShortcuts() {
+            document.addEventListener('keydown', function (e) {
+                const key = (e.key || '').toLowerCase();
+                if (key !== 's' || !(e.ctrlKey || e.metaKey)) return;
+
+                if (e.shiftKey) {
+                    e.preventDefault();
+                    triggerAction(exportDataJSON);
+                } else {
+                    e.preventDefault();
+                    triggerAction(() => cloudPush(false));
+                }
+            });
         }
 
         // Mobilde ekranın SOL KENARINDAN başlayıp SAĞA doğru çekilen bir dokunuşla kenar çubuğunu
@@ -13056,10 +13109,10 @@
             el.classList.add('search-row-highlight');
             // Mobil kart görünümünde daraltılmış satırı aç
             if (el.classList.contains('rt-collapsible')) el.classList.add('rt-expanded');
-            try {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-            } catch (e) {
-                el.scrollIntoView(true);
+            if (typeof el.scrollIntoView === 'function') {
+                try {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                } catch (e) { /* bazı eski tarayıcılar seçenek nesnesini desteklemeyebilir, sessizce geç */ }
             }
             setTimeout(() => el.classList.remove('search-row-highlight'), 2600);
         }
@@ -13114,6 +13167,7 @@
         }
 
         function goToGlobalSearchResult(tabId, entityType, entityId, projectId) {
+            let pendingSearchJumpTimers = [];
             const navMap = { 'dashboard-tab': 'nav-dashboard', 'kasa-tab': 'nav-kasa', 'receivables-tab': 'nav-receivables', 'banka-cek-tab': 'nav-banka-cek', 'credit-card-tab': 'nav-credit-card', 'cariler-tab': 'nav-cariler' };
             const resultsEl = document.getElementById('global-search-results');
             if (resultsEl) resultsEl.classList.add('hidden');
@@ -13143,7 +13197,7 @@
                             selectedCariNames.length = 0;
                             selectedCariNames.push(entityId);
                         }
-                        if (typeof updateCariPickerLabel === 'function') updateCariPickerLabel();
+                        if (typeof updateCariPickerButtonLabel === 'function') updateCariPickerButtonLabel();
                         if (typeof renderCarilerPage === 'function') renderCarilerPage();
                         if (typeof renderCariPickerChecklist === 'function') renderCariPickerChecklist();
                     }
@@ -13173,7 +13227,17 @@
                 return false;
             };
 
-            [0, 50, 120, 280, 500, 900].forEach(ms => setTimeout(tryScroll, ms));
+            [0, 50, 120, 280, 500, 900].forEach(ms => {
+                const timerId = setTimeout(() => {
+                    if (tryScroll()) {
+                        // Satır bulundu — henüz çalışmamış kalan denemeleri iptal et, gereksiz
+                        // tekrar vurgulama/kaydırma olmasın.
+                        pendingSearchJumpTimers.forEach(id => clearTimeout(id));
+                        pendingSearchJumpTimers.length = 0;
+                    }
+                }, ms);
+                pendingSearchJumpTimers.push(timerId);
+            });
         }
 
         // ================= TARİH ARALIĞI FİLTRESİ =================
@@ -13320,6 +13384,44 @@
         }
 
         // Gelişmiş Şifreleme & Yetkilendirme Kontrolleri
+        // İlk kurulum gerekli mi? (adminPass_rev4 hiç kaydedilmemişse — yani şifre henüz
+        // rastgele üretilip localStorage'a yazılmış ama kullanıcı tarafından hiç
+        // GÖRÜLMEMİŞ/BELİRLENMEMİŞ demektir.)
+        // NOT: safeSetStorage gecikmeli (debounced) yazdığı için, kurulum TAMAMLANDIKTAN hemen
+        // sonra (aynı oturumda) localStorage'a değil, bu bellek içi bayrağa güvenilir —
+        // localStorage kontrolü sadece SONRAKİ (yeni) sayfa yüklemelerinde devreye girer.
+        let firstTimeSetupCompletedThisSession = false;
+        function needsFirstTimeSetup() {
+            if (firstTimeSetupCompletedThisSession) return false;
+            try {
+                return localStorage.getItem('adminPass_rev4') === null || localStorage.getItem('fts_completed_rev4') !== 'true';
+            } catch (e) {
+                return false;
+            }
+        }
+        function completeFirstTimeSetup() {
+            const p1 = document.getElementById('fts-admin-pass').value;
+            const p2 = document.getElementById('fts-admin-pass-confirm').value;
+            const errEl = document.getElementById('fts-error-msg');
+            const showErr = (msg) => { errEl.innerText = msg; errEl.classList.remove('hidden'); };
+
+            if (!p1 || p1.length < 4) { showErr('Şifre en az 4 karakter olmalı.'); return; }
+            if (p1 !== p2) { showErr('Girdiğiniz iki şifre birbiriyle eşleşmiyor.'); return; }
+
+            adminPassword = p1;
+            safeSetStorage('adminPass_rev4', adminPassword);
+            safeSetStorage('fts_completed_rev4', 'true');
+            firstTimeSetupCompletedThisSession = true;
+
+            document.getElementById('firstTimeSetupModal').classList.add('hidden');
+
+            userRole = 'admin';
+            isAdmin = true;
+            safeSetSession('userRole_rev4', 'admin');
+            updateDashboard();
+            showToast('Kurulum Tamamlandı', 'Yönetici şifreniz belirlendi ve giriş yapıldı.', 'success');
+        }
+
         function toggleAuth() {
             if (userRole !== 'visitor') {
                 userRole = 'visitor';
@@ -13328,6 +13430,9 @@
                 if (sessionTimeoutTimer) clearTimeout(sessionTimeoutTimer);
                 updateDashboard();
                 showToast('Çıkış Başarılı', 'Oturum güvenli şekilde sonlandırıldı.', 'info');
+            } else if (needsFirstTimeSetup()) {
+                const modal = document.getElementById('firstTimeSetupModal');
+                if (modal) modal.classList.remove('hidden');
             } else {
                 const passField = document.getElementById('login-password');
                 if (passField) passField.value = '';
@@ -13473,7 +13578,7 @@
             }
         }
 
-        // E-posta adresini kısmen gizleyerek gösterir: "21mehmetkilic@gmail.com" -> "21me*********@gmail.com"
+        // E-posta adresini kısmen gizleyerek gösterir: "ornek@gmail.com" -> "orn***@gmail.com"
         // Şifre sıfırlama ekranında kayıtlı e-postanın tamamını değil sadece bir ipucunu gösterir;
         // kullanıcı ikinci doğrulama faktörü olarak adresin TAMAMINI kendisi girmek zorundadır.
         function maskEmail(email) {
@@ -14003,7 +14108,7 @@
                 // Senkronizasyonu bölümünden elle değiştirilebilir/kaldırılabilir.
                 keys: [
                     'exchangeRates_rev4', 'savingsGoal_rev4', 'adminPass_rev4', 'viewerPass_rev4', 'adminEmail_rev4',
-                    'securityQuestion_rev4', 'securityAnswer_rev4', 'visSettings_rev4',
+                    'securityQuestion_rev4', 'securityAnswer_rev4', 'visSettings_rev4', 'fts_completed_rev4',
                     'notificationsEnabled_rev4',
                     'lastNotifiedDate_rev4', 'currencyLayoutSideBySide_rev4', 'appsScriptUrl_rev4', 'appsScriptSecret_rev4',
                     'loginFailCount_rev4', 'loginLockUntil_rev4', 'lastBackupReminderDate_rev4',
@@ -14110,9 +14215,9 @@
                 newViewerPass = generateSecurePassword(10);
                 adminPassword = newAdminPass;
                 viewerPassword = newViewerPass;
-                adminEmail = '21mehmetkilic@gmail.com';
-                securityQuestion = 'En sevdiğiniz renk?';
-                securityAnswer = 'mavi';
+                adminEmail = '';
+                securityQuestion = '';
+                securityAnswer = '';
             }
 
             dueReminderDismissed = false;
@@ -14639,6 +14744,7 @@
 
             safeInit('backupReminder', checkMonthlyBackupReminder);
             safeInit('sidebarSwipeGesture', initSidebarSwipeGesture);
+            safeInit('quickSaveShortcuts', initQuickSaveShortcuts);
             safeInit('sessionTimeoutWatcher', initSessionTimeoutWatcher);
         }
     </script>
