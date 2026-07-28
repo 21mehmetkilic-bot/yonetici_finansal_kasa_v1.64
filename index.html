@@ -815,6 +815,15 @@
                         </div>
                     </div>
 
+                    <!-- ÖZET DURUM ROZETİ: "hangi verinin güncel olduğunu" her an görebilmek için —
+                         Yerel dosya bağlı mı, son yedek ne zaman alındı, bulut modu (Manuel/Otomatik).
+                         Tıklanınca Yönetici Paneli'ni açar (ayrıntılar ve butonlar orada). -->
+                    <div id="status-summary-badge" onclick="openPasswordChangeModal()" title="Ayrıntılar için Yönetici Paneli'ni aç" class="hidden sm:flex flex-col justify-center gap-0.5 theme-bg-card border theme-border px-3 py-2 rounded-xl shadow-sm cursor-pointer hover:opacity-80 transition-all">
+                        <span id="status-summary-file" class="text-[10px] font-black theme-text-main flex items-center gap-1.5"><i class="fa-solid fa-file text-[9px] theme-text-muted"></i> Dosya bağlı değil</span>
+                        <span id="status-summary-backup" class="text-[9px] theme-text-muted font-bold">Son yedek: —</span>
+                        <span id="status-summary-cloud" class="text-[9px] theme-text-muted font-bold">Bulut: Manuel</span>
+                    </div>
+
                     <!-- Canlı Saat — MOBİLDE GİZLİ (sadece sm+ ekranlarda görünür) -->
                     <div class="hidden sm:flex items-center gap-3 theme-bg-card border theme-border p-3 rounded-xl shadow-sm">
                         <div class="w-9 h-9 rounded-lg bg-zinc-900/10 dark:bg-zinc-900 border theme-border theme-text-main flex items-center justify-center">
@@ -2027,9 +2036,38 @@
 
                 <div class="space-y-3 text-left border-t theme-border pt-4">
                     <div>
-                        <span class="text-[10px] font-black theme-text-muted uppercase tracking-widest block flex items-center gap-1.5"><i class="fa-solid fa-cloud"></i> Bulut Senkronizasyonu (Her Cihazda Aynı Veri)</span>
+                        <span class="text-[10px] font-black theme-text-muted uppercase tracking-widest block flex items-center gap-1.5"><i class="fa-solid fa-hard-drive"></i> Yerel Veri Dosyası (Excel Gibi Çalışır — ÖNERİLEN)</span>
                         <p class="text-[10px] theme-text-muted mt-1 leading-relaxed">
-                            Bu dosya statik bir dosya olduğu için kendi başına bir sunucusu yoktur. "Her yerde aynı veri" için ücretsiz bir bulut hesabı gerekir. İki sağlayıcı desteklenir — büyük veri hacmi (yüzlerce/binlerce kayıt) için <b>Firebase</b> önerilir, çünkü ücretsiz planı çok daha geniş (1GB'a karşı JSONBin'in 100KB'ı).
+                            Bir kez bir dosya seçin/oluşturun (ör. <b>kasa-verileri.json</b>). Bundan sonra panelde "Kaydet"e her bastığınızda, tıpkı Excel'de Ctrl+S gibi, veri <b>doğrudan o dosyanın üzerine</b> yazılır — sunucuya, internete ihtiyaç yoktur. O dosyayı USB/OneDrive/Google Drive klasörüne koyarsanız, hangi bilgisayarda "Dosyayı Aç" ile o dosyayı seçerseniz, panel o hâliyle açılır.
+                        </p>
+                    </div>
+                    <div id="local-file-status-box" class="p-2.5 theme-table-header border theme-border rounded-xl">
+                        <span class="text-[10px] font-bold theme-text-muted uppercase tracking-widest block">Bağlı Dosya</span>
+                        <span id="local-file-name-display" class="text-xs font-black theme-text-main block mt-0.5">Henüz bir dosya bağlanmadı</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button onclick="createLocalDataFile()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-file-circle-plus"></i> Yeni Dosya Oluştur / Farklı Kaydet
+                        </button>
+                        <button onclick="openLocalDataFile()" class="py-2.5 px-3 bg-zinc-900/10 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-700 theme-text-main border theme-border rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-folder-open"></i> Var Olan Dosyayı Aç / Bağla
+                        </button>
+                    </div>
+                    <button onclick="handleFileBadgeClick()" class="w-full py-2.5 px-3 theme-text-main border theme-border rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 hover:opacity-80">
+                        <i class="fa-solid fa-floppy-disk"></i> Şimdi Dosyaya Kaydet <span class="text-[9px] theme-text-muted font-normal">(Alt+1)</span>
+                    </button>
+                    <p class="text-[9px] theme-text-muted -mt-1">Kısayollar: <b>Alt+1</b> dosyaya kaydet · <b>Alt+2</b> var olan dosyayı aç/bağla</p>
+                    <p id="local-file-support-warning" class="hidden text-[10px] font-bold text-amber-500 leading-relaxed">
+                        ⚠ Bu tarayıcı gerçek dosyaya doğrudan kaydetmeyi desteklemiyor (bu özellik Chrome/Edge masaüstü sürümlerinde çalışır). "Verileri Kaydet" ile indirip aynı dosyanın üzerine elle kaydedebilirsiniz.
+                    </p>
+                    <span id="local-file-sync-status" class="text-[10px] font-bold theme-text-muted block"></span>
+                </div>
+
+                <div class="space-y-3 text-left border-t theme-border pt-4">
+                    <div>
+                        <span class="text-[10px] font-black theme-text-muted uppercase tracking-widest block flex items-center gap-1.5"><i class="fa-solid fa-cloud"></i> Bulut Senkronizasyonu (Otomatik Ek Katman)</span>
+                        <p class="text-[10px] theme-text-muted mt-1 leading-relaxed">
+                            Bu bölüm <b>"Yerel Veri Dosyası"nın yerine geçmez, ona ek olarak paralel çalışır.</b> Panel her zaman önce bu cihaza ve varsa bağlı dosyaya kaydeder — bu kısım internete asla ihtiyaç duymaz. Bulut ayarlarını girip açık bırakırsanız, her kayıttan hemen sonra veriniz sessizce buluta da gönderilir (böylece başka bir bilgisayardan da erişilebilir); internet yoksa veya bulut başarısız olursa panel bundan hiçbir şekilde etkilenmez. Aşağıda Firebase bağlantısı zaten varsayılan olarak hazır/açık gelir.
                         </p>
                     </div>
                     <div>
@@ -2083,7 +2121,7 @@
                         <button onclick="cloudPush(false)" class="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-solid fa-cloud-arrow-up"></i> Buluta Kaydet
                         </button>
-                        <button onclick="cloudPull(false)" class="py-2.5 px-3 bg-zinc-900/10 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-700 theme-text-main border theme-border rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                        <button onclick="confirmCloudPull()" class="py-2.5 px-3 bg-zinc-900/10 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-700 theme-text-main border theme-border rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
                             <i class="fa-solid fa-cloud-arrow-down"></i> Buluttan Getir
                         </button>
                     </div>
@@ -5287,17 +5325,32 @@
         // kriptografik olarak güvenli bir şifre üretilip KALICI olarak kaydedilir — bu sayede
         // her sayfa yenilemesinde aynı şifre kalır (değişmez), ama dosyanın kaynak kodunda
         // hiçbir zaman bilinen/sabit bir şifre görünmez.
+        // GÖMÜLÜ KURULUM: İlk açılışta / boş localStorage'ta bu değerler kullanılır.
+        // Yönetici paneli veya şifre değişikliği ile sonradan güncellenebilir (localStorage önceliklidir).
+        const EMBEDDED_ADMIN_PASS = 'emrah1905.';
+        const EMBEDDED_VIEWER_PASS = '6021';
+        const EMBEDDED_ADMIN_EMAIL = '21mehmetkilic@gmail.com';
         let adminPassword = safeGetStorage('adminPass_rev4', null);
         if (adminPassword === null) {
-            adminPassword = generateSecurePassword(12);
+            adminPassword = EMBEDDED_ADMIN_PASS;
             safeSetStorage('adminPass_rev4', adminPassword);
         }
         let viewerPassword = safeGetStorage('viewerPass_rev4', null);
         if (viewerPassword === null) {
-            viewerPassword = generateSecurePassword(10);
+            viewerPassword = EMBEDDED_VIEWER_PASS;
             safeSetStorage('viewerPass_rev4', viewerPassword);
         }
         let adminEmail = safeGetStorage('adminEmail_rev4', '');
+        if (!adminEmail) {
+            adminEmail = EMBEDDED_ADMIN_EMAIL;
+            safeSetStorage('adminEmail_rev4', adminEmail);
+        }
+        // İlk kurulum sihirbazını atla (şifreler zaten gömülü)
+        try {
+            if (localStorage.getItem('fts_completed_rev4') !== 'true') {
+                localStorage.setItem('fts_completed_rev4', 'true');
+            }
+        } catch (e) { /* ignore */ }
 
         // ANA EKRAN GÖRÜNÜRLÜK AYARLARI: Yönetici, ana ekranda hangi bölümlerin görüneceğini kontrol edebilir
         const VIS_SECTIONS = [
@@ -5444,8 +5497,27 @@
             showToast('Logo Kaldırıldı', 'Varsayılan ikona dönüldü.', 'info');
         }
 
-        const APP_VERSION = "1.85.0";
+        const APP_VERSION = "1.86.1";
         const CHANGELOG = [
+            {
+                version: "1.86.1",
+                date: "27.07.2026",
+                changes: [
+                    "🐞 Düzeltme: Dosya bağlı değilken Alt+1 (Kaydet) ile Alt+2 (Var Olan Dosyayı Aç) aynı işlevi (dosya açma penceresi) çalıştırıyordu — artık dosya bağlı değilken Alt+1 'Yeni Dosya Oluştur/Farklı Kaydet' penceresini açıyor (kaydetme niyeti), Alt+2 ise değişmeden 'Var Olan Dosyayı Aç' penceresini açıyor (açma niyeti) — ikisi artık her durumda birbirinden ayrı davranıyor"
+                ]
+            },
+            {
+                version: "1.86.0",
+                date: "27.07.2026",
+                changes: [
+                    "💾 YENİ: 'Yerel Veri Dosyası' (Excel gibi çalışır) — Ayarlar'dan bir kez bir dosya (ör. kasa-verileri.json) seçilip bağlanabiliyor; bağlandıktan sonra panelde yapılan HER kayıt otomatik olarak doğrudan o dosyanın üzerine yazılıyor (Ctrl+S mantığı). Dosya bir USB/OneDrive/Google Drive klasörüne konup başka bir bilgisayarda 'Var Olan Dosyayı Aç' ile seçilirse, panel kaldığı yerden açılıyor. (Chrome/Edge masaüstünde çalışır; desteklemeyen tarayıcılarda otomatik olarak indir/yükle yöntemine düşer)",
+                    "⌨️ Yeni klavye kısayolları: Alt+1 → Şimdi Dosyaya Kaydet, Alt+2 → Var Olan Dosyayı Aç/Bağla (Ctrl+1/Ctrl+2 tarayıcı sekme kısayollarıyla çakıştığı için kasıtlı olarak Alt kullanıldı)",
+                    "☁️ Bulut Senkronizasyonu artık TAMAMEN MANUEL — 'Her Değişiklikte Otomatik Buluta Kaydet' varsayılan olarak KAPALI (önceki kurulumlarda açık kalmış olabilecekler için bir kereye mahsus otomatik olarak kapatıldı). Buluta kayıt/getirme artık sadece 'Buluta Kaydet' / 'Buluttan Getir' butonlarına basıldığında çalışıyor — böylece aynı veri birden fazla adresten (ör. bir PC ve bir web adresi) açıldığında arka planda sessizce üzerine yazılıp karışmıyor",
+                    "🛡️ GÜVENLİK: 'Buluttan Getir' artık ÇİFT ONAYLI — önce genel bir onay, ardından 'yerel veri değiştirilecek' uyarısı gösteriliyor; ikisi de onaylanmadan bu cihazdaki/dosyadaki veri değiştirilmiyor",
+                    "🔎 Üst bara özet durum rozeti eklendi: Yerel dosya bağlı mı, son yedek/kayıt ne zaman alındı (tarih+saat), bulut modu (Manuel/Otomatik) tek bakışta görülüyor; rozete tıklanınca Yönetici Paneli açılıyor",
+                    "🐞 Bulut push/pull fonksiyonlarındaki durum mesajları ve Ayarlar > Yerel Veri Dosyası bölümündeki durum yazısı, gerçek zamanlı olarak senkron tutuluyor"
+                ]
+            },
             {
                 version: "1.85.0",
                 date: "26.07.2026",
@@ -6822,6 +6894,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            recordLastBackupTimestamp();
             showToast('Yedekleme Tamamlandı', '"veriler.json" dosyası indirildi.', 'success');
         }
 
@@ -6867,21 +6940,66 @@
         // ve Firebase Realtime Database (Google, ücretsiz planda 1GB depolama — büyük veri
         // hacimleri için çok daha uygun). Aynı bilgiler her cihaza girildiğinde tüm cihazlar
         // otomatik olarak aynı veriyi görür/yazar.
-        let cloudProvider = safeGetStorage('cloudProvider_rev4', 'firebase'); // 'jsonbin' | 'firebase' — varsayılan artık Firebase (daha geniş ücretsiz limit), JSONBin dropdown'dan hâlâ seçilebilir
+        let cloudProvider = safeGetStorage('cloudProvider_rev4', 'firebase'); // 'jsonbin' | 'firebase' — varsayılan Firebase
+        if (!safeGetStorage('cloudProvider_rev4', '')) {
+            safeSetStorage('cloudProvider_rev4', 'firebase');
+        }
         let cloudApiKey = safeGetStorage('cloudApiKey_rev4', '');
         let cloudBinId = safeGetStorage('cloudBinId_rev4', '');
-        let cloudAutoSync = safeGetStorage('cloudAutoSync_rev4', 'true') === 'true';
+        // Otomatik bulut senkronu varsayılan KAPALI. Panel her zaman önce bu cihaza (localStorage/
+        // IndexedDB) ve varsa bağlı "Yerel Veri Dosyası"na (Excel gibi) kaydeder — bu kısım
+        // internete hiç ihtiyaç duymaz ve HER ZAMAN otomatiktir. Bulut ise TAMAMEN elle kontrol
+        // edilir: sadece "Buluta Kaydet" / "Buluttan Getir" butonlarına bastığınızda çalışır.
+        // NEDEN: Aynı veriyi hem bu bilgisayardan hem başka bir adresten (ör. pages.dev) açarsanız,
+        // arka planda kendiliğinden çalışan bir senkron, iki taraf da düzenleme yaparken hangi
+        // verinin "doğru" olduğuna sessizce karar verip üzerine yazar — bu da verilerin karışmasına
+        // yol açar. Elle kaydet/getir ile hangi verinin nereye gideceğine HER ZAMAN siz karar verirsiniz.
+        let cloudAutoSync = safeGetStorage('cloudAutoSync_rev4', 'false') === 'true';
+        if (safeGetStorage('cloudAutoSync_rev4', null) === null) {
+            safeSetStorage('cloudAutoSync_rev4', 'false');
+            cloudAutoSync = false;
+        }
+        // TEK SEFERLİK GÖÇ: önceki bir sürümde bu ayar varsayılan AÇIK'tı ve sessizce otomatik
+        // senkron yapıyordu (verilerin karışması şikayetinin sebebi buydu). Daha önce bu yüzden
+        // "açık" kalmış olabilecek kurulumları, kullanıcının haberi/onayı olmadan bir daha
+        // otomatik senkron yapmasın diye BİR KEZE MAHSUS kapatıyoruz. Bundan sonra kullanıcı
+        // kendisi işaretleyip "Bulut Ayarlarını Kaydet"e basarsa, tercihi olduğu gibi kalır.
+        if (safeGetStorage('cloudAutoSyncManualMigration_rev4', null) === null) {
+            cloudAutoSync = false;
+            safeSetStorage('cloudAutoSync_rev4', 'false');
+            safeSetStorage('cloudAutoSyncManualMigration_rev4', 'done');
+        }
         // true ise girilen anahtar kısıtlı bir "Access Key"dir (X-Access-Key ile gönderilir);
         // false ise tam yetkili "Master Key"dir (X-Master-Key ile gönderilir).
         let cloudKeyIsAccessKey = safeGetStorage('cloudKeyIsAccessKey_rev4', 'false') === 'true';
         // Firebase Realtime Database bağlantı bilgileri
+        // GÖMÜLÜ BULUT: Firebase Realtime Database + Apps Script (şifre sıfırlama e-postası)
+        const EMBEDDED_FIREBASE_URL = '';
+        const EMBEDDED_FIREBASE_SECRET = '';
+        const EMBEDDED_APPS_SCRIPT_URL = '';
+        const EMBEDDED_APPS_SCRIPT_SECRET = '';
         let firebaseDbUrl = safeGetStorage('firebaseDbUrl_rev4', '');
+        if (!firebaseDbUrl) {
+            firebaseDbUrl = EMBEDDED_FIREBASE_URL;
+            safeSetStorage('firebaseDbUrl_rev4', firebaseDbUrl);
+        }
         let firebaseSecret = safeGetStorage('firebaseSecret_rev4', '');
+        if (!firebaseSecret) {
+            firebaseSecret = EMBEDDED_FIREBASE_SECRET;
+            safeSetStorage('firebaseSecret_rev4', firebaseSecret);
+        }
 
-        // Google Apps Script üzerinden gerçek şifre sıfırlama e-postası göndermek için (opsiyonel).
-        // Boş bırakılırsa sistem eskisi gibi yeni şifreyi sadece panoya kopyalar, e-posta göndermeye çalışmaz.
+        // Google Apps Script üzerinden gerçek şifre sıfırlama e-postası göndermek için.
         let appsScriptUrl = safeGetStorage('appsScriptUrl_rev4', '');
+        if (!appsScriptUrl) {
+            appsScriptUrl = EMBEDDED_APPS_SCRIPT_URL;
+            safeSetStorage('appsScriptUrl_rev4', appsScriptUrl);
+        }
         let appsScriptSecret = safeGetStorage('appsScriptSecret_rev4', '');
+        if (!appsScriptSecret) {
+            appsScriptSecret = EMBEDDED_APPS_SCRIPT_SECRET;
+            safeSetStorage('appsScriptSecret_rev4', appsScriptSecret);
+        }
         let cloudSyncTimer = null;
         let cloudIsSyncing = false;
 
@@ -6908,6 +7026,324 @@
                 : "text-[10px] font-bold text-emerald-500 mt-2 block";
         }
 
+        // ================= "DOSYA" DURUMU (Ayarlar modalı içinde) =================
+        // Üst barda artık ayrı bir rozet YOK — kullanıcı isteği üzerine kaldırıldı. Durum artık
+        // sadece Ayarlar > "Yerel Veri Dosyası" bölümündeki küçük yazıda görünür; buluta manuel
+        // kayıtta ayrıca bir bildirim (toast) gösterilir (bkz. writeSnapshotToLinkedFile/cloudPush).
+        // state: 'idle' | 'pending' | 'success' | 'error' | 'offline' | 'reconnect'
+        function setGlobalSyncBadge(state, detailText) {
+            const styles = {
+                pending:   { label: 'Kaydediliyor…' },
+                success:   { label: 'Dosyaya kaydedildi' },
+                error:     { label: 'Sadece tarayıcıda kaydedildi' },
+                offline:   { label: 'Dosya bağlı değil' },
+                reconnect: { label: 'Devam etmek için "Şimdi Dosyaya Kaydet"e tıklayın' },
+                idle:      { label: 'Bekleniyor' }
+            };
+            const s = styles[state] || styles.idle;
+
+            const nameDisplay = document.getElementById('local-file-name-display');
+            if (nameDisplay) nameDisplay.innerText = linkedFileHandle ? linkedFileHandle.name : 'Henüz bir dosya bağlanmadı';
+            const statusEl = document.getElementById('local-file-sync-status');
+            if (statusEl) {
+                // "Bağlı değil" durumunda ayrı bir uyarı yazısı göstermiyoruz — üstteki "Bağlı Dosya"
+                // kutusu (Henüz bir dosya bağlanmadı) zaten bunu söylüyor, tekrar etmeye gerek yok.
+                statusEl.innerText = (state === 'offline') ? '' : (detailText || s.label);
+                statusEl.className = 'text-[10px] font-bold block ' + (state === 'error' ? 'text-red-500' : state === 'success' ? 'text-emerald-500' : 'theme-text-muted');
+            }
+            updateStatusSummaryBadge();
+        }
+
+        // Bulut durumu artık üst barda değil — sadece Ayarlar > Bulut Senkronizasyonu bölümündeki
+        // "cloud-sync-status" yazısında görünür (bkz. setCloudStatus). Manuel "Buluta Kaydet"e
+        // basıldığında ayrıca bir bildirim (toast) gösterilir — kullanıcının istediği tam olarak bu.
+        function setCloudBadge(state, detailText) { /* üst bar rozeti kaldırıldı, kasıtlı boş */ }
+
+        // ================= ÖZET DURUM ROZETİ (üst bar) =================
+        // "Hangi verinin güncel olduğunu her zaman görebilmek" için: dosya bağlantısı, en son ne
+        // zaman herhangi bir şekilde yedek/kayıt alındığı (dosya/JSON/bulut — hangisi en yeniyse)
+        // ve bulutun şu an Manuel mi Otomatik mi çalıştığı tek bakışta gösterilir.
+        function recordLastBackupTimestamp() {
+            safeSetStorage('unifiedLastSaveTs_rev4', new Date().toISOString());
+            updateStatusSummaryBadge();
+        }
+
+        function updateStatusSummaryBadge() {
+            const fileEl = document.getElementById('status-summary-file');
+            const backupEl = document.getElementById('status-summary-backup');
+            const cloudEl = document.getElementById('status-summary-cloud');
+            if (!fileEl || !backupEl || !cloudEl) return;
+
+            if (linkedFileHandle) {
+                fileEl.innerHTML = '<i class="fa-solid fa-file-circle-check text-[9px] text-emerald-500"></i> Yerel dosya bağlı';
+            } else {
+                fileEl.innerHTML = '<i class="fa-solid fa-file text-[9px] theme-text-muted"></i> Dosya bağlı değil';
+            }
+
+            const ts = safeGetStorage('unifiedLastSaveTs_rev4', '');
+            if (ts) {
+                const d = new Date(ts);
+                const dateStr = ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear();
+                const timeStr = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+                backupEl.innerText = 'Son yedek: ' + dateStr + ' ' + timeStr;
+            } else {
+                backupEl.innerText = 'Son yedek: —';
+            }
+
+            cloudEl.innerText = 'Bulut: ' + (cloudAutoSync ? 'Otomatik' : 'Manuel');
+        }
+
+
+
+        // ================= YEREL VERİ DOSYASI (EXCEL MANTIĞI) =================
+        // File System Access API (Chrome/Edge masaüstü) ile gerçek bir dosyaya doğrudan yazar.
+        // Kullanıcı bir kez dosya seçer/oluşturur; sonrasında "Kaydet" her basıldığında (aynı
+        // Excel'de Ctrl+S gibi) veri sessizce o dosyanın üzerine yazılır. Dosyayı USB/bulut
+        // klasörüne koyup başka bir bilgisayarda "Var Olan Dosyayı Aç" ile seçerse, panel o
+        // dosyadaki veriyle açılır — internete/sunucuya hiç ihtiyaç yoktur.
+        const FS_ACCESS_SUPPORTED = !!(window.showSaveFilePicker && window.showOpenFilePicker);
+        let linkedFileHandle = null;      // Şu an bağlı FileSystemFileHandle
+        let pendingReconnectHandle = null; // İzin yenilenmesi gereken, önceden bağlanmış tutamaç
+        let localFileSaveTimer = null;
+        let localFileIsSaving = false;
+
+        // Tutamaç (FileSystemFileHandle) tarayıcı oturumları arasında hatırlansın diye, uygulamanın
+        // kendi Dexie veritabanından bağımsız, ayrı ve basit bir IndexedDB deposunda saklanır.
+        const FILE_HANDLE_DB_NAME = 'kasaLocalFileLinkDB';
+        const FILE_HANDLE_STORE = 'handles';
+        const FILE_HANDLE_KEY = 'linkedDataFile';
+
+        function openFileHandleDb() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) { reject(new Error('IndexedDB yok')); return; }
+                const req = indexedDB.open(FILE_HANDLE_DB_NAME, 1);
+                req.onupgradeneeded = () => { req.result.createObjectStore(FILE_HANDLE_STORE); };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function saveFileHandleToDb(handle) {
+            try {
+                const db = await openFileHandleDb();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(FILE_HANDLE_STORE, 'readwrite');
+                    tx.objectStore(FILE_HANDLE_STORE).put(handle, FILE_HANDLE_KEY);
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error);
+                });
+            } catch (e) { console.warn('Dosya tutamacı kaydedilemedi:', e); }
+        }
+
+        async function loadFileHandleFromDb() {
+            try {
+                const db = await openFileHandleDb();
+                return await new Promise((resolve, reject) => {
+                    const tx = db.transaction(FILE_HANDLE_STORE, 'readonly');
+                    const req = tx.objectStore(FILE_HANDLE_STORE).get(FILE_HANDLE_KEY);
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => reject(req.error);
+                });
+            } catch (e) { return null; }
+        }
+
+        async function clearFileHandleInDb() {
+            try {
+                const db = await openFileHandleDb();
+                await new Promise((resolve) => {
+                    const tx = db.transaction(FILE_HANDLE_STORE, 'readwrite');
+                    tx.objectStore(FILE_HANDLE_STORE).delete(FILE_HANDLE_KEY);
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => resolve();
+                });
+            } catch (e) { /* yoksay */ }
+        }
+
+        async function ensureReadWritePermission(handle) {
+            const opts = { mode: 'readwrite' };
+            try {
+                if ((await handle.queryPermission(opts)) === 'granted') return true;
+                if ((await handle.requestPermission(opts)) === 'granted') return true;
+            } catch (e) { /* kullanıcı reddetti veya tarayıcı desteklemiyor */ }
+            return false;
+        }
+
+        // Ayarlar modalındaki "Bağlı Dosya" kutusunu ve destek uyarısını günceller
+        function updateLinkedFileUi() {
+            const nameDisplay = document.getElementById('local-file-name-display');
+            if (nameDisplay) nameDisplay.innerText = linkedFileHandle ? linkedFileHandle.name : 'Henüz bir dosya bağlanmadı';
+            const warning = document.getElementById('local-file-support-warning');
+            if (warning) warning.classList.toggle('hidden', FS_ACCESS_SUPPORTED);
+        }
+
+        // "Yeni Dosya Oluştur / Farklı Kaydet" — kaydetme penceresi açar, seçilen boş/yeni dosyayı
+        // hemen mevcut verilerle doldurur ve bundan sonraki tüm kayıtları bu dosyaya yönlendirir.
+        async function createLocalDataFile() {
+            if (!FS_ACCESS_SUPPORTED) {
+                exportDataJSON();
+                showAlert('Tarayıcı Desteklemiyor', 'Bu tarayıcı doğrudan dosyaya kaydetmeyi desteklemiyor (Chrome/Edge masaüstü önerilir). Şimdilik "veriler.json" indirildi — her kayıttan sonra Ayarlar > "Verileri Kaydet" ile tekrar indirip aynı dosyanın üzerine kaydedebilirsiniz.');
+                return;
+            }
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: 'kasa-verileri.json',
+                    types: [{ description: 'Kasa Veri Dosyası', accept: { 'application/json': ['.json'] } }]
+                });
+                linkedFileHandle = handle;
+                pendingReconnectHandle = null;
+                await saveFileHandleToDb(handle);
+                updateLinkedFileUi();
+                await writeSnapshotToLinkedFile(true);
+                showToast('Dosya Bağlandı', `"${handle.name}" oluşturuldu. Bundan sonraki her "Kaydet" bu dosyaya yazılacak.`, 'success');
+            } catch (e) {
+                if (e && e.name !== 'AbortError') { console.warn(e); showAlert('Hata', 'Dosya oluşturulamadı: ' + e.message); }
+            }
+        }
+
+        // "Var Olan Dosyayı Aç / Bağla" — daha önce kaydedilmiş bir veri dosyasını seçtirir,
+        // içeriğini panele yükler ve bundan sonraki kayıtları da bu dosyaya yönlendirir.
+        async function openLocalDataFile() {
+            if (!FS_ACCESS_SUPPORTED) {
+                triggerImportDataJSON();
+                return;
+            }
+            try {
+                const [handle] = await window.showOpenFilePicker({
+                    types: [{ description: 'Kasa Veri Dosyası', accept: { 'application/json': ['.json'] } }],
+                    excludeAcceptAllOption: false,
+                    multiple: false
+                });
+                const ok = await ensureReadWritePermission(handle);
+                if (!ok) { showAlert('İzin Gerekli', 'Bu dosyaya yazma izni verilmediği için bağlanamadı.'); return; }
+                const file = await handle.getFile();
+                const text = await file.text();
+                let parsed;
+                try { parsed = JSON.parse(text); } catch (e) { showAlert('Geçersiz Dosya', 'Seçilen dosya geçerli bir kasa veri dosyası (JSON) değil.'); return; }
+
+                linkedFileHandle = handle;
+                pendingReconnectHandle = null;
+                await saveFileHandleToDb(handle);
+                applyDataSnapshot(parsed);
+                updateLinkedFileUi();
+                setGlobalSyncBadge('success', '✓ "' + handle.name + '" ile açıldı');
+                showToast('Dosya Bağlandı', `"${handle.name}" içeriği yüklendi. Bundan sonraki her "Kaydet" bu dosyaya yazılacak.`, 'success');
+            } catch (e) {
+                if (e && e.name !== 'AbortError') { console.warn(e); showAlert('Hata', 'Dosya açılamadı: ' + e.message); }
+            }
+        }
+
+        // Bağlı dosyaya anlık veri yazar (Ctrl+S gibi, dosya seçme penceresi AÇMAZ).
+        async function writeSnapshotToLinkedFile(silent) {
+            if (!linkedFileHandle) {
+                setGlobalSyncBadge('offline');
+                if (!silent) showAlert('Dosya Bağlı Değil', 'Önce Ayarlar > "Yeni Dosya Oluştur" veya "Var Olan Dosyayı Aç" ile bir dosya bağlamanız gerekiyor.');
+                return;
+            }
+            if (localFileIsSaving) return;
+            localFileIsSaving = true;
+            setGlobalSyncBadge('pending');
+            try {
+                const ok = await ensureReadWritePermission(linkedFileHandle);
+                if (!ok) throw new Error('Dosya izni verilmedi');
+                flushPendingStorageWrites();
+                const snapshot = buildDataSnapshot();
+                const writable = await linkedFileHandle.createWritable();
+                await writable.write(JSON.stringify(snapshot, null, 2));
+                await writable.close();
+                const now = new Date().toLocaleString('tr-TR');
+                safeSetStorage('localFileLastSync_rev4', now);
+                setGlobalSyncBadge('success', '✓ Dosyaya kaydedildi — ' + now);
+                recordLastBackupTimestamp();
+                if (!silent) showToast('Kaydedildi', `"${linkedFileHandle.name}" dosyasına yazıldı.`, 'success');
+            } catch (err) {
+                console.warn('Yerel dosyaya yazma hatası:', err);
+                setGlobalSyncBadge('error', '⚠ Sadece tarayıcıda kaydedildi (dosya yazılamadı)');
+                if (!silent) showAlert('Kaydetme Hatası', 'Dosyaya yazılamadı: ' + err.message + '\n\nVeriniz yine de bu tarayıcıda (localStorage) güvende — "Ayarlar > Verileri Kaydet" ile de yedek alabilirsiniz.');
+            } finally {
+                localFileIsSaving = false;
+            }
+        }
+
+        // Her kayıt işleminden hemen sonra çağrılır (updateDashboard'un sonunda). Aynı Excel'deki
+        // gibi ard arda gelen hızlı değişiklikleri (ör. toplu satır ekleme) 300ms içinde TEK bir
+        // dosya yazma işleminde birleştirir — kullanıcı için pratikte "aynı anda" kaydedilmiş olur.
+        function scheduleLocalFileSave() {
+            if (!linkedFileHandle) { setGlobalSyncBadge('offline'); return; }
+            setGlobalSyncBadge('pending');
+            if (localFileSaveTimer) clearTimeout(localFileSaveTimer);
+            localFileSaveTimer = setTimeout(() => writeSnapshotToLinkedFile(true), 300);
+        }
+
+        // Sayfa açılışında: bu bilgisayarda daha önce bağlanmış bir dosya var mı diye bakar.
+        // Tarayıcı izni hâlâ geçerliyse (genelde aynı sekme/oturumda) sessizce devam eder.
+        // Değilse (izin sıfırlanmışsa) kullanıcı rozete tıklayınca yeniden izin istenir — tarayıcı
+        // güvenliği gereği izin isteği sayfa yüklenirken KENDİLİĞİNDEN açılamaz, tıklama gerekir.
+        async function restoreLinkedFileOnLoad() {
+            updateLinkedFileUi();
+            if (!FS_ACCESS_SUPPORTED) { setGlobalSyncBadge('offline', 'Bu tarayıcı dosya bağlamayı desteklemiyor'); return; }
+            const handle = await loadFileHandleFromDb();
+            if (!handle) { setGlobalSyncBadge('offline'); return; }
+            let granted = 'prompt';
+            try { granted = await handle.queryPermission({ mode: 'readwrite' }); } catch (e) { /* */ }
+            if (granted === 'granted') {
+                linkedFileHandle = handle;
+                updateLinkedFileUi();
+                setGlobalSyncBadge('success', '"' + handle.name + '" bağlı');
+            } else {
+                pendingReconnectHandle = handle;
+                setGlobalSyncBadge('reconnect', '"' + handle.name + '" — devam etmek için tıklayın');
+            }
+        }
+
+        // Üst bardaki "Dosya" rozetine tıklanınca çalışır: bağlı bir dosya varsa hemen kaydeder;
+        // yeniden izin gerekiyorsa izin ister; hiç dosya yoksa dosya bağlama penceresini açar.
+        async function handleFileBadgeClick() {
+            if (pendingReconnectHandle) {
+                const ok = await ensureReadWritePermission(pendingReconnectHandle);
+                if (ok) {
+                    linkedFileHandle = pendingReconnectHandle;
+                    pendingReconnectHandle = null;
+                    updateLinkedFileUi();
+                    setGlobalSyncBadge('success', '"' + linkedFileHandle.name + '" yeniden bağlandı');
+                    showToast('Dosya Yeniden Bağlandı', `"${linkedFileHandle.name}" ile devam ediliyor.`, 'success');
+                } else {
+                    showAlert('İzin Verilmedi', 'Dosyaya devam edebilmek için izin vermeniz gerekiyor. Tekrar deneyin veya "Var Olan Dosyayı Aç" ile yeniden seçin.');
+                }
+                return;
+            }
+            if (linkedFileHandle) {
+                writeSnapshotToLinkedFile(false);
+                return;
+            }
+            // ÖNEMLİ: Bu, "Kaydet" işlevidir — hiçbir zaman "Var Olan Dosyayı Aç"a düşmemeli
+            // (o ayrı bir işlev/kısayoldur — Alt+2). Dosya henüz bağlı değilse, "Kaydet" burada
+            // mantıken "Farklı Kaydet" anlamına gelir: yeni bir dosya oluşturup ORAYA yazar.
+            createLocalDataFile();
+        }
+
+        // "Buluttan Getir" ÇİFT ONAYLI: bu işlem bu cihazdaki/dosyadaki mevcut veriyi SİLİP
+        // buluttaki veriyle DEĞİŞTİRİR. Yanlışlıkla basılıp yerel veri kaybedilmesin diye iki
+        // ayrı, birbirinden farklı uyarı gösterilir; ikisi de "Evet" ile onaylanmadan çalışmaz.
+        function confirmCloudPull() {
+            showConfirm(
+                'Buluttan Getir — Emin misiniz?',
+                'Bu işlem buluttaki en son kaydı bu cihaza indirecek.',
+                function () {
+                    // NOT: showConfirm'ün kapanış mekanizması, bu geri çağrı bittikten hemen sonra
+                    // confirmCallback'i sıfırlıyor. İkinci onayı senkron açarsak o sıfırlama ikinci
+                    // onayın kendi geri çağrısını da siler. Bu yüzden bir sonraki tick'e erteliyoruz.
+                    setTimeout(function () {
+                        showConfirm(
+                            'Yerel Veri Değişecek',
+                            'Bu cihazdaki (ve varsa bağlı dosyadaki) mevcut veri, buluttan gelen veriyle DEĞİŞTİRİLECEK. Bu cihazda buluta hiç göndermediğiniz bir kayıt varsa kaybolur. Devam etmeden önce isterseniz önce "Verileri Kaydet" ile bir yedek alın. Yine de devam etmek istiyor musunuz?',
+                            function () { cloudPull(false); },
+                            true
+                        );
+                    }, 0);
+                }
+            );
+        }
+
         // Genel giriş noktaları: seçili sağlayıcıya göre doğru işlevi çağırır. Bu sayede
         // uygulamanın geri kalanı (otomatik senkronizasyon, butonlar vb.) hangi sağlayıcının
         // seçili olduğunu bilmek zorunda kalmaz.
@@ -6922,11 +7358,13 @@
 
         async function jsonbinPush(silent) {
             if (!isCloudConfigured()) {
+                setCloudBadge('offline');
                 if (!silent) showAlert('Bulut Bağlantısı Yok', 'Önce API Anahtarınızı girip kaydetmeniz gerekiyor.');
                 return;
             }
             if (cloudIsSyncing) return;
             cloudIsSyncing = true;
+            setCloudBadge('pending');
             if (!silent) setCloudStatus('Buluta kaydediliyor...', false);
 
             flushPendingStorageWrites();
@@ -6960,10 +7398,13 @@
                 const now = new Date().toLocaleString('tr-TR');
                 safeSetStorage('cloudLastSync_rev4', now);
                 setCloudStatus('✓ Buluta kaydedildi — ' + now, false);
+                setCloudBadge('success', '✓ Buluta kaydedildi — ' + now);
+                recordLastBackupTimestamp();
                 if (!silent) showToast('Buluta Kaydedildi', 'Verileriniz başarıyla buluta senkronize edildi.', 'success');
             } catch (err) {
                 logError('jsonbinPush', err);
                 setCloudStatus('✗ Buluta kaydetme başarısız oldu', true);
+                setCloudBadge('error');
                 if (!silent) showAlert('Bağlantı Hatası', 'Buluta kaydedilemedi. API Anahtarınızı ve internet bağlantınızı kontrol edin. (' + err.message + ')');
             } finally {
                 cloudIsSyncing = false;
@@ -6972,11 +7413,13 @@
 
         async function jsonbinPull(silent) {
             if (!isCloudConfigured() || !cloudBinId) {
+                setCloudBadge('offline');
                 if (!silent) showAlert('Bulut Bağlantısı Yok', 'Buluttan veri getirmek için önce bir kez "Buluta Kaydet" yaparak Bin oluşturmanız veya mevcut Bin ID\'nizi girmeniz gerekiyor.');
                 return;
             }
             if (cloudIsSyncing) return;
             cloudIsSyncing = true;
+            setCloudBadge('pending');
             if (!silent) setCloudStatus('Buluttan getiriliyor...', false);
 
             try {
@@ -6992,10 +7435,12 @@
                 const now = new Date().toLocaleString('tr-TR');
                 safeSetStorage('cloudLastSync_rev4', now);
                 setCloudStatus('✓ Buluttan güncellendi — ' + now, false);
+                setCloudBadge('success', '✓ Sunucudan alındı — ' + now);
                 if (!silent && applied) showToast('Buluttan Güncellendi', 'En güncel veriler bu cihaza uygulandı.', 'success');
             } catch (err) {
                 logError('jsonbinPull', err);
                 setCloudStatus('✗ Buluttan getirme başarısız oldu', true);
+                setCloudBadge('error', '⚠ Sunucudan alınamadı');
                 if (!silent) showAlert('Bağlantı Hatası', 'Buluttan veri getirilemedi. API Anahtarı / Bin ID\'yi ve internet bağlantınızı kontrol edin. (' + err.message + ')');
             } finally {
                 cloudIsSyncing = false;
@@ -7016,11 +7461,13 @@
 
         async function firebasePush(silent) {
             if (!isCloudConfigured()) {
+                setCloudBadge('offline');
                 if (!silent) showAlert('Bulut Bağlantısı Yok', 'Önce Firebase Veritabanı URL\'nizi girip kaydetmeniz gerekiyor.');
                 return;
             }
             if (cloudIsSyncing) return;
             cloudIsSyncing = true;
+            setCloudBadge('pending');
             if (!silent) setCloudStatus('Buluta kaydediliyor (Firebase)...', false);
 
             flushPendingStorageWrites();
@@ -7037,10 +7484,13 @@
                 const now = new Date().toLocaleString('tr-TR');
                 safeSetStorage('cloudLastSync_rev4', now);
                 setCloudStatus('✓ Buluta kaydedildi (Firebase) — ' + now, false);
+                setCloudBadge('success', '✓ Buluta kaydedildi — ' + now);
+                recordLastBackupTimestamp();
                 if (!silent) showToast('Buluta Kaydedildi', 'Verileriniz başarıyla Firebase\'e senkronize edildi.', 'success');
             } catch (err) {
                 logError('firebasePush', err);
                 setCloudStatus('✗ Buluta kaydetme başarısız oldu', true);
+                setCloudBadge('error');
                 if (!silent) showAlert('Bağlantı Hatası', 'Firebase\'e kaydedilemedi. Veritabanı URL\'nizi, Gizli Anahtarınızı ve güvenlik kurallarınızı kontrol edin. (' + err.message + ')');
             } finally {
                 cloudIsSyncing = false;
@@ -7049,11 +7499,13 @@
 
         async function firebasePull(silent) {
             if (!isCloudConfigured()) {
+                setCloudBadge('offline');
                 if (!silent) showAlert('Bulut Bağlantısı Yok', 'Buluttan veri getirmek için önce Firebase Veritabanı URL\'nizi girip kaydetmeniz gerekiyor.');
                 return;
             }
             if (cloudIsSyncing) return;
             cloudIsSyncing = true;
+            setCloudBadge('pending');
             if (!silent) setCloudStatus('Buluttan getiriliyor (Firebase)...', false);
 
             try {
@@ -7063,6 +7515,7 @@
 
                 if (!record) {
                     setCloudStatus('Firebase\'de henüz veri yok', true);
+                    setCloudBadge('idle', 'Firebase\'de henüz veri yok');
                     if (!silent) showAlert('Veri Bulunamadı', 'Bu Firebase veritabanında henüz kayıtlı veri yok. Önce bir kez "Buluta Kaydet" yapmanız gerekiyor.');
                     return;
                 }
@@ -7072,10 +7525,12 @@
                 const now = new Date().toLocaleString('tr-TR');
                 safeSetStorage('cloudLastSync_rev4', now);
                 setCloudStatus('✓ Buluttan güncellendi (Firebase) — ' + now, false);
+                setCloudBadge('success', '✓ Sunucudan alındı — ' + now);
                 if (!silent && applied) showToast('Buluttan Güncellendi', 'En güncel veriler bu cihaza uygulandı.', 'success');
             } catch (err) {
                 logError('firebasePull', err);
                 setCloudStatus('✗ Buluttan getirme başarısız oldu', true);
+                setCloudBadge('error', '⚠ Sunucudan alınamadı');
                 if (!silent) showAlert('Bağlantı Hatası', 'Firebase\'den veri getirilemedi. Veritabanı URL\'nizi, Gizli Anahtarınızı ve güvenlik kurallarınızı kontrol edin. (' + err.message + ')');
             } finally {
                 cloudIsSyncing = false;
@@ -7195,14 +7650,26 @@
         // kendisi elle basmalı — bu, kazara/istemsiz bir sıfırlamanın buluta da yayılmasını önler.
         let suppressAutoCloudPush = false;
 
-        // Otomatik senkronizasyon: veri değiştikten 2.5 saniye sonra (kullanıcı yazmayı bitirince) buluta gönderir.
+        // Bulut senkronizasyonu artık İSTEĞE BAĞLI ve varsayılan KAPALI (bkz. cloudAutoSync).
+        // Ana kayıt hedefi "Yerel Veri Dosyası" (bkz. scheduleLocalFileSave). Kullanıcı Ayarlar'dan
+        // bulutu kendi isteğiyle açarsa, kayıttan kısa bir süre sonra sessizce buluta da gönderilir.
         function scheduleAutoCloudPush() {
             if (!cloudAutoSync || !isCloudConfigured() || userRole !== 'admin' || suppressAutoCloudPush) return;
             if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
-            cloudSyncTimer = setTimeout(() => cloudPush(true), 2500);
+            cloudSyncTimer = setTimeout(() => cloudPush(true), 300);
         }
+        const EMBEDDED_SECURITY_QUESTION = 'En sevdiğiniz renk?';
+        const EMBEDDED_SECURITY_ANSWER = 'sanane';
         let securityQuestion = safeGetStorage('securityQuestion_rev4', '');
+        if (!securityQuestion) {
+            securityQuestion = EMBEDDED_SECURITY_QUESTION;
+            safeSetStorage('securityQuestion_rev4', securityQuestion);
+        }
         let securityAnswer = safeGetStorage('securityAnswer_rev4', '');
+        if (!securityAnswer) {
+            securityAnswer = EMBEDDED_SECURITY_ANSWER;
+            safeSetStorage('securityAnswer_rev4', securityAnswer);
+        }
 
         let ratioChart, categoryChart, ccCategoryChartInstance, trendChartInstance;
         let confirmCallback = null;
@@ -7654,8 +8121,24 @@
         function initQuickSaveShortcuts() {
             document.addEventListener('keydown', function (e) {
                 const key = (e.key || '').toLowerCase();
-                if (key !== 's' || !(e.ctrlKey || e.metaKey)) return;
 
+                // Alt+1: Yerel Veri Dosyasına Kaydet (dosya bağlıysa üzerine yazar; bağlı değilse
+                // "Şimdi Dosyaya Kaydet" ile aynı davranışı gösterip dosya seçme penceresini açar).
+                // Alt+2: Var Olan Dosyayı Aç / Bağla
+                // NOT: Ctrl+1/Ctrl+2 tarayıcıda "sekmeler arası geçiş" için ayrılmış olduğundan ve
+                // sayfa tarafından geçersiz kılınamadığından, bu ikisi kasıtlı olarak Alt tuşuyla.
+                if (e.altKey && key === '1') {
+                    e.preventDefault();
+                    triggerAction(handleFileBadgeClick);
+                    return;
+                }
+                if (e.altKey && key === '2') {
+                    e.preventDefault();
+                    triggerAction(openLocalDataFile);
+                    return;
+                }
+
+                if (!(e.ctrlKey || e.metaKey) || key !== 's') return;
                 if (e.shiftKey) {
                     e.preventDefault();
                     triggerAction(exportDataJSON);
@@ -8110,7 +8593,10 @@
             // Grafik verisini hafızada tut (sekme değişince taze çizim için)
             window.__lastChartPayload = { cashRemaining, bankTotal, totalReceivables, totalPayables };
 
-            // Bulut Otomatik Senkronizasyonu (yalnızca yönetici veri değiştirdiğinde)
+            // Yerel Veri Dosyası (Excel gibi) — bağlıysa her kayıttan sonra hemen dosyaya yazar
+            if (userRole === 'admin' && !suppressAutoCloudPush) scheduleLocalFileSave();
+
+            // Bulut Otomatik Senkronizasyonu (isteğe bağlı, varsayılan kapalı; yalnızca yönetici veri değiştirdiğinde)
             scheduleAutoCloudPush();
         }
 
@@ -14668,15 +15154,31 @@
                 }, 3000);
             });
 
-            // Bulut Otomatik Senkronizasyonu Açıksa: açılışta en güncel veriyi buluttan çek
-            // NOT: JSONBin bir Bin ID'ye ihtiyaç duyar (ilk kayıttan sonra oluşur), Firebase'de
-            // böyle bir şart yok — sadece Veritabanı URL'sinin girilmiş olması yeterlidir.
+            // Bulut Otomatik Senkronizasyonu (isteğe bağlı, varsayılan kapalı) açıksa: açılışta
+            // en güncel veriyi buluttan çeker. Varsayılan/ana akış artık "Yerel Veri Dosyası".
             safeInit('cloudAutoSync', () => {
                 const readyForAutoSync = cloudProvider === 'firebase' ? isCloudConfigured() : (isCloudConfigured() && cloudBinId);
-                if (cloudAutoSync && readyForAutoSync) {
-                    scheduleIdle(() => cloudPull(true), 4000);
+                if (!readyForAutoSync) {
+                    setCloudBadge('offline');
+                } else if (cloudAutoSync) {
+                    setCloudBadge('pending', 'Sunucudan kontrol ediliyor…');
+                    scheduleIdle(() => cloudPull(true), 800);
+                } else {
+                    setCloudBadge('idle', 'Otomatik senkron kapalı');
                 }
             });
+
+            // Yerel Veri Dosyası: bu bilgisayarda daha önce bir dosya bağlanmışsa (Excel gibi),
+            // izin hâlâ geçerliyse sessizce devam eder; değilse üst bardaki rozete tıklanınca
+            // yeniden bağlanma isteği gösterilir (tarayıcı güvenliği: izin isteği kullanıcı
+            // tıklaması gerektirir, sayfa yüklenirken otomatik istenemez).
+            safeInit('restoreLocalFile', () => {
+                scheduleIdle(() => restoreLinkedFileOnLoad(), 200);
+            });
+
+            // Özet Durum Rozeti: sayfa ilk açıldığında da (henüz hiçbir kayıt olayı olmasa bile)
+            // doğru başlangıç durumunu göstersin.
+            safeInit('statusSummaryBadge', updateStatusSummaryBadge);
 
             // Saat sayacı
             safeInit('clockInterval', () => {
