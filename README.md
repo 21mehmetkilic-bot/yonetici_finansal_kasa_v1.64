@@ -1,2 +1,2 @@
-# yonetici_finansal_kasa_v1.64
-v1.64
+# yonetici_finansal_kasa_v3.9.3
+v3.9.3
